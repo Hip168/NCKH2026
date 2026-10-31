@@ -9,10 +9,19 @@ DATA_PROCESSED = ROOT / "data" / "processed"
 DATA_SPLITS = ROOT / "data" / "splits"
 RESULTS = ROOT / "results"
 
+# IBM AML LI-Small bản đã định dạng, có sẵn trên máy dev (Test/TH1). Máy khác: đặt file vào data/raw/ibm_aml/.
+IBM_LI_SMALL_FORMATTED = next(
+    (p for p in [DATA_RAW / "ibm_aml" / "LI_Small" / "formatted_transactions.csv",
+                 ROOT.parent / "Test" / "TH1" / "data-raw" / "LI_Small" / "formatted_transactions.csv"]
+     if p.exists()),
+    DATA_RAW / "ibm_aml" / "LI_Small" / "formatted_transactions.csv",
+)
+
 SEED = 42
 
 # --- Đánh giá (đã chốt trong kế hoạch, KHÔNG đổi sau khi xem kết quả) ---
-TOP_K_PER_DAY = 100          # ngân sách cảnh báo: số giao dịch chuyên viên kiểm tra được mỗi ngày
+ALERT_FRACS = (0.01, 0.02)   # ngân sách cảnh báo: tỷ lệ giao dịch mỗi ngày chuyên viên kiểm tra được (chính 1%, độ nhạy 2%)
+BURN_IN_DAYS = 30            # bỏ 30 ngày đầu khỏi train/test: kịch bản gian lận và cửa sổ 30 ngày chưa ổn định
 N_OUTER_FOLDS = 5
 N_INNER_FOLDS = 3
 TERMINAL_DELAY_DAYS = 7      # nhãn gian lận chỉ được biết sau 7 ngày (dùng cho đặc trưng rủi ro terminal)

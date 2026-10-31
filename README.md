@@ -17,7 +17,14 @@ Python 3.11. Đã kiểm tra trên Windows 11 với các phiên bản ghi trong 
 | 1. Sinh dữ liệu synthetic 5 ngân hàng + đặc trưng | `python scripts/01_generate_synthetic.py` | `data/processed/*.parquet` (~15 giây) |
 | 2. Chia fold cố định (chỉ chạy 1 lần) | `python scripts/02_make_splits.py` | `data/splits/fold_assignments_synthetic.csv` |
 | 3. EDA | `python scripts/03_eda.py` | `results/eda/` |
-| 4. Baseline dạng bảng (kiểm tra pipeline) | `python scripts/10_baseline_tabular.py` | `results/baseline_tabular/` (~1 phút) |
+| 3b. EDA IBM AML LI-Small | `python scripts/04_ibm_aml_eda.py` | `results/eda_ibm/` |
+| 4. Baseline dạng bảng (kiểm tra pipeline) | `python scripts/10_baseline_tabular.py` | `results/baseline_tabular/` (~2 phút) |
+| 5. GNN: E1 centralized, E2 local, E3 FedAvg | `python scripts/20_gnn_synthetic.py` | `results/gnn_synthetic/` (~2 giờ CPU; thử nhanh: `--folds 0`) |
+| 6. E4/E5 DP mức bản ghi (MLP + DP-SGD), quét ε | `python scripts/30_dp_fl.py --mode record` | `results/dp_record/` (~1,5 giờ) |
+| 7. DP mức client đúng Slide 4 (GNN), quét ε | `python scripts/30_dp_fl.py --mode client` | `results/dp_client/` (~25 phút, fold 0) |
+| 8. Biểu đồ cho bài báo | `python scripts/40_figures.py` | `results/figures/` |
+
+**Kết quả mới nhất: [docs/results.md](docs/results.md).**
 | Kiểm thử | `python -m pytest -q tests` | |
 
 Dữ liệu sinh ra là tất định (seed 42): ai chạy lại bước 1 cũng được đúng bộ dữ liệu đó.
@@ -32,8 +39,15 @@ project/
 │   ├── data/
 │   │   ├── simulate.py    # bộ sinh giao dịch non-IID nhiều ngân hàng
 │   │   ├── features.py    # 15 đặc trưng dạng bảng, tính riêng trong từng ngân hàng
-│   │   └── splits.py      # nested stratified K-fold + chia theo thời gian
-│   └── eval/metrics.py    # PR-AUC, Recall@k, Precision@k, VDR@k, F1 — dùng chung, không tự tính lại
+│   │   ├── splits.py      # nested stratified K-fold + chia theo thời gian
+│   │   ├── prep.py        # nạp dữ liệu + fold, bỏ giai đoạn khởi động, chuẩn hóa riêng từng client
+│   │   └── ibm_aml.py     # loader IBM AML (bản gốc Kaggle và bản đã định dạng)
+│   ├── graph.py           # đồ thị giao dịch (cạnh quá khứ → hiện tại, cùng khách / cùng terminal)
+│   ├── models.py          # GraphSAGE + MLP
+│   ├── train.py           # huấn luyện full-batch + FedAvg
+│   ├── privacy.py         # DP: client-level (cắt Δ + nhiễu), record-level (DP-SGD), tính ε
+│   ├── experiment.py      # hàm dùng chung cho script thí nghiệm
+│   └── eval/metrics.py    # PR-AUC, Recall@p, Precision@p, VDR@p, F1 — dùng chung, không tự tính lại
 ├── scripts/               # các bước chạy, đánh số theo thứ tự
 ├── tests/                 # kiểm thử đặc trưng và chỉ số
 ├── data/                  # raw/ và processed/ không commit; splits/ có commit
@@ -52,10 +66,13 @@ project/
 ## Lộ trình
 
 - [x] Tuần 1–2: dữ liệu synthetic, đặc trưng, chia fold, EDA, module chỉ số, baseline dạng bảng
-- [ ] Tải IBM AML Small + Elliptic vào `data/raw/`, viết loader
-- [ ] Dựng đồ thị giao dịch + GraphSAGE/MLP centralized (E1), local-only (E2)
-- [ ] FedAvg mô phỏng 5 client (E3)
-- [ ] DP: clip + nhiễu Gauss + RDP accountant (E4, E5)
+- [x] Áp đề xuất D7–D9 (ngân sách cảnh báo 1%, đặc trưng tương đối + chuẩn hóa cục bộ, bỏ 30 ngày đầu)
+- [x] Loader + EDA IBM AML LI-Small (bản đã định dạng)
+- [x] Đồ thị giao dịch + GraphSAGE/MLP: E1 centralized, E2 local-only, E3 FedAvg
+- [ ] Tải IBM AML bản gốc (có mã ngân hàng) + Elliptic; E7 centralized trên IBM
+- [x] DP: clip + nhiễu Gauss + RDP accountant, 2 mức client / record (E4, E5)
+- [ ] Chạy thêm 2 seed cho E1–E4 + kiểm định Wilcoxon, effect size (Slide 8b)
+- [ ] FedProx / SCAFFOLD (E6)
 
 ## Nguồn tham khảo và giấy phép
 

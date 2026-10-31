@@ -11,7 +11,7 @@ from fraudfl.config import TERMINAL_DELAY_DAYS
 WINDOWS = (1, 7, 30)
 
 FEATURES = (
-    ["TX_AMOUNT", "TX_DURING_WEEKEND", "TX_DURING_NIGHT"]
+    ["TX_AMOUNT", "TX_DURING_WEEKEND", "TX_DURING_NIGHT", "TX_AMOUNT_RATIO_30DAY"]
     + [f"CUSTOMER_ID_NB_TX_{w}DAY_WINDOW" for w in WINDOWS]
     + [f"CUSTOMER_ID_AVG_AMOUNT_{w}DAY_WINDOW" for w in WINDOWS]
     + [f"TERMINAL_ID_NB_TX_{w}DAY_WINDOW" for w in WINDOWS]
@@ -36,6 +36,8 @@ def _client_features(df: pd.DataFrame, delay: int) -> pd.DataFrame:
         total = _rolling(df, "CUSTOMER_ID", "TX_AMOUNT", w, "sum")
         df[f"CUSTOMER_ID_NB_TX_{w}DAY_WINDOW"] = nb
         df[f"CUSTOMER_ID_AVG_AMOUNT_{w}DAY_WINDOW"] = total / nb
+    # Giá trị tương đối so với thói quen chi tiêu của chính khách → không phụ thuộc quy mô ngân hàng (D8)
+    df["TX_AMOUNT_RATIO_30DAY"] = df["TX_AMOUNT"] / df["CUSTOMER_ID_AVG_AMOUNT_30DAY_WINDOW"].clip(lower=0.01)
 
     # Rủi ro terminal: chỉ dùng nhãn đã biết, tức giao dịch trong [t - delay - w, t - delay)
     nb_delay = _rolling(df, "TERMINAL_ID", "TX_FRAUD", delay, "count")

@@ -1,0 +1,39 @@
+Chế độ record-level DP, δ = 1e-05, C = 1.0, folds [0, 1, 2, 3, 4], ε [inf, 2.0, 1.0, 0.5]
+
+=== Outer fold 0 ===
+  ε=inf  z=  0.00  PR-AUC 0.7165  Recall@1% 0.5496  VDR@1% 0.8066  (vòng tốt nhất 25, 51s)
+  ε=2.0  z=  2.07  PR-AUC 0.6880  Recall@1% 0.5223  VDR@1% 0.7950  (vòng tốt nhất 27, 54s)
+  ε=1.0  z=  3.70  PR-AUC 0.6655  Recall@1% 0.5116  VDR@1% 0.7841  (vòng tốt nhất 18, 53s)
+  ε=0.5  z=  6.89  PR-AUC 0.6379  Recall@1% 0.4983  VDR@1% 0.7677  (vòng tốt nhất 7, 54s)
+
+=== Outer fold 1 ===
+  ε=inf  z=  0.00  PR-AUC 0.7118  Recall@1% 0.5466  VDR@1% 0.8159  (vòng tốt nhất 29, 52s)
+  ε=2.0  z=  2.08  PR-AUC 0.6733  Recall@1% 0.5188  VDR@1% 0.8039  (vòng tốt nhất 27, 55s)
+  ε=1.0  z=  3.71  PR-AUC 0.6587  Recall@1% 0.5131  VDR@1% 0.7909  (vòng tốt nhất 29, 54s)
+  ε=0.5  z=  6.92  PR-AUC 0.6134  Recall@1% 0.4845  VDR@1% 0.7750  (vòng tốt nhất 13, 54s)
+
+=== Outer fold 2 ===
+  ε=inf  z=  0.00  PR-AUC 0.7188  Recall@1% 0.5489  VDR@1% 0.7984  (vòng tốt nhất 29, 53s)
+  ε=2.0  z=  2.07  PR-AUC 0.6827  Recall@1% 0.5152  VDR@1% 0.7742  (vòng tốt nhất 30, 54s)
+  ε=1.0  z=  3.70  PR-AUC 0.6748  Recall@1% 0.5053  VDR@1% 0.7698  (vòng tốt nhất 27, 53s)
+  ε=0.5  z=  6.91  PR-AUC 0.6492  Recall@1% 0.5094  VDR@1% 0.7898  (vòng tốt nhất 17, 55s)
+
+=== Outer fold 3 ===
+  ε=inf  z=  0.00  PR-AUC 0.6929  Recall@1% 0.5156  VDR@1% 0.7975  (vòng tốt nhất 19, 52s)
+  ε=2.0  z=  2.07  PR-AUC 0.6577  Recall@1% 0.4876  VDR@1% 0.7882  (vòng tốt nhất 27, 54s)
+  ε=1.0  z=  3.70  PR-AUC 0.6415  Recall@1% 0.4900  VDR@1% 0.7890  (vòng tốt nhất 14, 54s)
+  ε=0.5  z=  6.91  PR-AUC 0.6065  Recall@1% 0.4756  VDR@1% 0.7806  (vòng tốt nhất 14, 55s)
+
+=== Outer fold 4 ===
+  ε=inf  z=  0.00  PR-AUC 0.7021  Recall@1% 0.5319  VDR@1% 0.7909  (vòng tốt nhất 28, 52s)
+  ε=2.0  z=  2.08  PR-AUC 0.6583  Recall@1% 0.5036  VDR@1% 0.7742  (vòng tốt nhất 24, 55s)
+  ε=1.0  z=  3.71  PR-AUC 0.6439  Recall@1% 0.4939  VDR@1% 0.7685  (vòng tốt nhất 24, 53s)
+  ε=0.5  z=  6.92  PR-AUC 0.6182  Recall@1% 0.4794  VDR@1% 0.7752  (vòng tốt nhất 7, 55s)
+
+=== Trung bình qua các fold ===
+         pr_auc  roc_auc      f1  recall@1%  precision@1%  vdr@1%  recall@2%  precision@2%  vdr@2%  noise_multiplier
+epsilon                                                                                                             
+0.5      0.6250   0.8776  0.6228     0.4895        0.7595  0.7777     0.6264        0.5022  0.8667            6.9094
+1.0      0.6569   0.8886  0.6384     0.5028        0.7802  0.7805     0.6568        0.5266  0.8755            3.7055
+2.0      0.6720   0.8969  0.6506     0.5095        0.7906  0.7871     0.6672        0.5350  0.8800            2.0754
+inf      0.7084   0.9050  0.6973     0.5385        0.8356  0.8019     0.6943        0.5567  0.8951            0.0000

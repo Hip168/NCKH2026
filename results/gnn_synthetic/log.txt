@@ -1,0 +1,33 @@
+Đồ thị: 495,722 nút; cạnh centralized 2,850,661, local 2,743,508 (5.4s)
+
+=== Outer fold 0 ===
+  => centralized  PR-AUC 0.7429  Recall@1% 0.5645  VDR@1% 0.8161  F1 0.7183
+  => local        PR-AUC 0.7140  Recall@1% 0.5463  VDR@1% 0.8008  F1 0.6943
+  => fedavg       PR-AUC 0.7251  Recall@1% 0.5554  VDR@1% 0.8062  F1 0.7071
+
+=== Outer fold 1 ===
+  => centralized  PR-AUC 0.7332  Recall@1% 0.5532  VDR@1% 0.8112  F1 0.7134
+  => local        PR-AUC 0.7091  Recall@1% 0.5426  VDR@1% 0.7957  F1 0.7008
+  => fedavg       PR-AUC 0.7185  Recall@1% 0.5491  VDR@1% 0.8033  F1 0.7086
+
+=== Outer fold 2 ===
+  => centralized  PR-AUC 0.7503  Recall@1% 0.5645  VDR@1% 0.7900  F1 0.7395
+  => local        PR-AUC 0.7159  Recall@1% 0.5456  VDR@1% 0.7745  F1 0.7053
+  => fedavg       PR-AUC 0.7282  Recall@1% 0.5481  VDR@1% 0.7881  F1 0.7189
+
+=== Outer fold 3 ===
+  => centralized  PR-AUC 0.7211  Recall@1% 0.5252  VDR@1% 0.7984  F1 0.7016
+  => local        PR-AUC 0.6944  Recall@1% 0.5172  VDR@1% 0.7854  F1 0.6836
+  => fedavg       PR-AUC 0.7065  Recall@1% 0.5236  VDR@1% 0.7946  F1 0.7015
+
+=== Outer fold 4 ===
+  => centralized  PR-AUC 0.7176  Recall@1% 0.5319  VDR@1% 0.7797  F1 0.6958
+  => local        PR-AUC 0.6940  Recall@1% 0.5247  VDR@1% 0.7734  F1 0.6811
+  => fedavg       PR-AUC 0.6980  Recall@1% 0.5174  VDR@1% 0.7703  F1 0.6728
+
+=== Trung bình qua các fold ===
+             pr_auc  roc_auc      f1  recall@1%  precision@1%  vdr@1%  recall@2%  precision@2%  vdr@2%
+setting                                                                                               
+centralized  0.7330   0.9213  0.7137     0.5479        0.8500  0.7991     0.7133        0.5719  0.9000
+fedavg       0.7153   0.9137  0.7018     0.5387        0.8359  0.7925     0.7016        0.5625  0.8940
+local        0.7055   0.9060  0.6930     0.5353        0.8306  0.7860     0.6925        0.5552  0.8851

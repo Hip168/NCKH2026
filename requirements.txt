@@ -5,6 +5,7 @@ scikit-learn==1.8.0
 matplotlib==3.10.8
 pyarrow==26.0.0
 pytest
+opacus==1.6.0
 
 # Giai đoạn GNN / FL (tuần 3+), đã có sẵn trên máy dev
 torch==2.9.1

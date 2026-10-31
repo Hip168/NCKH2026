@@ -1,50 +1,73 @@
 # Sổ quyết định
 
-Ghi mọi quyết định ảnh hưởng tới kết quả **trước khi** chạy thí nghiệm chính. Mỗi mục: ngày, nội dung, lý do, người quyết.
+Ghi mọi quyết định ảnh hưởng tới kết quả **trước khi** chạy thí nghiệm chính. Mỗi mục: ngày, nội dung, lý do.
+Trạng thái "đề xuất" = đã áp vào code để chạy thử, **chờ cả nhóm duyệt** trong buổi họp.
 
 ## Đã chốt
 
 | # | Ngày | Quyết định | Lý do |
 |---|---|---|---|
-| D1 | 2026-10-31 | Chỉ số chính: PR-AUC, Recall@k, VDR@k. Phụ: F1, ROC-AUC, Precision@k, chi phí truyền thông, độ trễ | Theo Slide 6. Chốt trước để tránh chọn chỉ số theo kết quả |
-| D2 | 2026-10-31 | Recall@k, Precision@k, VDR@k tính **theo ngày**: mỗi ngày gắn cờ top-k, cộng dồn trên mọi ngày | Tính trên toàn tập test thì Recall@100 tối đa ~5%, vô nghĩa |
+| D1 | 2026-10-31 | Chỉ số chính: PR-AUC, Recall@p, VDR@p. Phụ: F1, ROC-AUC, Precision@p, chi phí truyền thông, độ trễ | Theo Slide 6. Chốt trước để tránh chọn chỉ số theo kết quả |
+| D2 | 2026-10-31 | Recall/Precision/VDR tính **theo ngày**: mỗi ngày gắn cờ phần đầu bảng xếp hạng, cộng dồn trên mọi ngày | Tính trên toàn tập test thì Recall@100 tối đa ~5%, vô nghĩa |
 | D3 | 2026-10-31 | Ngưỡng F1 chọn trên inner fold 0 của tập train | Không chọn ngưỡng trên test |
 | D4 | 2026-10-31 | Đặc trưng tính riêng trong từng ngân hàng; rủi ro terminal chỉ dùng nhãn có độ trễ 7 ngày | Đúng tinh thần FL; tránh rò rỉ nhãn |
-| D5 | 2026-10-31 | Synthetic: 5 ngân hàng × ~100k giao dịch, 120 ngày, tỷ lệ gian lận 1,0–1,8%, terminal dùng chung | Theo Slide 5. Terminal chung → 81% terminal bị xâm nhập xuất hiện ở >1 ngân hàng, tạo động lực cho FL |
-| D6 | 2026-10-31 | Chia fold: nested stratified 5×3 theo (nhãn × client), seed 42; thêm cột chia theo thời gian (60% train / 7 ngày đệm / còn lại test) | Theo Slide 8; chia theo thời gian dùng cho dữ liệu đồ thị |
+| D5 | 2026-10-31 | Synthetic: 5 ngân hàng × ~100k giao dịch, 120 ngày, tỷ lệ gian lận 1,0–1,8%, terminal dùng chung | Theo Slide 5. 81% terminal bị xâm nhập xuất hiện ở >1 ngân hàng → động lực cho FL |
+| D6 | 2026-10-31 | Chia fold: nested stratified 5×3 theo (nhãn × client), seed 42; thêm cột chia theo thời gian | Theo Slide 8 |
 
-## Cần nhóm quyết định (phát hiện từ baseline 2026-10-31)
+## Đề xuất — đã áp vào code, chờ nhóm duyệt
 
-### Q1. Giá trị k của Recall@k / VDR@k — **k = 100/ngày quá rộng**
+| # | Ngày | Đề xuất | Lý do | Thay cho |
+|---|---|---|---|---|
+| D7 | 2026-10-31 | Ngân sách cảnh báo **p = 1%** giao dịch mỗi ngày (chỉ số chính), **2%** (độ nhạy). `config.ALERT_FRACS` | Giả định năng lực kiểm tra của chuyên viên tỷ lệ với lưu lượng; không phụ thuộc kích thước fold/bộ dữ liệu | Q1: k = 100/ngày gắn cờ ~12% giao dịch → VDR ≈ 0,94 với mọi mô hình |
+| D8 | 2026-10-31 | Thêm `TX_AMOUNT_RATIO_30DAY` (giá trị / chi tiêu TB 30 ngày của khách) + chuẩn hóa z-score **riêng từng client** (`prep.scale_per_client`) | Giá trị tiền khác quy mô giữa ngân hàng; chuẩn hóa cục bộ không cần chia sẻ thống kê → tương thích FL | Q2 |
+| D9 | 2026-10-31 | Bỏ 30 ngày đầu khỏi fit/val/test (`config.BURN_IN_DAYS`); vẫn dùng làm lịch sử cho đặc trưng và nút đồ thị | Kịch bản gian lận và cửa sổ 30 ngày chưa ổn định | Q3 |
+| D10 | 2026-10-31 | GNN: huấn luyện **full-batch**, lr = 5e-3 (Slide 6: batch 64, lr = 1e-3); dừng sớm theo PR-AUC val, patience 30 epoch, tối đa 300; FedAvg **50 vòng** × 3 epoch cục bộ | Đồ thị liên kết nên mini-batch cần thư viện lấy mẫu láng giềng (pyg-lib) chưa có trên Windows; lr 1e-3 full-batch hội tụ quá chậm. FedAvg 30 vòng chưa hội tụ ở fold 0 (val PR-AUC còn tăng ở vòng 28–30) | Slide 6 |
+| D12 | 2026-11-01 | DP có **2 mức** (`src/fraudfl/privacy.py`, `scripts/30_dp_fl.py`): (a) **client-level** đúng Slide 4 — cắt Δ của cả ngân hàng, cộng nhiễu, GNN; (b) **record-level** — DP-SGD trong từng ngân hàng (cắt gradient từng giao dịch, lấy mẫu Poisson, batch kỳ vọng 1024), MLP dạng bảng. ε tính bằng RDP accountant (Opacus), δ = 1e-5, C = 1 | Với 5 client, client-level ε = 1 cần hệ số nhiễu z ≈ 29 (nhiễu lớn hơn tín hiệu hàng nghìn lần). Record-level ε = 1 chỉ cần z ≈ 3 nhờ khuếch đại lấy mẫu con. Bài toán ngân hàng cần bảo vệ **từng khách/giao dịch** → record-level là đơn vị riêng tư đúng | Slide 4 |
+| D13 | 2026-11-01 | Record-level dùng SGD momentum 0,9, lr 0,5 (không phải Adam); pos_weight = 10 cố định | Adam khuếch đại nhiễu DP (thử trên val: 0,14 so với 0,67). pos_weight tính từ dữ liệu sẽ tốn ngân sách riêng tư | Slide 6 |
+| D11 | 2026-10-31 | Đồ thị: nút = giao dịch; cạnh từ 3 giao dịch liền trước của cùng khách và cùng terminal, **chỉ chiều quá khứ → hiện tại**. Local/FL: cạnh trong cùng ngân hàng. Centralized: cạnh terminal xuyên ngân hàng | Không dùng thông tin tương lai; centralized có lợi thế thông tin thật sự so với FL | — |
 
-Mỗi outer fold có ~99k giao dịch / 120 ngày ≈ 830 giao dịch/ngày, trong đó ~13 ca gian lận.
-k = 100 nghĩa là gắn cờ ~12% giao dịch mỗi ngày → VDR@100 ≈ 0,94 với **mọi** mô hình, kể cả Logistic Regression.
-Chỉ số không còn phân biệt được mô hình tốt và kém, và tiêu chí "VDR ≥ 0,80" trở nên quá dễ đạt.
+### Kết quả sau khi áp D7–D9 (baseline dạng bảng, trung bình 5 fold, `results/baseline_tabular/`)
 
-Đề xuất: định nghĩa k theo **tỷ lệ** lưu lượng mỗi ngày (ví dụ 1% hoặc 2%) để không phụ thuộc kích thước fold hay
-bộ dữ liệu, hoặc chọn k tuyệt đối nhỏ (ví dụ 10–20/ngày/fold). Phải chốt **trước** khi chạy E1–E4,
-và lý do chọn phải dựa trên năng lực kiểm tra giả định của chuyên viên, không dựa trên kết quả.
+| Đặc trưng | Mô hình | Cách train | PR-AUC | Recall@1% | VDR@1% |
+|---|---|---|---|---|---|
+| v0 (gốc) | RF | centralized | 0,632 | 0,488 | 0,741 |
+| v0 (gốc) | RF | local | 0,670 | 0,521 | 0,784 |
+| v1 (D8) | RF | centralized | 0,694 | 0,529 | 0,769 |
+| v1 (D8) | RF | local | 0,690 | 0,538 | 0,790 |
+| v0 (gốc) | LR | centralized | 0,459 | 0,366 | 0,660 |
+| v1 (D8) | LR | centralized | 0,549 | 0,436 | 0,679 |
 
-### Q2. Local-only đang **tốt hơn** centralized trên baseline dạng bảng
+D8 xóa gần hết khoảng cách centralized–local (RF: 0,694 so với 0,690). Recall@1% giờ phân biệt rõ mô hình
+(0,37 → 0,54), không còn bão hòa như k = 100.
 
-| Mô hình | Cách train | PR-AUC (5 fold) |
-|---|---|---|
-| Random Forest | centralized | 0,610 ± 0,011 |
-| Random Forest | local-only | 0,661 ± 0,014 |
-| Logistic Regression | centralized | 0,445 ± 0,019 |
-| Logistic Regression | local-only | 0,562 ± 0,022 |
+## Câu hỏi còn mở
 
-Nguyên nhân có thể: giá trị giao dịch và ngưỡng gian lận khác nhau mạnh giữa các ngân hàng (non-IID). Một mô hình
-chung chỉ dùng giá trị tiền tuyệt đối không học được ngưỡng riêng của từng ngân hàng.
-Đây là phát hiện thật, ngược với giả thuyết "centralized > local" ở Slide 7, và FL nhiều khả năng gặp cùng vấn đề.
+### Q7. Giới hạn của DP record-level cần nêu trong bài báo
 
-Hướng xử lý (chọn trước khi làm E1–E3):
-- Thêm đặc trưng tương đối, ví dụ `TX_AMOUNT / CUSTOMER_ID_AVG_AMOUNT_30DAY_WINDOW`, để giá trị không phụ thuộc quy mô ngân hàng.
-- Chuẩn hóa đặc trưng riêng trong từng client (local scaler) trước khi train FL.
-- Cân nhắc FL cá nhân hóa (FedPer / fine-tune cục bộ) như một thí nghiệm bổ sung.
-- Báo cáo trung thực trong bài báo nếu hiện tượng vẫn còn: đây là lập luận cho việc cần xử lý non-IID.
+- GNN không dùng được DP-SGD thông thường (gradient một nút phụ thuộc láng giềng) → kết quả DP dùng MLP
+  dạng bảng. DP cho GNN (node-level DP, ví dụ GAP — Sajadmanesh et al., USENIX Security 2023) là hướng mở rộng.
+- Đặc trưng cửa sổ (chi tiêu TB của khách, rủi ro terminal) được tính từ nhiều giao dịch → một giao dịch ảnh
+  hưởng tới đặc trưng của giao dịch khác. Đảm bảo ε chỉ đúng khi coi mỗi hàng đặc trưng là một bản ghi;
+  bảo đảm chặt hơn cần tính đặc trưng có DP — nêu là hạn chế.
+- Không có SecAgg: server thấy cập nhật đã thêm nhiễu của từng client (đúng phạm vi phiên bản 1.0.0).
 
-### Q3. 2–3 tuần đầu của dữ liệu là giai đoạn "khởi động"
+### Q4. Hiệu năng kỳ vọng ở Slide 7 cần sửa theo số thật
 
-Tỷ lệ gian lận tăng dần trong ~20 ngày đầu (biểu đồ `results/eda/non_iid_overview.png`), vì các kịch bản gian lận
-cộng dồn theo thời gian, và đặc trưng cửa sổ 30 ngày chưa đủ dữ liệu. Có thể bỏ 30 ngày đầu khỏi train/test.
+Đã có kết quả E1–E5 (`docs/results.md`). Slide 7 cần thay bảng "kết quả kỳ vọng" bằng số thật, và Slide 4 cần
+đổi cơ chế DP sang mức bản ghi (client-level sụp ở mọi ε ≤ 2). Local-only mạnh hơn kỳ vọng (96% centralized)
+→ cân nhắc thêm kịch bản ngân hàng nhỏ để thể hiện lợi ích FL.
+
+### Q5. IBM AML: dùng LI-Small hay HI-Small?
+
+Máy dev có sẵn **LI-Small** (bản đã định dạng, `Test/TH1/data-raw`): 6,92 triệu giao dịch, 706k tài khoản,
+17 ngày, tỷ lệ rửa tiền **0,05%** (3.565 ca). Slide 5 ghi "~5 triệu giao dịch, ~300k tài khoản" — gần với
+**HI-Small** (5,08 triệu giao dịch, tỷ lệ ~0,1%). Cần chốt dùng bộ nào và sửa slide cho khớp.
+
+Bản đã định dạng **mất mã ngân hàng** (bị gộp vào mã tài khoản) → chỉ dùng được cho E7 (centralized).
+Muốn làm E8 (FL theo ngân hàng) phải tải bản gốc `*_Trans.csv` từ Kaggle (có cột From Bank / To Bank) và
+đọc bằng `ibm_aml.load_raw`.
+
+### Q6. VDR trên IBM AML cần quy đổi tiền tệ
+
+Giao dịch IBM AML ở 15 loại tiền tệ. Tính VDR phải quy đổi về một đồng tiền (ví dụ USD theo tỷ giá cố định)
+— cần chốt bảng tỷ giá. Elliptic không có giá trị tiền → không tính VDR trên Elliptic, chỉ báo PR-AUC, Recall@p.
