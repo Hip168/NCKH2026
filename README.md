@@ -23,9 +23,10 @@ Python 3.11. Đã kiểm tra trên Windows 11 với các phiên bản ghi trong 
 | 6. E4/E5 DP mức bản ghi (MLP + DP-SGD), quét ε | `python scripts/30_dp_fl.py --mode record` | `results/dp_record/` (~1,5 giờ) |
 | 7. DP mức client đúng Slide 4 (GNN), quét ε | `python scripts/30_dp_fl.py --mode client` | `results/dp_client/` (~25 phút, fold 0) |
 | 8. Biểu đồ cho bài báo | `python scripts/40_figures.py` | `results/figures/` |
-
-**Kết quả mới nhất: [docs/results.md](docs/results.md).**
 | Kiểm thử | `python -m pytest -q tests` | |
+
+**Người mới vào nhóm: đọc [docs/BAO_CAO_TONG_HOP.md](docs/BAO_CAO_TONG_HOP.md) trước** (tiến độ, kết quả, phân công).
+Bảng số đầy đủ: [docs/results.md](docs/results.md).
 
 Dữ liệu sinh ra là tất định (seed 42): ai chạy lại bước 1 cũng được đúng bộ dữ liệu đó.
 File chia fold được commit vào git để mọi người dùng chung đúng một cách chia.
