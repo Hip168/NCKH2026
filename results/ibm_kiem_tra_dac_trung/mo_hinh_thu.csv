@@ -1,0 +1,3 @@
+view,n_dac_trung,pr_auc_co_trong_so,pr_auc_khong_trong_so,roc_auc,recall@1%,vdr@1%,ty_le_ngau_nhien
+global,29,0.3466,0.8210,0.9811,0.5652,0.5447,0.0010
+bank,23,0.2846,0.7812,0.9780,0.4889,0.5176,0.0010

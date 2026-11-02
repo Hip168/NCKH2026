@@ -1,0 +1,9 @@
+{
+  "thoi_diem": "2026-11-02T22:32:45",
+  "script": "07_ibm_kiem_tra_dac_trung.py",
+  "lenh": "scripts/07_ibm_kiem_tra_dac_trung.py --max-day 9 --tag ngay0_9",
+  "commit": "e721c0c",
+  "co_thay_doi_chua_commit": true,
+  "thu_muc_luu_tru": "results/_luu_tru/2026-11-02_2232_ibm_kiem_tra_dac_trung_ngay0_9",
+  "ghi_chu": "Kiểm tra đặc trưng IBM HI-Small, mẫu tạm r=0.02, max_day=9, bỏ []"
+}

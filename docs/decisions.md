@@ -42,6 +42,13 @@ Trạng thái "đề xuất" = đã áp vào code để chạy thử, **chờ c�
 D8 xóa gần hết khoảng cách centralized–local (RF: 0,694 so với 0,690). Recall@1% giờ phân biệt rõ mô hình
 (0,37 → 0,54), không còn bão hòa như k = 100.
 
+### D18 (đề xuất, 2026-11-02): IBM HI-Small chỉ dùng ngày 0–9
+
+Từ ngày 10 đến 17 chỉ còn khoảng 1.100 giao dịch nhưng khoảng 60% là rửa tiền (trước đó 0,03–0,21%) — lỗi của bộ sinh
+dữ liệu. Giữ lại thì mọi đặc trưng gắn với thời gian bị rò rỉ và VDR bị thổi phồng (0,10 → 0,55). Đề xuất: lọc
+`TX_TIME_DAYS <= 9` TRƯỚC khi lấy mẫu (D17); đặc trưng vẫn tính trên toàn bộ dữ liệu (chỉ nhìn quá khứ nên không bị
+ảnh hưởng bởi đuôi). Cân nhắc bỏ `SND_AGE_DAYS` (chênh PR-AUC 0,01). Bằng chứng: `docs/nhat_ky_ket_qua.md` giai đoạn 6.
+
 ## Câu hỏi còn mở
 
 ### Q7. Giới hạn của DP record-level cần nêu trong bài báo

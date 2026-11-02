@@ -73,3 +73,31 @@ Kết quả chạy **trước ngày 02/11** chưa có kho lưu trữ; bản gố
 - **Lưu ở:** `results/_luu_tru/2026-11-02_2224_ibm_features_global`, `..._2225_ibm_features_bank` (bản dùng);
   `..._2221_...`, `..._2222_...` là bản đầu trước khi chuyển số đếm sang thang log.
 - **Chờ:** chốt r với anh Hùng rồi chạy `05_ibm_sample.py`.
+
+## Giai đoạn 6 — Đánh giá đặc trưng IBM HI-Small (02/11/2026)
+
+- **Làm:** `scripts/07_ibm_kiem_tra_dac_trung.py` — kiểm tra sạch dữ liệu, sức phân biệt đơn biến trên 5,08 triệu
+  giao dịch, mô hình thử HistGradientBoosting trên mẫu TẠM (r = 0,02, chia ngẫu nhiên 80/20; không phải mẫu D17).
+- **Sạch dữ liệu:** 0 giá trị thiếu, 0 vô cực.
+- **Phát hiện lỗi dữ liệu:** từ ngày 10 đến 17 chỉ còn khoảng 1.100 giao dịch nhưng khoảng 60% là rửa tiền (các ngày
+  trước: 0,03–0,21%). 715 ca rửa tiền (13,8%) nằm ở đuôi này. Đặc trưng gắn với thời gian (tuổi tài khoản, AP đơn biến
+  0,072 so với mức ngẫu nhiên 0,001) bị rò rỉ. → đề xuất D18: chỉ dùng ngày 0–9.
+- **Mô hình thử (PR-AUC trên test có trọng số 1/r, tức tỷ lệ thật khoảng 0,09–0,1%):**
+
+  | Dữ liệu | View | PR-AUC có trọng số | PR-AUC không trọng số | ROC-AUC | Recall@1% | VDR@1% |
+  |---|---|---|---|---|---|---|
+  | Cả 18 ngày | global | 0,347 | 0,821 | 0,981 | 0,565 | 0,545 |
+  | Cả 18 ngày | bank | 0,285 | 0,781 | 0,978 | 0,489 | 0,518 |
+  | Ngày 0–9 | global | 0,304 | 0,774 | 0,977 | 0,653 | 0,102 |
+  | Ngày 0–9 | bank | 0,224 | 0,729 | 0,974 | 0,566 | 0,043 |
+  | Ngày 0–9, bỏ tuổi TK | global | 0,293 | 0,770 | 0,977 | 0,645 | 0,077 |
+  | Ngày 0–9, bỏ tuổi TK | bank | 0,223 | 0,716 | 0,973 | 0,551 | 0,043 |
+
+- **Lưu ở:** `results/_luu_tru/2026-11-02_2231_ibm_kiem_tra_dac_trung`, `..._2232_..._ngay0_9`,
+  `..._2233_..._ngay0_9_bo_tuoi`.
+- **Rút ra:**
+  1. Đặc trưng có tín hiệu thật: PR-AUC khoảng 0,29 ở tỷ lệ thật 0,09% (gấp khoảng 300 lần ngẫu nhiên).
+  2. PR-AUC không trọng số cao giả khoảng 2,5 lần → bắt buộc đánh giá có trọng số (D17).
+  3. Đuôi dữ liệu thổi phồng VDR (0,10 → 0,55) vì ca rửa tiền ở đuôi có giá trị lớn.
+  4. Chế độ bank (cho FL) kém global khoảng 0,07 PR-AUC — đây là giá của việc không thấy thông tin tài khoản nhận.
+  5. VDR thấp (0,04–0,10) dù Recall khoảng 0,6: mô hình bắt được nhiều ca nhưng bỏ sót ca giá trị lớn.
