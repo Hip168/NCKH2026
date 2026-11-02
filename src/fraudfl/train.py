@@ -90,7 +90,8 @@ def train_full_batch(model: nn.Module, d: GraphData, lr: float, max_epochs: int,
 def fedavg(model: nn.Module, clients: list[GraphData], lr: float, rounds: int, local_epochs: int,
            log=None, privatize=None, local_train=None, server_privatize=None,
            uniform_weights: bool = False, batch_size: int | None = None,
-           pos_weight: float | None = None) -> tuple[nn.Module, list[dict]]:
+           pos_weight: float | None = None, clients_per_round: int | None = None,
+           sample_gen: torch.Generator | None = None) -> tuple[nn.Module, list[dict]]:
     """FedAvg (McMahan et al., 2017): trung bình trọng số theo số mẫu fit của từng client.
 
     Mỗi vòng: client nhận mô hình chung → train `local_epochs` epoch trên dữ liệu riêng (Adam mới mỗi vòng)
@@ -100,16 +101,22 @@ def fedavg(model: nn.Module, clients: list[GraphData], lr: float, rounds: int, l
     `server_privatize(avg_state, global_state) -> state`: nếu có, server áp lên mô hình SAU khi lấy trung bình
     (DP mức client kiểu McMahan et al. 2018: client chỉ cắt, server cộng nhiễu một lần).
     `uniform_weights`: lấy trung bình đều 1/K thay vì theo số mẫu (cần cho DP mức client để độ nhạy là C/K).
+    `clients_per_round`: mỗi vòng chọn ngẫu nhiên m client (không hoàn lại, dùng `sample_gen`); trung bình chỉ trên m
+    client đó (DP: độ nhạy C/m, khuếch đại nhờ lấy mẫu con với q = m/K).
     Trả về (mô hình tốt nhất, lịch sử từng vòng).
     """
     pos_weight = _pos_weight(clients) if pos_weight is None else torch.tensor(pos_weight)   # vô hướng
-    weights = np.array([1.0 if uniform_weights else c.n_fit for c in clients], dtype=np.float64)
-    weights /= weights.sum()
     best, best_state, history = -1.0, None, []
     for r in range(1, rounds + 1):
         global_state = copy.deepcopy(model.state_dict())
+        if clients_per_round and clients_per_round < len(clients):
+            chosen = [clients[i] for i in torch.randperm(len(clients), generator=sample_gen)[:clients_per_round].tolist()]
+        else:
+            chosen = clients
+        weights = np.array([1.0 if uniform_weights else c.n_fit for c in chosen], dtype=np.float64)
+        weights /= weights.sum()
         states = []
-        for c in clients:
+        for c in chosen:
             model.load_state_dict(global_state)
             if local_train:
                 local_train(model, c)

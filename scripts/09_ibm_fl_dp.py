@@ -60,6 +60,10 @@ def main():
     ap.add_argument("--pos-weight", type=float, default=None, help="trọng số lớp rửa tiền (mặc định = neg/pos)")
     ap.add_argument("--local-epochs", type=int, default=LOCAL_EPOCHS)
     ap.add_argument("--lr", type=float, default=LR)
+    ap.add_argument("--min-tx", type=int, default=None,
+                    help="D20: client = ngân hàng có >= min_tx giao dịch (ngày 0–9); ngân hàng nhỏ hơn BỎ khỏi FL")
+    ap.add_argument("--max-clients", type=int, default=None, help="chỉ lấy K ngân hàng lớn nhất (quét K)")
+    ap.add_argument("--clients-per-round", type=int, default=None, help="m ngân hàng chọn ngẫu nhiên mỗi vòng")
     args = ap.parse_args()
     out = RESULTS / ("ibm_fl_dp" + (f"_{args.tag}" if args.tag else ""))
     out.mkdir(parents=True, exist_ok=True)
@@ -77,24 +81,41 @@ def main():
     y = f["LABEL"].to_numpy().astype(np.int64)
     amt, day = f["AMOUNT_USD"].to_numpy(), f["TX_TIME_DAYS"].to_numpy()
 
-    cases = f.groupby("FROM_BANK")["LABEL"].sum()
-    big = sorted(cases[cases >= args.min_cases].index, key=lambda b: -cases[b])
-    client_name = np.where(f["FROM_BANK"].isin(big), f["FROM_BANK"], SMALL_GROUP)
-    names = big + [SMALL_GROUP]
+    if args.min_tx is None:          # cách cũ (D19): NH >= min_cases ca + 1 client gộp
+        cases = f.groupby("FROM_BANK")["LABEL"].sum()
+        big = sorted(cases[cases >= args.min_cases].index, key=lambda b: -cases[b])
+        client_name = np.where(f["FROM_BANK"].isin(big), f["FROM_BANK"], SMALL_GROUP)
+        names = big + [SMALL_GROUP]
+        desc = f"{len(big)} ngân hàng >= {args.min_cases} ca + '{SMALL_GROUP}'"
+    else:                            # D20: mỗi client là một ngân hàng thật; ngân hàng nhỏ bị bỏ
+        size = f.groupby("FROM_BANK").size().sort_values(ascending=False, kind="stable")
+        names = list(size[size >= args.min_tx].index[: args.max_clients])
+        f = f[f["FROM_BANK"].isin(names)].reset_index(drop=True)
+        X, y = f[fc].to_numpy(np.float32), f["LABEL"].to_numpy().astype(np.int64)
+        amt, day = f["AMOUNT_USD"].to_numpy(), f["TX_TIME_DAYS"].to_numpy()
+        client_name = f["FROM_BANK"].to_numpy()
+        desc = f"ngân hàng >= {args.min_tx} giao dịch" + (f", {args.max_clients} lớn nhất" if args.max_clients else "")
     cid = pd.Series(range(len(names)), index=names)[client_name].to_numpy()
     K = len(names)
+    m_round = min(args.clients_per_round or K, K)
     log(f"{args.stem} ngày 0–{IBM_MAX_DAY}: {len(f):,} gd, {y.sum():,} ca; {len(fc)} đặc trưng (view bank); "
-        f"K = {K} client ({len(big)} ngân hàng >= {args.min_cases} ca + '{SMALL_GROUP}'); r = {args.rate}; "
+        f"K = {K} client ({desc}); {m_round} client/vòng; r = {args.rate}; "
         f"{args.rounds} vòng × {args.local_epochs} epoch; lr {args.lr}; batch {args.batch_size}; pos_weight {args.pos_weight}; "
         f"ε {args.eps}; seed {args.seed}")
-    log("Ca rửa tiền theo client: " + ", ".join(f"{n}:{int((y[cid == i]).sum())}" for i, n in enumerate(names)))
+    cc = np.bincount(cid, weights=y, minlength=K)
+    log(f"Ca rửa tiền: {int(y.sum()):,} trên {K} client; client không có ca nào: {(cc == 0).sum()}; "
+        f"nhiều nhất {int(cc.max())}; trung vị {np.median(cc):.0f}")
 
     rows, per_client_rows, history = [], [], []
     skf = StratifiedKFold(5, shuffle=True, random_state=args.seed)
-    for k, (tr_all, te) in enumerate(skf.split(X, cid * 2 + y)):
+    # Phân tầng theo (client × nhãn) chỉ với client có >= 10 ca; client ít ca hơn phân tầng chung theo nhãn
+    # (StratifiedKFold / train_test_split cần đủ thành viên mỗi lớp)
+    cc_all = np.bincount(cid, weights=y, minlength=K)
+    strat = np.where(cc_all[cid] >= 10, cid * 2 + y, -(y + 1))
+    for k, (tr_all, te) in enumerate(skf.split(X, strat)):
         if k not in args.folds:
             continue
-        fit_all, val = train_test_split(tr_all, test_size=0.2, stratify=cid[tr_all] * 2 + y[tr_all],
+        fit_all, val = train_test_split(tr_all, test_size=0.2, stratify=strat[tr_all],
                                         random_state=args.seed + k)
         s = subsample_negatives(fit_all, y[fit_all], cid[fit_all], args.rate, args.seed + k)
         fit = s["TX_ID"].to_numpy()
@@ -132,7 +153,7 @@ def main():
             rows.append(row)
             log(f"  {setting:14s} PR-AUC {row['pr_auc']:.4f} | TB theo client {row['macro_pr_auc']:.4f} | "
                 f"Recall@1% {row['recall@1%']:.4f} | VDR@1% {row['vdr@1%']:.4f}"
-                + (f" | z={extra['z']:.2f}" if extra and "z" in extra else ""))
+                + (f" | z={extra['z']:.2f}, nhiễu/tham số={extra['noise_std']:.4f}" if extra and "z" in extra else ""))
             pd.DataFrame(rows).to_csv(out / "per_fold.csv", index=False, float_format="%.5f")
             pd.DataFrame(per_client_rows).to_csv(out / "per_client.csv", index=False, float_format="%.5f")
 
@@ -166,7 +187,8 @@ def main():
             t0 = time.time()
             torch.manual_seed(args.seed)
             m, hist = fedavg(TabMLP(len(fc)), clients, args.lr, args.rounds, args.local_epochs,
-                             batch_size=args.batch_size, pos_weight=args.pos_weight)
+                             batch_size=args.batch_size, pos_weight=args.pos_weight, clients_per_round=m_round,
+                             sample_gen=torch.Generator().manual_seed(args.seed + 1000 + k))
             history += [{"fold": k, "setting": "fedavg", **h} for h in hist]
             report("fedavg", full_score(m, clients), {"seconds": round(time.time() - t0)})
 
@@ -174,16 +196,20 @@ def main():
             for eps in args.eps:
                 t0 = time.time()
                 gen = torch.Generator().manual_seed(args.seed + k)
-                z = noise_multiplier(eps, sample_rate=1.0, steps=args.rounds)
+                # m client/vòng chọn ngẫu nhiên trong K → lấy mẫu con q = m/K; trung bình đều trên m → std = zC/m
+                q = m_round / K
+                z = noise_multiplier(eps, sample_rate=q, steps=args.rounds)
+                std = z * CLIP / m_round
                 torch.manual_seed(args.seed)
                 m, hist = fedavg(TabMLP(len(fc)), clients, args.lr, args.rounds, args.local_epochs,
                                  batch_size=args.batch_size, pos_weight=args.pos_weight,
                                  privatize=lambda loc, glo: privatize_update(loc, glo, CLIP, 0.0, gen),
-                                 server_privatize=lambda avg, glo: add_server_noise(avg, glo, z * CLIP / K, gen),
-                                 uniform_weights=True)
+                                 server_privatize=lambda avg, glo: add_server_noise(avg, glo, std, gen),
+                                 uniform_weights=True, clients_per_round=m_round,
+                                 sample_gen=torch.Generator().manual_seed(args.seed + 1000 + k))
                 history += [{"fold": k, "setting": f"dp_eps{eps:g}", **h} for h in hist]
                 report(f"dp ε={eps:g}", full_score(m, clients),
-                       {"epsilon": eps, "z": z, "noise_std": z * CLIP / K, "seconds": round(time.time() - t0)})
+                       {"epsilon": eps, "z": z, "q": q, "noise_std": std, "seconds": round(time.time() - t0)})
         pd.DataFrame(history).to_csv(out / "history.csv", index=False, float_format="%.5f")
 
     df = pd.DataFrame(rows)
