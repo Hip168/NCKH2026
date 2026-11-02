@@ -1,0 +1,218 @@
+# =====================================================================================
+# docker-compose.yml: danh sách các "máy" (container) của hệ thống và cách chúng nối nhau.
+# Hướng dẫn: docs/huong_dan_docker.md. Mặc định mô phỏng 3 ngân hàng.
+#
+# Hệ thống có 2 nửa:
+#   Nửa 1, DẠY MÁY : superlink + bank-0, bank-1, bank-2 + huan-luyen
+#   Nửa 2, DÙNG MÁY: kafka + redis + postgres + cham-diem-0, 1, 2 + phat-giao-dich
+#
+# Cách đọc nhanh:
+#   image       : container được tạo từ bản cài nào
+#   command     : container chạy lệnh gì khi bật
+#   ports       : "cổng trên laptop:cổng trong container", để laptop gọi được vào container
+#   volumes     : "thư mục trên laptop:thư mục trong container", thêm :ro là chỉ đọc
+#   healthcheck : lệnh Docker chạy định kỳ để biết dịch vụ đã sẵn sàng chưa
+#   depends_on  : chỉ bật container này sau khi container kia sẵn sàng
+#   profiles    : chỉ bật khi được gọi tên, lệnh "docker compose up" thường sẽ bỏ qua
+#
+# Trong cùng compose, các container gọi nhau bằng TÊN DỊCH VỤ, ví dụ kafka:9092, superlink:9091.
+# =====================================================================================
+
+name: nckh                                    # tên dự án, nên container có dạng nckh-bank-0-1
+
+# Khối dùng chung. Tiền tố x- nghĩa là Docker bỏ qua, không coi nó là dịch vụ.
+# &app đặt tên cho khối này. Chỗ nào ghi "<<: *app" là chép nguyên khối vào chỗ đó.
+x-app: &app
+  image: nckh-fraudfl:latest                  # image Python của dự án, tất cả dịch vụ Python dùng chung
+  build: {context: .., dockerfile: infra/Dockerfile}   # cách build: lấy thư mục dat-ai làm gốc, công thức ở infra/Dockerfile
+
+services:                                     # từ đây trở xuống, mỗi mục là một loại container
+
+  # ===================================================================================
+  # NỬA 2: BA DỊCH VỤ NỀN CHO REAL-TIME
+  # ===================================================================================
+
+  # ----- Kafka: băng chuyền chở giao dịch, người chấm điểm nghỉ thì giao dịch vẫn nằm chờ -----
+  kafka:
+    image: apache/kafka:3.7.0                 # image Kafka chính thức, không cần tự build
+    environment:                              # cấu hình Kafka, truyền vào bằng biến môi trường
+      KAFKA_NODE_ID: 1                        # mã số của máy Kafka này, ở đây chỉ có 1 máy
+      KAFKA_PROCESS_ROLES: broker,controller  # kiêm 2 việc: giữ dữ liệu (broker) và quản lý cụm (controller)
+      # 3 cổng lắng nghe:
+      #   9092  cho các container khác gọi vào
+      #   9093  cho việc quản lý cụm
+      #   29092 cho chương trình chạy trên laptop gọi vào
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,HOST://:29092
+      # Địa chỉ Kafka báo lại cho người kết nối:
+      # trong Docker thì gọi kafka:9092, trên laptop thì gọi localhost:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,HOST://localhost:29092
+      # Cả 3 cổng đều không mã hóa. Chấp nhận được khi mô phỏng, ngân hàng thật thì không.
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,HOST:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER        # cổng tên CONTROLLER dùng cho việc quản lý cụm
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093       # danh sách máy được bỏ phiếu: chỉ có máy số 1
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT        # các broker nói chuyện với nhau qua cổng PLAINTEXT
+      # 3 dòng dưới là số bản sao của dữ liệu nội bộ Kafka. Chỉ có 1 máy nên chỉ 1 bản.
+      # Hệ quả: máy Kafka này hỏng thì hệ thống dừng. Bản 3 máy chưa làm.
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1          # bản sao của sổ "ai đã đọc tới đâu" (offset)
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1  # bản sao của nhật ký transaction
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1             # cần tối thiểu 1 bản sao còn sống để ghi nhật ký đó
+      KAFKA_NUM_PARTITIONS: 5                 # mỗi ngân hàng một partition; để 5 vì dữ liệu có 5 ngân hàng, mặc định chạy 3
+      KAFKA_HEAP_OPTS: "-Xms256m -Xmx512m"    # giới hạn RAM cho Kafka (Java): khởi đầu 256 MB, tối đa 512 MB
+    ports: ["29092:29092"]                    # mở cổng 29092 ra laptop
+    healthcheck:                              # kiểm tra Kafka đã sẵn sàng chưa
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1"]   # hỏi thử Kafka, trả lời được là sống
+      interval: 5s                            # 5 giây kiểm tra một lần
+      timeout: 10s                            # quá 10 giây không trả lời thì tính là thất bại
+      retries: 30                             # thất bại 30 lần liên tiếp mới báo hỏng
+
+  # ----- Redis: sổ nháp siêu nhanh, nhớ hành vi gần đây của khách hàng và terminal -----
+  redis:
+    image: redis:7.2-alpine                   # image Redis chính thức, bản alpine rất nhẹ
+    ports: ["6379:6379"]                      # mở cổng 6379 ra laptop
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]      # gửi lệnh ping, trả lời PONG là sống
+      interval: 5s                            # 5 giây kiểm tra một lần
+      retries: 20                             # thất bại 20 lần liên tiếp mới báo hỏng
+
+  # ----- Postgres: sổ cái chính thức, lưu giao dịch đã chấm và cảnh báo -----
+  postgres:
+    image: postgres:16-alpine                 # image Postgres chính thức
+    environment:                              # tạo sẵn tài khoản và database khi chạy lần đầu
+      POSTGRES_USER: nckh                     # tên đăng nhập
+      POSTGRES_PASSWORD: nckh                 # mật khẩu, chỉ dùng trên máy mô phỏng
+      POSTGRES_DB: nckh                       # tên database
+    ports: ["55432:5432"]                     # laptop gọi cổng 55432; không dùng 5432 vì cổng đó thuộc Postgres của dự án khác
+    volumes:
+      # File này tạo 2 bảng giao_dich và canh_bao khi database được tạo lần đầu.
+      # CHÚ Ý: chưa có volume cho dữ liệu. Xóa container (chay.sh tự làm việc này) là mất sổ cái.
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nckh -d nckh"]   # hỏi Postgres đã nhận kết nối chưa
+      interval: 5s                            # 5 giây kiểm tra một lần
+      retries: 20                             # thất bại 20 lần liên tiếp mới báo hỏng
+
+  # ===================================================================================
+  # NỬA 1: DẠY MÁY BẰNG HỌC LIÊN KẾT
+  # ===================================================================================
+
+  # ----- Trung tâm điều phối: phát mô hình, nhận bộ số từ các ngân hàng rồi gộp lại -----
+  superlink:
+    <<: *app                                  # chép khối dùng chung: image nckh-fraudfl
+    # flower-superlink: chương trình điều phối của Flower
+    # --insecure: không mã hóa TLS, chỉ dùng khi mô phỏng
+    # --host 0.0.0.0 --port 9091: nhận kết nối từ mọi container qua cổng 9091
+    # --database /tmp/state.db: lưu trạng thái các lần chạy, xóa container là mất
+    command: flower-superlink --insecure --host 0.0.0.0 --port 9091 --database /tmp/state.db
+    volumes: ["../artifacts:/app/artifacts"]  # mô hình và kết quả ghi ra thư mục artifacts trên laptop. Không gắn dữ liệu ngân hàng nào.
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import socket; socket.create_connection(('localhost', 9091), 2)\""]   # thử mở kết nối tới cổng 9091
+      interval: 5s                            # 5 giây kiểm tra một lần
+      retries: 30                             # thất bại 30 lần liên tiếp mới báo hỏng
+
+  # ----- Ba ngân hàng: mỗi container CHỈ thấy thư mục dữ liệu của chính nó -----
+  bank-0:
+    <<: *app                                  # cùng image với superlink, chỉ khác lệnh chạy
+    # flower-supernode: chương trình phía ngân hàng của Flower
+    # --superlink superlink:9091: kết nối tới trung tâm điều phối
+    # --node-config 'partition="bank_0"': nhận mình là bank_0, code dùng tên này để tìm dữ liệu
+    command: flower-supernode --insecure --superlink superlink:9091 --node-config 'partition="bank_0"'
+    volumes: ["../data/banks/bank_0:/app/data/banks/bank_0:ro"]   # chỉ gắn dữ liệu bank_0, chỉ đọc. Đây là thứ tách dữ liệu giữa các ngân hàng.
+    depends_on: {superlink: {condition: service_healthy}}         # superlink sẵn sàng thì mới bật
+  bank-1:
+    <<: *app                                  # giống bank-0, chỉ khác tên ngân hàng và thư mục
+    command: flower-supernode --insecure --superlink superlink:9091 --node-config 'partition="bank_1"'
+    volumes: ["../data/banks/bank_1:/app/data/banks/bank_1:ro"]   # chỉ thấy dữ liệu bank_1
+    depends_on: {superlink: {condition: service_healthy}}
+  bank-2:
+    <<: *app                                  # giống bank-0, chỉ khác tên ngân hàng và thư mục
+    command: flower-supernode --insecure --superlink superlink:9091 --node-config 'partition="bank_2"'
+    volumes: ["../data/banks/bank_2:/app/data/banks/bank_2:ro"]   # chỉ thấy dữ liệu bank_2
+    depends_on: {superlink: {condition: service_healthy}}
+
+  # ===================================================================================
+  # VIỆC CHẠY MỘT LẦN RỒI TẮT
+  # Gọi bằng: docker compose run --rm <tên>
+  # profiles: [viec] khiến "docker compose up" bỏ qua chúng
+  # ===================================================================================
+
+  # ----- Sinh dữ liệu giả lập rồi chia cho từng ngân hàng -----
+  chuan-bi:
+    <<: *app
+    profiles: [viec]
+    # Bước 1: sinh giao dịch giả lập. Bước 2: tách thành từng thư mục, chia sẵn cho cả 5 ngân hàng và bản gộp.
+    command: sh -c "python scripts/01_generate_synthetic.py && python scripts/50_chia_du_lieu_ngan_hang.py --folds 0"
+    volumes: ["../data/processed:/app/data/processed", "../data/banks:/app/data/banks"]   # ghi kết quả ra laptop, không có :ro vì phải ghi
+
+  # ----- Người ra lệnh: gửi lệnh "bắt đầu dạy" tới superlink, xong thì tắt -----
+  huan-luyen:
+    <<: *app
+    profiles: [viec]
+    # flwr run: đóng gói thư mục fl_app, gửi tới kết nối tên "docker" khai báo trong flwr_config.toml
+    # --stream: hiện log trực tiếp, chờ tới khi chạy xong
+    # --run-config: thông số của lần chạy. Muốn thêm thì ghi tiếp, ví dụ epsilon=1.0 num-rounds=10
+    command: flwr run fl_app docker --stream --run-config 'data-root="/app/data/banks" out-dir="/app/artifacts" run-name="tach_khong_dp"'
+    environment: {FLWR_HOME: /app/infra}      # bảo Flower tìm file config.toml ở thư mục này
+    volumes: ["./flwr_config.toml:/app/infra/config.toml"]        # đưa cấu hình kết nối vào container
+    depends_on: {superlink: {condition: service_healthy}}         # superlink sẵn sàng thì mới gửi lệnh
+
+  # ----- Tạo topic giao_dich trên Kafka, tức dựng băng chuyền -----
+  tao-topic:
+    image: apache/kafka:3.7.0                 # dùng image Kafka vì cần công cụ kafka-topics.sh
+    profiles: [viec]
+    # --if-not-exists: có rồi thì thôi, không báo lỗi
+    # --partitions 5: 5 làn, mỗi ngân hàng một làn
+    # --replication-factor 1: mỗi làn 1 bản, vì chỉ có 1 máy Kafka
+    command: /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic giao_dich --partitions 5 --replication-factor 1
+    depends_on: {kafka: {condition: service_healthy}}             # Kafka sẵn sàng thì mới tạo topic
+
+  # ----- Nạp lịch sử trước ngày 60 vào Redis, để giao dịch đầu tiên đã có sẵn lịch sử -----
+  nap-lich-su:
+    <<: *app
+    profiles: [viec]
+    command: python -m fraudfl.stream.backfill --redis redis://redis:6379/0 --tu-ngay 60   # nạp các giao dịch trước ngày 60
+    volumes: ["../data/processed:/app/data/processed:ro"]         # đọc dữ liệu đã sinh, chỉ đọc
+    depends_on: {redis: {condition: service_healthy}}             # Redis sẵn sàng thì mới nạp
+
+  # ----- Giả làm giao dịch mới đổ về: phát dữ liệu ngày 60 lên Kafka, 50 giao dịch mỗi giây -----
+  phat-giao-dich:
+    <<: *app
+    profiles: [viec]
+    command: python -m fraudfl.stream.producer --kafka kafka:9092 --tu-ngay 60 --den-ngay 61 --toc-do 50
+    volumes: ["../data/processed:/app/data/processed:ro"]         # đọc dữ liệu đã sinh, chỉ đọc
+    depends_on: {kafka: {condition: service_healthy}}             # Kafka sẵn sàng thì mới phát
+
+  # ===================================================================================
+  # NỬA 2: CHẤM ĐIỂM REAL-TIME, MỖI NGÂN HÀNG MỘT CONSUMER
+  # Bật bằng: docker compose --profile cham-diem up -d
+  # ===================================================================================
+
+  # ----- Người chấm của ngân hàng 0: lấy giao dịch từ Kafka, tra Redis, chấm điểm, ghi Postgres -----
+  cham-diem-0:
+    <<: *app
+    profiles: [cham-diem]
+    # --bank 0: chỉ đọc làn của ngân hàng 0
+    # --kafka, --redis, --postgres: địa chỉ của 3 dịch vụ nền
+    # --mo-hinh: mô hình đã dạy ở nửa 1
+    # --dung-sau-rong 0: chạy mãi, không tự dừng khi hết tin
+    command: python -m fraudfl.stream.consumer --bank 0 --kafka kafka:9092 --redis redis://redis:6379/0 --postgres postgresql://nckh:nckh@postgres:5432/nckh --mo-hinh artifacts/tach_khong_dp/model.pt --dung-sau-rong 0
+    volumes: ["../artifacts:/app/artifacts:ro", "../data/banks/bank_0:/app/data/banks/bank_0:ro"]   # đọc mô hình, và chỉ thấy dữ liệu ngân hàng 0
+    depends_on: &stream_deps                  # đặt tên stream_deps để 2 người chấm còn lại dùng lại
+      kafka: {condition: service_healthy}     # chờ Kafka sẵn sàng
+      redis: {condition: service_healthy}     # chờ Redis sẵn sàng
+      postgres: {condition: service_healthy}  # chờ Postgres sẵn sàng
+
+  # ----- Người chấm của ngân hàng 1: giống cham-diem-0, đổi số ngân hàng -----
+  cham-diem-1:
+    <<: *app
+    profiles: [cham-diem]
+    command: python -m fraudfl.stream.consumer --bank 1 --kafka kafka:9092 --redis redis://redis:6379/0 --postgres postgresql://nckh:nckh@postgres:5432/nckh --mo-hinh artifacts/tach_khong_dp/model.pt --dung-sau-rong 0
+    volumes: ["../artifacts:/app/artifacts:ro", "../data/banks/bank_1:/app/data/banks/bank_1:ro"]   # chỉ thấy dữ liệu ngân hàng 1
+    depends_on: *stream_deps                  # dùng lại danh sách chờ của cham-diem-0
+
+  # ----- Người chấm của ngân hàng 2: giống cham-diem-0, đổi số ngân hàng -----
+  cham-diem-2:
+    <<: *app
+    profiles: [cham-diem]
+    command: python -m fraudfl.stream.consumer --bank 2 --kafka kafka:9092 --redis redis://redis:6379/0 --postgres postgresql://nckh:nckh@postgres:5432/nckh --mo-hinh artifacts/tach_khong_dp/model.pt --dung-sau-rong 0
+    volumes: ["../artifacts:/app/artifacts:ro", "../data/banks/bank_2:/app/data/banks/bank_2:ro"]   # chỉ thấy dữ liệu ngân hàng 2
+    depends_on: *stream_deps                  # dùng lại danh sách chờ của cham-diem-0

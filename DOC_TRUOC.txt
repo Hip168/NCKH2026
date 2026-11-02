@@ -1,0 +1,19 @@
+HE THONG NCKH: HOC LIEN KET + REAL-TIME
+
+Can co: Docker Desktop (https://www.docker.com/products/docker-desktop/)
+Khong can cai Python.
+May can trong 10 GB o cung, RAM tu 8 GB.
+Windows: mo PowerShell bang quyen Administrator, chay "wsl --install", khoi dong lai may.
+
+CACH CHAY
+1. Mo Docker Desktop, doi no chay han.
+2. Giai nen file zip nay (Windows: dat o thu muc co duong dan ngan, vd C:\nckh).
+3. Windows: bam dup vao chay.bat
+   Mac/Linux: mo Terminal trong thu muc nay, go: sh chay.sh
+4. Doi 20-30 phut lan dau. Thay "THANH CONG" la xong.
+   Ket qua tham khao: 2555 giao dich, khoang 30 canh bao.
+5. Xong thi tat: bam dup tat.bat (Mac/Linux: sh tat.sh)
+
+CO LOI
+Chup man hinh gui cho Dao. Cac loi hay gap nam o docs/huong_dan_docker.md muc 6.
+Doc them cach he thong hoat dong: docs/huong_dan_docker.md

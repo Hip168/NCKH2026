@@ -1,0 +1,46 @@
+# =====================================================================================
+# FILE NÀY LÀ GÌ: khai báo ứng dụng học liên kết và các thông số mặc định.
+# Muốn đổi thông số cho một lần chạy thì không cần sửa file này, chỉ cần thêm vào lệnh chạy:
+#   flwr run fl_app docker --stream --run-config 'epsilon=1.0 num-rounds=10'
+# =====================================================================================
+
+# Cách đóng gói ứng dụng thành thư viện Python
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# Thông tin ứng dụng
+[project]
+name = "fraudfl-fl"
+version = "0.1.0"
+description = "FL + DP phát hiện gian lận: chạy qua mạng thật bằng Flower"
+dependencies = ["flwr>=1.42.0"]
+
+# Đóng gói toàn bộ thư mục hiện tại
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+
+# Thông tin cho Flower
+[tool.flwr.app]
+publisher = "nckh2026"
+fab-format-version = 0
+flwr-version-target = "1.42.0"
+
+# Flower tìm code ở đâu
+[tool.flwr.app.components]
+serverapp = "fraudfl_fl.server_app:app"   # phía điều phối: biến app trong server_app.py
+clientapp = "fraudfl_fl.client_app:app"   # phía ngân hàng: biến app trong client_app.py
+
+# Thông số mặc định của một lần chạy
+[tool.flwr.app.config]
+num-rounds = 30               # số vòng học liên kết
+fold = 0                      # dùng phần chia dữ liệu số mấy, tức file fold0.npz
+epsilon = 0.0                 # 0 = không DP; số càng nhỏ thì càng riêng tư và nhiễu càng nhiều
+min-nodes = 3                 # cần đủ 3 ngân hàng mới chạy
+lr = 0.5                      # tốc độ học
+batch = 1024                  # số giao dịch trung bình mỗi bước
+pos-weight = 10.0             # trọng số phạt khi bỏ sót gian lận
+clip = 1.0                    # ngưỡng cắt gradient, chỉ có tác dụng khi bật DP
+run-name = "tach_khong_dp"    # tên thư mục kết quả
+out-dir = "artifacts"         # nơi lưu kết quả
+data-root = "data/banks"      # nơi chứa dữ liệu các ngân hàng
