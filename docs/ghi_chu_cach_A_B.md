@@ -44,7 +44,8 @@ Cùng điều kiện với lần thử nhanh: synthetic, fold 0, 10 vòng, 5 ng�
 ```bash
 cd project
 
-# Cách A — đã có kết quả (lưu ở results/_luu_tru/2026-11-02_2225_dp_client_nhanh_*); chạy lại nếu muốn kiểm chứng:
+# Cách A — đã có kết quả (lưu ở results/_luu_tru/2026-11-02_2225_dp_client_nhanh_*). Code của cách A KHÔNG đổi từ
+# lúc đó và seed cố định → chạy lại lệnh cũ ra ĐÚNG số cũ (chỉ để kiểm tra tái lập, không có thông tin mới):
 python scripts/30_dp_fl.py --mode client --folds 0 --rounds 10 --noise server --small --eps inf 8 4 1 --tag A_server_nho    # ~3 phút
 python scripts/30_dp_fl.py --mode client --folds 0 --rounds 10 --noise server --eps inf 8 4 1 --tag A_server_goc            # ~10 phút
 
@@ -53,7 +54,13 @@ python scripts/30_dp_fl.py --mode client --folds 0 --rounds 10 --noise server --
 python scripts/30_dp_fl.py --mode client --folds 0 --rounds 10 --noise client --model mlp --eps inf 8 4 1 --tag B_client_mlp
 # Thêm: nhiều vòng hơn cho cách B (MLP nhanh nên chạy được)
 python scripts/30_dp_fl.py --mode client --folds 0 --rounds 50 --noise server --model mlp --eps inf 8 4 1 --tag B_server_mlp_50v
+
+# Nếu cách B cũng sụp — cách A với ε lớn (CHƯA chạy) để biết từ ε nào mô hình bắt đầu học được:
+python scripts/30_dp_fl.py --mode client --folds 0 --rounds 10 --noise server --small --eps 32 16 --tag A_server_nho_eps_lon
 ```
+
+Các hướng khác cho cách A chưa thử (cần sửa code): ngưỡng cắt C lớn hơn (5, 10); learning rate hoặc momentum ở server
+(McMahan et al. 2018); nhiều seed để xem 0,069 ở ε = 8 có ổn định không.
 
 Xem kết quả: dòng `ε=...` trong `results/dp_client_<tag>/log.txt`.
 
