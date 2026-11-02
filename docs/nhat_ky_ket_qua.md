@@ -308,3 +308,29 @@ Kết quả chạy **trước ngày 02/11** chưa có kho lưu trữ; bản gố
      nhiễu át tín hiệu.
   3. Hướng chưa thử: dùng mọi ngân hàng đủ giao dịch làm client (802 ngân hàng có ≥ 1.000 giao dịch, kể cả không có ca
      rửa tiền) → K vài trăm, kèm chọn ngẫu nhiên một phần ngân hàng mỗi vòng. Hoặc chuyển sang DP mức bản ghi.
+
+## Giai đoạn 16 — DP mức client trên IBM với 802 ngân hàng (03/11/2026, D20)
+
+- **Làm:** `09_ibm_fl_dp.py --min-tx 1000 --clients-per-round 200 --rate 0.1 --rounds 30 --batch-size 512 --lr 1e-3
+  --local-epochs 1 --pos-weight 1`, fold 0. K = 802 (94 ngân hàng không có ca rửa tiền; trung vị 2 ca/ngân hàng);
+  4,56 triệu giao dịch, 4.021 ca. Lưu ở `results/_luu_tru/2026-11-03_0059_ibm_fl_dp_K802`.
+- **Kết quả** (PR-AUC tổng; ngẫu nhiên ≈ 0,0009):
+
+  | Cách | PR-AUC | TB theo client | Recall@1% | z | Nhiễu/tham số |
+  |---|---|---|---|---|---|
+  | Gộp chung | 0,111 | 0,376 | 0,531 | | |
+  | FedAvg | 0,0067 | 0,084 | 0,126 | | |
+  | DP ε = 8 | 0,0012 | 0,020 | 0,011 | 1,21 | 0,0060 |
+  | DP ε = 4 | 0,0017 | 0,036 | 0,037 | 1,92 | 0,0096 |
+  | DP ε = 2 | 0,0036 | 0,065 | 0,103 | 3,26 | 0,0163 |
+  | DP ε = 1 | 0,0075 | 0,118 | 0,173 | 5,86 | 0,0293 |
+
+- **Rút ra:**
+  1. Nhiễu đã nhỏ như dự tính (0,006–0,029/tham số, so với 0,125–0,79 khi K = 28).
+  2. Nhưng **FedAvg không DP học quá chậm**: val PR-AUC vòng 1/5/10/20/30 = 0,0008/0,0008/0,0009/0,0044/0,0071 — mới bắt
+     đầu học ở vòng 20. Với 802 ngân hàng, 25% tham gia mỗi vòng, 1 epoch cục bộ, lr 1e-3 → mô hình chung gần như chưa
+     học.
+  3. DP có vẻ "tốt hơn khi nhiều nhiễu hơn" (ε = 1 > FedAvg) — ngược lý thuyết, do hệ thống ở giai đoạn đầu học, số liệu
+     chủ yếu là dao động. **Chưa kết luận được về DP.**
+  4. → Phải làm FedAvg học nhanh hơn với nhiều client trước (nhiều epoch cục bộ, lr lớn hơn, nhiều vòng, hoặc
+     lr/momentum ở server).
