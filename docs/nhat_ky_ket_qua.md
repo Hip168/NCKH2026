@@ -96,8 +96,8 @@ Kết quả chạy **trước ngày 02/11** chưa có kho lưu trữ; bản gố
 - **Lưu ở:** `results/_luu_tru/2026-11-02_2231_ibm_kiem_tra_dac_trung`, `..._2232_..._ngay0_9`,
   `..._2233_..._ngay0_9_bo_tuoi`.
 - **Rút ra:**
-  1. Đặc trưng có tín hiệu thật. ~~PR-AUC khoảng 0,29~~ — **ĐÍNH CHÍNH ở giai đoạn 8:** con số này quá lạc quan do
-     tập test r = 0,02 quá nhỏ; ước lượng đúng hơn khoảng 0,10 (vẫn gấp khoảng 100 lần mức ngẫu nhiên 0,001).
+  1. Đặc trưng có tín hiệu thật. ~~PR-AUC khoảng 0,29~~ — **ĐÍNH CHÍNH ở giai đoạn 9:** con số đúng (5 fold, test
+     đầy đủ) là 0,209 ± 0,018.
   2. PR-AUC không trọng số cao giả khoảng 2,5 lần → bắt buộc đánh giá có trọng số (D17).
   3. Đuôi dữ liệu thổi phồng VDR (0,10 → 0,55) vì ca rửa tiền ở đuôi có giá trị lớn.
   4. Chế độ bank (cho FL) kém global khoảng 0,07 PR-AUC — đây là giá của việc không thấy thông tin tài khoản nhận.
@@ -137,7 +137,9 @@ Kết quả chạy **trước ngày 02/11** chưa có kho lưu trữ; bản gố
     mô hình học với r = 0,1 đạt **0,095**.
   - Các giao dịch bình thường bị chấm điểm cao nhất: không phải ACH, tài khoản gửi gần như chưa có lịch sử, số tiền lớn
     (1.700–44.000 USD) — "trông giống rửa tiền".
-- **Rút ra:**
+- **⚠ Kết luận dưới đây đã được ĐÍNH CHÍNH ở giai đoạn 9** (so sánh ở đây lẫn hai yếu tố: khác mô hình và khác tập
+  test; một lần chia ngẫu nhiên). Giữ nguyên để lưu vết.
+- **Rút ra (cũ):**
   1. **Để HUẤN LUYỆN, r = 0,02 là đủ**: mô hình tốt ngang r = 0,1.
   2. **Để ĐÁNH GIÁ, tập test lấy mẫu r = 0,02 KHÔNG tin được**: PR-AUC phụ thuộc vào vài ca bình thường "khó", với
      r nhỏ phần lớn các ca này không lọt vào test → con số lạc quan khoảng 3 lần (0,29 so với ~0,10). Trọng số 1/r
@@ -146,3 +148,33 @@ Kết quả chạy **trước ngày 02/11** chưa có kho lưu trữ; bản gố
      (hoặc r_test lớn, ≥ 0,2). Mô hình dạng bảng chấm 1 triệu dòng mất vài giây.
   4. VDR@1% dao động rất mạnh giữa các lần (0,03–0,98) vì VDR bị chi phối bởi một vài ca rửa tiền giá trị rất lớn →
      cần báo cáo VDR kèm khoảng dao động, và cũng cần tập test đầy đủ.
+
+## Giai đoạn 9 — Bằng chứng 5 fold cho cách lấy mẫu IBM (02/11/2026)
+
+- **Làm:** `scripts/08_ibm_danh_gia_lay_mau.py` — ngày 0–9, 5 fold phân tầng (seed 42). Mỗi fold: 20% phần train làm
+  validation ĐẦY ĐỦ (chọn ngưỡng F1); 80% còn lại lấy mẫu r_train ∈ {0,02; 0,05; 0,1; 0,2} → HistGradientBoosting;
+  chấm trên TEST ĐẦY ĐỦ và trên test lấy mẫu r_test ∈ {0,02; 0,1} có trọng số. Hai vòng: không trọng số lớp và trọng số
+  lớp cân bằng. Lưu ở `results/_luu_tru/2026-11-02_2308_ibm_danh_gia_lay_mau`,
+  `..._2310_ibm_danh_gia_lay_mau_cw_balanced`.
+- **PR-AUC trên test đầy đủ (trung bình ± độ lệch 5 fold):**
+
+  | r_train | Không trọng số lớp | Trọng số lớp cân bằng |
+  |---|---|---|
+  | 0,02 | **0,209 ± 0,018** | 0,165 ± 0,017 |
+  | 0,05 | 0,118 ± 0,017 | 0,168 ± 0,008 |
+  | 0,10 | 0,111 ± 0,010 | 0,173 ± 0,009 |
+  | 0,20 | 0,113 ± 0,028 | 0,161 ± 0,009 |
+
+  F1 lớp rửa tiền tốt nhất 0,284 (r = 0,02, không trọng số lớp); Recall@1% 0,63.
+- **Test lấy mẫu so với test đầy đủ (cùng mô hình):** trung bình chỉ lệch +0,005 đến +0,02 (hơi lạc quan), nhưng độ lệch
+  chuẩn giữa các fold lớn gấp 2–4 lần (vd r = 0,02, cân bằng: 0,045 so với 0,017).
+- **Rút ra (thay cho kết luận cũ ở giai đoạn 8):**
+  1. **Thêm dữ liệu bình thường không giúp:** khi đã kiểm soát mất cân bằng lớp (cột cân bằng), PR-AUC gần như
+     không đổi từ r = 0,02 đến 0,2 (0,161–0,173). Vòng không trọng số lớp tụt ở r lớn là do mất cân bằng (0,35% rửa tiền
+     ở r = 0,2), không phải do dữ liệu.
+  2. **r = 0,02 không trọng số lớp là cấu hình tốt nhất** (0,209): tỷ lệ ~4% rửa tiền trong mẫu tốt hơn cả cân bằng hoàn
+     toàn. → Chọn r = 0,02 có căn cứ: đủ dữ liệu, nhẹ máy, tỷ lệ lớp tốt.
+  3. **Test lấy mẫu KHÔNG lạc quan gấp 3 lần** như giai đoạn 8 nói — sai số chủ yếu là dao động. Vẫn nên giữ test đầy
+     đủ để con số ổn định (và validation đầy đủ để chọn ngưỡng).
+  4. **VDR@1% trên IBM dao động quá mạnh** (độ lệch chuẩn 0,27–0,40) → chỉ báo cáo làm chỉ số phụ kèm khoảng dao động.
+  5. Mốc tham chiếu cho E7: mô hình cây dạng bảng đạt PR-AUC ~0,21, F1 ~0,28 (mức ngẫu nhiên 0,00089).

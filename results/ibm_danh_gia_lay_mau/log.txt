@@ -1,0 +1,39 @@
+HI-Small ngày 0–9: 5,077,237 gd, 4,522 ca rửa tiền; 28 đặc trưng; r_train [0.02, 0.05, 0.1, 0.2]; r_test [0.02, 0.1]
+fold 0 r_train=0.02  n_train= 67,824  test đầy đủ: PR-AUC 0.2420 F1 0.3173 VDR@1% 0.9885 | test lấy mẫu: r=0.02: 0.2183, r=0.1: 0.2402  (6s)
+fold 0 r_train=0.05  n_train=165,207  test đầy đủ: PR-AUC 0.0987 F1 0.2297 VDR@1% 0.9905 | test lấy mẫu: r=0.02: 0.0944, r=0.1: 0.1008  (3s)
+fold 0 r_train=0.1   n_train=327,552  test đầy đủ: PR-AUC 0.1019 F1 0.2075 VDR@1% 0.5520 | test lấy mẫu: r=0.02: 0.1067, r=0.1: 0.1023  (3s)
+fold 0 r_train=0.2   n_train=652,197  test đầy đủ: PR-AUC 0.1575 F1 0.2522 VDR@1% 0.7643 | test lấy mẫu: r=0.02: 0.1853, r=0.1: 0.1953  (3s)
+fold 1 r_train=0.02  n_train= 67,829  test đầy đủ: PR-AUC 0.2001 F1 0.2818 VDR@1% 0.6541 | test lấy mẫu: r=0.02: 0.1981, r=0.1: 0.2016  (4s)
+fold 1 r_train=0.05  n_train=165,224  test đầy đủ: PR-AUC 0.1415 F1 0.2546 VDR@1% 0.9355 | test lấy mẫu: r=0.02: 0.1573, r=0.1: 0.1549  (3s)
+fold 1 r_train=0.1   n_train=327,545  test đầy đủ: PR-AUC 0.1037 F1 0.2121 VDR@1% 0.4291 | test lấy mẫu: r=0.02: 0.0860, r=0.1: 0.0994  (4s)
+fold 1 r_train=0.2   n_train=652,205  test đầy đủ: PR-AUC 0.1142 F1 0.2100 VDR@1% 0.3111 | test lấy mẫu: r=0.02: 0.1587, r=0.1: 0.1209  (3s)
+fold 2 r_train=0.02  n_train= 67,819  test đầy đủ: PR-AUC 0.1994 F1 0.2629 VDR@1% 0.9020 | test lấy mẫu: r=0.02: 0.2147, r=0.1: 0.1735  (5s)
+fold 2 r_train=0.05  n_train=165,229  test đầy đủ: PR-AUC 0.1285 F1 0.2550 VDR@1% 0.9210 | test lấy mẫu: r=0.02: 0.1872, r=0.1: 0.1434  (4s)
+fold 2 r_train=0.1   n_train=327,550  test đầy đủ: PR-AUC 0.1174 F1 0.2155 VDR@1% 0.8699 | test lấy mẫu: r=0.02: 0.1906, r=0.1: 0.1430  (3s)
+fold 2 r_train=0.2   n_train=652,207  test đầy đủ: PR-AUC 0.0872 F1 0.1740 VDR@1% 0.5355 | test lấy mẫu: r=0.02: 0.0840, r=0.1: 0.0843  (3s)
+fold 3 r_train=0.02  n_train= 67,821  test đầy đủ: PR-AUC 0.1992 F1 0.2874 VDR@1% 0.0640 | test lấy mẫu: r=0.02: 0.2067, r=0.1: 0.2011  (4s)
+fold 3 r_train=0.05  n_train=165,219  test đầy đủ: PR-AUC 0.1058 F1 0.2380 VDR@1% 0.0530 | test lấy mẫu: r=0.02: 0.1256, r=0.1: 0.1191  (4s)
+fold 3 r_train=0.1   n_train=327,528  test đầy đủ: PR-AUC 0.1085 F1 0.2178 VDR@1% 0.0484 | test lấy mẫu: r=0.02: 0.1314, r=0.1: 0.1058  (4s)
+fold 3 r_train=0.2   n_train=652,204  test đầy đủ: PR-AUC 0.1136 F1 0.2077 VDR@1% 0.0457 | test lấy mẫu: r=0.02: 0.1140, r=0.1: 0.1252  (3s)
+fold 4 r_train=0.02  n_train= 67,827  test đầy đủ: PR-AUC 0.2062 F1 0.2715 VDR@1% 0.6234 | test lấy mẫu: r=0.02: 0.2334, r=0.1: 0.1898  (5s)
+fold 4 r_train=0.05  n_train=165,216  test đầy đủ: PR-AUC 0.1152 F1 0.2443 VDR@1% 0.9002 | test lấy mẫu: r=0.02: 0.0998, r=0.1: 0.1038  (5s)
+fold 4 r_train=0.1   n_train=327,537  test đầy đủ: PR-AUC 0.1252 F1 0.2455 VDR@1% 0.5828 | test lấy mẫu: r=0.02: 0.1209, r=0.1: 0.1341  (4s)
+fold 4 r_train=0.2   n_train=652,221  test đầy đủ: PR-AUC 0.0935 F1 0.2210 VDR@1% 0.4489 | test lấy mẫu: r=0.02: 0.0810, r=0.1: 0.0825  (4s)
+
+=== Trung bình ± độ lệch qua các fold ===
+                      pr_auc              f1         recall@1%          vdr@1%        
+                        mean     std    mean     std      mean     std    mean     std
+r_train test                                                                          
+0.02    day_du        0.2094  0.0184  0.2842  0.0208    0.6294  0.0103  0.6464  0.3613
+        lay_mau_0.02  0.2142  0.0132  0.2824  0.0325    0.6349  0.0213  0.6519  0.3717
+        lay_mau_0.1   0.2012  0.0246  0.2740  0.0251    0.6249  0.0151  0.6411  0.3628
+0.05    day_du        0.1179  0.0173  0.2443  0.0109    0.6019  0.0160  0.7600  0.3967
+        lay_mau_0.02  0.1329  0.0393  0.2534  0.0366    0.6123  0.0284  0.6704  0.3877
+        lay_mau_0.1   0.1244  0.0240  0.2460  0.0204    0.5995  0.0204  0.6692  0.3868
+0.10    day_du        0.1114  0.0098  0.2197  0.0149    0.5778  0.0138  0.4964  0.2980
+        lay_mau_0.02  0.1271  0.0394  0.2265  0.0256    0.5836  0.0278  0.5332  0.3062
+        lay_mau_0.1   0.1169  0.0201  0.2169  0.0172    0.5681  0.0213  0.4966  0.2976
+0.20    day_du        0.1132  0.0275  0.2130  0.0281    0.5046  0.0248  0.4211  0.2668
+        lay_mau_0.02  0.1246  0.0461  0.2155  0.0367    0.5168  0.0173  0.4212  0.2668
+        lay_mau_0.1   0.1216  0.0457  0.2098  0.0310    0.5011  0.0221  0.3268  0.1864
+Đã lưu trữ: D:\0 Project\2026 NCKH 2027\project\results\_luu_tru\2026-11-02_2308_ibm_danh_gia_lay_mau
