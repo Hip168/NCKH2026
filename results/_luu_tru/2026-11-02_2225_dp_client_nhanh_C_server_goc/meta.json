@@ -1,0 +1,9 @@
+{
+  "thoi_diem": "2026-11-02T22:25:51",
+  "script": "30_dp_fl.py",
+  "lenh": "30_dp_fl.py --mode client --folds 0 --rounds 10 --noise server --eps inf 8 4 1 --tag nhanh_C_server_goc",
+  "commit": "cabad04",
+  "co_thay_doi_chua_commit": true,
+  "thu_muc_luu_tru": "results/_luu_tru/2026-11-02_2225_dp_client_nhanh_C_server_goc",
+  "ghi_chu": "Thử nhanh DP mức client cấu hình C (chạy 21:45–22:05 ngày 02/11, lưu trữ bổ sung)"
+}

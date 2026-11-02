@@ -64,6 +64,9 @@ project/
 - Không chọn siêu tham số, ngưỡng hay chỉ số dựa trên tập test. Ngưỡng F1 chọn trên tập validation (inner fold).
 - Thay đổi quyết định quan trọng (chỉ số, k, cách chia, tham số dữ liệu) → ghi vào `docs/decisions.md` trước.
 - Code mới trong `src/` cần có test tương ứng trong `tests/`.
+- **Lưu trữ kết quả từng giai đoạn** để viết báo cáo cả quá trình: không xóa kết quả cũ; mọi script gọi
+  `fraudfl.runlog.archive_run` ở cuối (tự chép vào `results/_luu_tru/` và ghi `results/NHAT_KY_CHAY.csv`);
+  hết mỗi giai đoạn thêm một mục vào [docs/nhat_ky_ket_qua.md](docs/nhat_ky_ket_qua.md). Chi tiết ở đầu tài liệu đó.
 
 ## Lộ trình
 

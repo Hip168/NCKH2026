@@ -35,6 +35,7 @@ from fraudfl.experiment import make_data, scores, test_metrics
 from fraudfl.graph import build_edge_index
 from fraudfl.models import SageMLP, TabMLP
 from fraudfl.privacy import CLIP, DELTA, add_server_noise, dpsgd_steps, noise_multiplier, privatize_update
+from fraudfl.runlog import archive_run
 from fraudfl.train import fedavg
 
 # Client-level (GNN): giống E3 để so sánh trực tiếp
@@ -158,6 +159,7 @@ def main():
     per_fold.groupby("epsilon")[MAIN_METRICS].agg(["mean", "std"]).to_csv(out / "summary.csv")
     log("\n=== Trung bình qua các fold ===")
     log(per_fold.groupby("epsilon")[MAIN_METRICS + ["noise_multiplier"]].mean().round(4).to_string())
+    log(f"Đã lưu trữ: {archive_run(out, note=f'DP {args.mode}, folds {folds}, eps {eps_list}, seed {args.seed}')}")
 
 
 if __name__ == "__main__":

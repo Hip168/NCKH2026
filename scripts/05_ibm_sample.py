@@ -28,6 +28,8 @@ from fraudfl.config import DATA_SPLITS, SEED
 from fraudfl.data.ibm_aml import load_raw
 from fraudfl.data.sampling import subsample_negatives
 from fraudfl.data.splits import stratified_nested, temporal
+from fraudfl.runlog import archive_run
+from fraudfl.config import RESULTS
 
 
 def main():
@@ -73,6 +75,10 @@ def main():
     out_meta.write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(meta, ensure_ascii=False, indent=2))
     print(f"Đã ghi {out_ids}, {out_folds}, {out_meta}. Nhớ commit cả ba file.")
+    rec = RESULTS / "ibm_sample"
+    rec.mkdir(parents=True, exist_ok=True)
+    (rec / "ibm_sample_meta.json").write_text(out_meta.read_text(encoding="utf-8"), encoding="utf-8")
+    print(f"Đã lưu trữ: {archive_run(rec, note=f'Lấy mẫu IBM r={args.rate}, seed {args.seed}')}")
 
 
 if __name__ == "__main__":

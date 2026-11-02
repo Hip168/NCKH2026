@@ -26,6 +26,7 @@ from fraudfl.eval.metrics import MAIN_METRICS, best_f1_threshold
 from fraudfl.experiment import make_data, scores, test_metrics
 from fraudfl.graph import build_edge_index
 from fraudfl.models import SageMLP
+from fraudfl.runlog import archive_run
 from fraudfl.train import fedavg, predict, train_full_batch
 
 LR = 5e-3
@@ -123,6 +124,7 @@ def main():
     summary.to_csv(OUT / "summary.csv")
     log("\n=== Trung bình qua các fold ===")
     log(per_fold.groupby("setting")[MAIN_METRICS].mean().round(4).to_string())
+    log(f"Đã lưu trữ: {archive_run(OUT, note=f'GNN E1–E3, folds {args.folds}, seed {args.seed}, {args.rounds} vòng')}")
 
 
 if __name__ == "__main__":
