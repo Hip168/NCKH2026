@@ -26,6 +26,7 @@ Python 3.11. Đã kiểm tra trên Windows 11 với các phiên bản ghi trong 
 | Kiểm thử | `python -m pytest -q tests` | |
 
 **Người mới vào nhóm: đọc [docs/BAO_CAO_TONG_HOP.md](docs/BAO_CAO_TONG_HOP.md) trước** (tiến độ, kết quả, phân công).
+Chạy bằng Docker, không cần cài Python: [docs/huong_dan_docker.md](docs/huong_dan_docker.md).
 Bảng số đầy đủ: [docs/results.md](docs/results.md).
 
 Dữ liệu sinh ra là tất định (seed 42): ai chạy lại bước 1 cũng được đúng bộ dữ liệu đó.

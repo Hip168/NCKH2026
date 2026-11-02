@@ -18,6 +18,10 @@ FORMATTED_COLUMNS = {
 }
 
 
+RAW_COLUMNS = ["Timestamp", "From Bank", "From Account", "To Bank", "To Account", "Amount Received",
+               "Receiving Currency", "Amount Paid", "Payment Currency", "Payment Format", "Is Laundering"]
+
+
 def load_formatted(csv_path: Path, cache: Path | None = None) -> pd.DataFrame:
     """Đọc bản đã định dạng; lưu cache parquet để lần sau đọc nhanh."""
     if cache is not None and cache.exists():
@@ -32,8 +36,8 @@ def load_formatted(csv_path: Path, cache: Path | None = None) -> pd.DataFrame:
 
 def load_raw(csv_path: Path) -> pd.DataFrame:
     """Đọc bản gốc Kaggle; tài khoản được định danh bằng (ngân hàng, số tài khoản)."""
-    df = pd.read_csv(csv_path, engine="pyarrow")
-    df = df.rename(columns={"Account": "From Account", "Account.1": "To Account"})
+    # File gốc có 2 cột cùng tên "Account" và engine pyarrow không tự đổi tên → đặt tên tường minh
+    df = pd.read_csv(csv_path, engine="pyarrow", skiprows=1, names=RAW_COLUMNS)
     df["Timestamp"] = pd.to_datetime(df["Timestamp"], format="%Y/%m/%d %H:%M")
     df["TX_TIME_DAYS"] = (df["Timestamp"] - df["Timestamp"].min().normalize()).dt.days
     return df

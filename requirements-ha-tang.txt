@@ -1,0 +1,5 @@
+# Thêm cho Flower qua mạng và hệ thống real-time (cài sau requirements.txt)
+flwr==1.42.0
+confluent-kafka==2.16.1
+redis==8.1.0
+psycopg[binary]==3.3.2
