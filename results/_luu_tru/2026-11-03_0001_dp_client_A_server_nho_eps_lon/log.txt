@@ -1,0 +1,11 @@
+Chế độ client-level DP, δ = 1e-05, C = 1.0, folds [0], ε [32.0, 16.0], seed 42, 10 vòng, 3 epoch cục bộ, nhiễu ở server, GNN nhỏ
+
+=== Outer fold 0 ===
+  ε=32.0 z=  0.68  PR-AUC 0.3031 (TB theo ngân hàng 0.3088)  Recall@1% 0.3240  VDR@1% 0.4698  (vòng tốt nhất 7, 32s)
+  ε=16.0 z=  1.15  PR-AUC 0.1586 (TB theo ngân hàng 0.1642)  Recall@1% 0.2033  VDR@1% 0.2782  (vòng tốt nhất 2, 32s)
+
+=== Trung bình qua các fold ===
+         pr_auc  roc_auc      f1  recall@1%  precision@1%  vdr@1%  recall@2%  precision@2%  vdr@2%  noise_multiplier
+epsilon                                                                                                             
+16.0     0.1586   0.8039  0.2847     0.2033        0.3102  0.2782     0.3190        0.2516  0.4295            1.1465
+32.0     0.3031   0.8431  0.4523     0.3240        0.4943  0.4698     0.4967        0.3918  0.6597            0.6763

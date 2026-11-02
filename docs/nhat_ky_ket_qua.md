@@ -186,3 +186,27 @@ Kết quả chạy **trước ngày 02/11** chưa có kho lưu trữ; bản gố
 - **Đính chính:** câu "cách B chịu DP tốt hơn" (trả lời trong buổi trao đổi) chưa có căn cứ — GraphSAGE nhỏ cỡ
   3,2 nghìn tham số (bằng MLP) vẫn sụp; nguyên nhân chính là ít ngân hàng.
 - **Kế tiếp:** Đạt chạy lại lần lượt theo mục 3 của ghi chú; nếu cách B cũng sụp → họp lập kế hoạch tăng số ngân hàng.
+
+## Giai đoạn 11 — Chạy cách B và thử ε lớn: DP mức client với 5 ngân hàng KHÔNG cứu được (02–03/11/2026)
+
+- **Làm:** theo mục 3 của [ghi_chu_cach_A_B.md](ghi_chu_cach_A_B.md); synthetic, fold 0, 5 ngân hàng.
+- **Kết quả PR-AUC** (mức ngẫu nhiên ≈ 0,015–0,02; gộp chung không DP = 0,733):
+
+  | ε | B: MLP, nhiễu server, 10 vòng | B: MLP, nhiễu từng NH, 10 vòng | B: MLP, nhiễu server, 50 vòng | A: GNN nhỏ, nhiễu server, 10 vòng |
+  |---|---|---|---|---|
+  | ∞ | 0,653 | 0,652 | 0,700 | 0,587 |
+  | 64 | 0,604 | — | — | — |
+  | 32 | 0,447 | — | — | 0,303 |
+  | 16 | 0,123 | — | — | 0,159 |
+  | 8 | 0,058 | 0,026 | 0,043 | 0,069 |
+  | 4 | 0,023 | 0,023 | 0,044 | 0,022 |
+  | 1 | 0,020 | 0,021 | 0,042 | 0,018 |
+
+  Lưu ở `results/_luu_tru/2026-11-02_2357_dp_client_B_*`, `..._2359_..._B_server_mlp_50v`,
+  `2026-11-03_0000_dp_client_B_server_mlp_eps_lon`, `2026-11-03_0001_dp_client_A_server_nho_eps_lon`.
+- **Rút ra:**
+  1. Cách B cũng sụp ở mọi ε ≤ 8 — đúng dự đoán; đổi mô hình không cứu được.
+  2. Mô hình chỉ bắt đầu học được từ **ε ≈ 16–32**, đạt ≥ 85% so với gộp chung chỉ ở ε ≈ 64 (cách B: 0,604 = 82%).
+     ε cỡ đó gần như không còn ý nghĩa bảo mật → **với 5 ngân hàng, DP mức client không khả thi ở mức ε có ý nghĩa**.
+  3. Không DP: MLP (cách B) 10 vòng đạt 0,653, cao hơn GNN nhỏ 0,587; 50 vòng đạt 0,700 (gần FedAvg GNN 0,715).
+  4. → Theo tiêu chí đã thống nhất ở ghi chú A/B: **bắt buộc tăng số ngân hàng → họp lập kế hoạch mới.**

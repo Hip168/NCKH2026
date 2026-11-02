@@ -1,0 +1,9 @@
+{
+  "thoi_diem": "2026-11-03T00:00:18",
+  "script": "30_dp_fl.py",
+  "lenh": "scripts/30_dp_fl.py --mode client --folds 0 --rounds 10 --noise server --model mlp --eps 64 32 16 --tag B_server_mlp_eps_lon",
+  "commit": "bdcaf39",
+  "co_thay_doi_chua_commit": true,
+  "thu_muc_luu_tru": "results/_luu_tru/2026-11-03_0000_dp_client_B_server_mlp_eps_lon",
+  "ghi_chu": "DP client, folds [0], eps [64.0, 32.0, 16.0], seed 42"
+}
