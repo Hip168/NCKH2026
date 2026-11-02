@@ -13,3 +13,11 @@ def test_load_raw_keeps_both_account_columns(tmp_path):
     assert df["From Account"].tolist() == ["8000EBD30", "8000F4580"]
     assert df["To Account"].tolist() == ["8000EBD31", "8000F5340"]
     assert df["TX_TIME_DAYS"].tolist() == [0, 1]
+
+
+def test_load_raw_keeps_leading_zeros_in_bank_codes(tmp_path):
+    p = tmp_path / "x_Trans.csv"
+    p.write_text(SAMPLE.replace("00:20,10,", "00:20,010,"), encoding="utf-8")   # "010" khác "10"
+    df = load_raw(p)
+    assert df["From Bank"].tolist() == ["010", "3208"]
+    assert df["To Bank"].tolist() == ["10", "1"]
