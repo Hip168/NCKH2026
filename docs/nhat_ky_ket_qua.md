@@ -334,3 +334,18 @@ Kết quả chạy **trước ngày 02/11** chưa có kho lưu trữ; bản gố
      chủ yếu là dao động. **Chưa kết luận được về DP.**
   4. → Phải làm FedAvg học nhanh hơn với nhiều client trước (nhiều epoch cục bộ, lr lớn hơn, nhiều vòng, hoặc
      lr/momentum ở server).
+
+## Giai đoạn 17 — Làm FedAvg học nhanh hơn với 802 ngân hàng (03/11/2026)
+
+- **Làm:** chỉ FedAvg không DP, fold 0, K = 802, 200 ngân hàng/vòng, r = 0,1, 30 vòng, lô 512, pos_weight 1.
+  Lưu ở `results/_luu_tru/2026-11-03_*_ibm_fl_dp_K802_F1_e3_lr5e-3`, `..._K802_F2_e5_lr5e-3`.
+
+  | Cấu hình | PR-AUC | TB theo client | Val PR-AUC vòng 1/5/10/20/30 |
+  |---|---|---|---|
+  | Cũ: 1 epoch, lr 1e-3 (giai đoạn 16) | 0,0067 | 0,084 | 0,0008/0,0008/0,0009/0,0044/0,0071 |
+  | F1: 3 epoch, lr 5e-3 | 0,0226 | 0,200 | 0,0016/0,015/0,019/0,021/0,020 |
+  | **F2: 5 epoch, lr 5e-3** | **0,0248** | **0,213** | 0,0049/0,017/0,021/0,021/0,020 |
+
+- **Rút ra:** FedAvg tốt lên ~3,7 lần và bão hòa từ vòng ~20, nhưng chỉ đạt ~22% so với gộp chung (0,111). Nhiều khả năng do
+  802 ngân hàng rất khác nhau (non-IID: 94 ngân hàng không có ca, trung vị 2 ca). Hướng thử: FedProx (E6), momentum ở server.
+- **Kế tiếp:** chạy DP với cấu hình F2 (ε ∈ {8, 4, 2, 1}) để đo mức giảm so với mốc FedAvg 0,025.
