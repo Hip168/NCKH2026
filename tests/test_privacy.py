@@ -32,3 +32,10 @@ def test_dpsgd_without_clip_or_noise_equals_plain_gradient():
 def test_noise_decreases_with_epsilon():
     zs = [noise_multiplier(e, sample_rate=0.02, steps=500) for e in (0.5, 1.0, 2.0)]
     assert zs[0] > zs[1] > zs[2] > 0
+
+
+def test_server_noise_std_and_uniform_fedavg_clip_only():
+    from fraudfl.privacy import add_server_noise
+    g = {"w": torch.zeros(200_000)}
+    out = add_server_noise({"w": torch.zeros(200_000)}, g, std=0.5, gen=torch.Generator().manual_seed(0))
+    assert abs(out["w"].std().item() - 0.5) < 0.01

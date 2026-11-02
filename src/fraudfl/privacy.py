@@ -60,6 +60,17 @@ def privatize_update(local: dict, global_: dict, clip: float, z: float, gen: tor
     return out
 
 
+def add_server_noise(avg: dict, global_: dict, std: float, gen: torch.Generator) -> dict:
+    """Server cộng nhiễu Gauss N(0, std²) MỘT lần vào phần thay đổi của mô hình trung bình.
+
+    Dùng cho DP mức client khi server được tin cậy (hoặc có SecAgg): mỗi ngân hàng chỉ cắt Δ về ≤ C
+    (privatize_update với z = 0), trung bình đều K ngân hàng có độ nhạy C/K, nên std = z·C/K.
+    So với mỗi ngân hàng tự cộng nhiễu z·C, tổng nhiễu nhỏ hơn √K lần với cùng ε.
+    """
+    return {k: avg[k] + torch.normal(0.0, std, size=avg[k].shape, generator=gen) if avg[k].is_floating_point()
+            else avg[k] for k in global_}
+
+
 def dpsgd_steps(model: nn.Module, X: torch.Tensor, y: torch.Tensor, opt: torch.optim.Optimizer, steps: int,
                 sample_rate: float, clip: float, z: float, pos_weight: float, gen: torch.Generator):
     """Record-level DP-SGD: lấy mẫu Poisson, gradient từng mẫu (torch.func), cắt, cộng nhiễu, chia cho batch kỳ vọng."""

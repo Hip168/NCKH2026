@@ -76,17 +76,21 @@ def train_full_batch(model: nn.Module, d: GraphData, lr: float, max_epochs: int,
 
 
 def fedavg(model: nn.Module, clients: list[GraphData], lr: float, rounds: int, local_epochs: int,
-           log=None, privatize=None, local_train=None) -> tuple[nn.Module, list[dict]]:
+           log=None, privatize=None, local_train=None, server_privatize=None,
+           uniform_weights: bool = False) -> tuple[nn.Module, list[dict]]:
     """FedAvg (McMahan et al., 2017): trung bình trọng số theo số mẫu fit của từng client.
 
     Mỗi vòng: client nhận mô hình chung → train `local_epochs` epoch trên dữ liệu riêng (Adam mới mỗi vòng)
     → gửi trọng số → server lấy trung bình có trọng số. Chọn vòng có PR-AUC val (gộp) cao nhất.
     `privatize(local_state, global_state) -> state`: nếu có, client áp DP lên cập nhật trước khi gửi.
     `local_train(model, client)`: thay cho bước train Adam mặc định (ví dụ DP-SGD).
+    `server_privatize(avg_state, global_state) -> state`: nếu có, server áp lên mô hình SAU khi lấy trung bình
+    (DP mức client kiểu McMahan et al. 2018: client chỉ cắt, server cộng nhiễu một lần).
+    `uniform_weights`: lấy trung bình đều 1/K thay vì theo số mẫu (cần cho DP mức client để độ nhạy là C/K).
     Trả về (mô hình tốt nhất, lịch sử từng vòng).
     """
     pos_weight = _pos_weight(clients)   # chỉ là một số vô hướng; thực tế có thể để từng client tự tính
-    weights = np.array([c.n_fit for c in clients], dtype=np.float64)
+    weights = np.array([1.0 if uniform_weights else c.n_fit for c in clients], dtype=np.float64)
     weights /= weights.sum()
     best, best_state, history = -1.0, None, []
     for r in range(1, rounds + 1):
@@ -101,7 +105,8 @@ def fedavg(model: nn.Module, clients: list[GraphData], lr: float, rounds: int, l
                 _local_epochs(model, c, opt, nn.BCEWithLogitsLoss(pos_weight=pos_weight), local_epochs)
             state = copy.deepcopy(model.state_dict())
             states.append(privatize(state, global_state) if privatize else state)
-        model.load_state_dict({k: sum(w * s[k] for w, s in zip(weights, states)) for k in global_state})
+        avg = {k: sum(w * s[k] for w, s in zip(weights, states)) for k in global_state}
+        model.load_state_dict(server_privatize(avg, global_state) if server_privatize else avg)
         ap = _val_ap(model, clients)
         history.append({"round": r, "val_pr_auc": ap})
         if ap > best:
