@@ -62,10 +62,11 @@ Kết quả chạy **trước ngày 02/11** chưa có kho lưu trữ; bản gố
 
 ## Giai đoạn 5 — Dữ liệu IBM AML HI-Small (02/11/2026)
 
-- **Dữ liệu:** 5.078.345 giao dịch, 5.177 ca rửa tiền (0,102%), 18 ngày, 30.528 ngân hàng gửi. Top 5 ngân hàng giữ
+- **Dữ liệu:** 5.078.345 giao dịch, 5.177 ca rửa tiền (0,102%), 18 ngày, ~~30.528~~ 30.470 ngân hàng gửi (đính chính giai đoạn 12). Top 5 ngân hàng giữ
   13,6% giao dịch; chỉ 34 ngân hàng có ≥ 20 ca rửa tiền. Ca rửa tiền dồn vào 10 ngày đầu.
-- **Sửa lỗi:** `load_raw` đọc mã ngân hàng thành số làm gộp nhầm 58 ngân hàng (`"010"` = `"10"`). Đã sửa, commit
-  `cabad04`.
+- ~~**Sửa lỗi:** `load_raw` đọc mã ngân hàng thành số làm gộp nhầm 58 ngân hàng (`"010"` = `"10"`). Đã sửa, commit
+  `cabad04`.~~ **ĐÍNH CHÍNH ở giai đoạn 12:** đây KHÔNG phải lỗi — `"010"` và `"0010"` là cùng một ngân hàng; số đúng
+  là 30.470 ngân hàng.
 - **Tỷ giá (Q6):** suy từ chính dữ liệu, độ lệch chuẩn ≈ 0 — `results/ibm_features_global/ty_gia.csv`.
 - **Đặc trưng:** 29 đặc trưng (chế độ global, cho E7), 23 đặc trưng (chế độ bank, cho FL); chỉ dùng quá khứ, không dùng
   nhãn. Đặc trưng mạnh: hình thức ACH (87% ca rửa tiền so với 12% ca thường), cuối tuần, mức hoạt động của tài khoản
@@ -210,3 +211,28 @@ Kết quả chạy **trước ngày 02/11** chưa có kho lưu trữ; bản gố
      ε cỡ đó gần như không còn ý nghĩa bảo mật → **với 5 ngân hàng, DP mức client không khả thi ở mức ε có ý nghĩa**.
   3. Không DP: MLP (cách B) 10 vòng đạt 0,653, cao hơn GNN nhỏ 0,587; 50 vòng đạt 0,700 (gần FedAvg GNN 0,715).
   4. → Theo tiêu chí đã thống nhất ở ghi chú A/B: **bắt buộc tăng số ngân hàng → họp lập kế hoạch mới.**
+
+## Giai đoạn 12 — Đính chính mã ngân hàng IBM (03/11/2026)
+
+- **Bối cảnh:** bạn trong nhóm hỏi "HI-Small có 10 ngân hàng?". Kiểm tra `HI-Small_accounts.csv`: **30.470 mã ngân
+  hàng (Bank ID), 20.053 tên ngân hàng** (một tên có tới 48 mã). Không phải 10 ngân hàng.
+- **Phát hiện:** 58 cặp mã chỉ khác số 0 ở đầu (`"010"` / `"0010"`) đều trỏ tới CÙNG Bank ID và CÙNG tên ngân hàng
+  (58/58 cặp; vd Bank ID 10 = National Bank of Laramie). → "Sửa lỗi" ở giai đoạn 5 (commit `cabad04`, đọc mã dạng chuỗi
+  giữ số 0) là **sai**: nó tách một ngân hàng thành hai, và tách lịch sử của tài khoản ở các ngân hàng đó.
+- **Sửa:** `load_raw` đọc dạng chuỗi rồi bỏ số 0 ở đầu → 30.470 ngân hàng, khớp `accounts.csv`. Test cập nhật.
+  Tính lại đặc trưng: `results/_luu_tru/2026-11-03_0007_ibm_features_global`, `..._0008_ibm_features_bank`.
+- **Ảnh hưởng — chạy lại đánh giá 5 fold** (`results/_luu_tru/2026-11-03_0010_ibm_danh_gia_lay_mau`), PR-AUC test đầy
+  đủ, không trọng số lớp:
+
+  | r_train | Trước khi sửa (giai đoạn 9) | Sau khi sửa |
+  |---|---|---|
+  | 0,02 | 0,209 ± 0,018 | **0,219 ± 0,016** |
+  | 0,05 | 0,118 ± 0,017 | 0,153 ± 0,032 |
+  | 0,10 | 0,111 ± 0,010 | 0,108 ± 0,020 |
+  | 0,20 | 0,113 ± 0,028 | 0,101 ± 0,010 |
+
+  F1 lớp rửa tiền (r = 0,02): 0,276; Recall@1%: 0,633. Kết luận giai đoạn 9 **không đổi**: r = 0,02 vẫn tốt nhất;
+  chênh lệch nằm trong mức dao động giữa các fold. Mốc baseline dạng bảng cập nhật: PR-AUC ~0,22.
+- **Số ngân hàng dùng được làm client (ngày 0–9):** ≥ 1.000 giao dịch: 802; ≥ 10.000: 91; có ≥ 1 ca rửa tiền: 987;
+  ≥ 5 ca: 223; **≥ 20 ca: 27**; ≥ 50 ca: 3.
+- **Bài học:** đối chiếu với file `accounts.csv` (nguồn chuẩn) trước khi kết luận về định danh.

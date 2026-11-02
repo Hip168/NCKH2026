@@ -2,7 +2,7 @@
   "input": "HI-Small_Trans.csv",
   "view": "bank",
   "n_tx": 5078345,
-  "n_features": 23,
+  "n_features": 22,
   "features": [
     "AMOUNT_USD_LOG",
     "CROSS_CURRENCY",
@@ -17,7 +17,6 @@
     "PF_WIRE",
     "HOUR",
     "WEEKEND",
-    "SND_AGE_DAYS",
     "SND_OUT_NB_LOG_1D",
     "SND_OUT_SUM_LOG_1D",
     "SND_IN_NB_LOG_1D",
@@ -29,7 +28,7 @@
     "SND_IN_SUM_LOG_7D"
   ],
   "n_laundering": 5177,
-  "giay_doc": 5,
-  "giay_tinh_dac_trung": 45,
+  "giay_doc": 6,
+  "giay_tinh_dac_trung": 44,
   "parquet": "HI-Small_features_bank.parquet"
 }

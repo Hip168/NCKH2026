@@ -37,11 +37,13 @@ def load_formatted(csv_path: Path, cache: Path | None = None) -> pd.DataFrame:
 def load_raw(csv_path: Path) -> pd.DataFrame:
     """Đọc bản gốc Kaggle; tài khoản được định danh bằng (ngân hàng, số tài khoản)."""
     # File gốc có 2 cột cùng tên "Account" và engine pyarrow không tự đổi tên → đặt tên tường minh
-    # Mã ngân hàng phải đọc dạng CHUỖI: "010" và "10" là hai ngân hàng khác nhau (HI-Small: đọc thành số làm
-    # 30.528 mã còn 30.470, gộp nhầm 58 ngân hàng). Engine pyarrow suy kiểu số trước khi áp dtype nên vẫn mất số 0
-    # ở đầu → dùng engine mặc định.
+    # Mã ngân hàng trong file giao dịch có thể có số 0 ở đầu không thống nhất: "010" và "0010" là CÙNG một ngân hàng
+    # (đối chiếu HI-Small_accounts.csv: cùng Bank ID 10, cùng tên). Chuẩn hóa: bỏ số 0 ở đầu, giữ dạng chuỗi.
+    # HI-Small: 30.528 cách viết → 30.470 ngân hàng (khớp accounts.csv). Đọc dạng chuỗi rồi mới chuẩn hóa.
     df = pd.read_csv(csv_path, skiprows=1, names=RAW_COLUMNS,
                      dtype={"From Bank": str, "To Bank": str, "From Account": str, "To Account": str})
+    for c in ("From Bank", "To Bank"):
+        df[c] = df[c].str.lstrip("0").replace("", "0")
     df["Timestamp"] = pd.to_datetime(df["Timestamp"], format="%Y/%m/%d %H:%M")
     df["TX_TIME_DAYS"] = (df["Timestamp"] - df["Timestamp"].min().normalize()).dt.days
     return df
