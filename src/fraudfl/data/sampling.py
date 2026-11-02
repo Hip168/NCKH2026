@@ -36,3 +36,13 @@ def subsample_negatives(ids: np.ndarray, labels: np.ndarray, groups: np.ndarray,
     out = pd.DataFrame({"TX_ID": ids[keep_idx], "GROUP": groups[keep_idx], "LABEL": labels[keep_idx],
                         "WEIGHT": weight})
     return out.sort_values("TX_ID").reset_index(drop=True)
+
+
+SMALL_GROUP = "_nho"
+
+
+def sampling_groups(banks: np.ndarray, labels: np.ndarray, min_neg: int = 1000) -> np.ndarray:
+    """Nhóm lấy mẫu (D17): ngân hàng có >= min_neg ca bình thường giữ mã riêng; còn lại gộp thành SMALL_GROUP."""
+    banks = np.asarray(banks).astype(str)
+    n_neg = pd.Series(np.asarray(labels) == 0).groupby(banks).transform("sum").to_numpy()
+    return np.where(n_neg >= min_neg, banks, SMALL_GROUP)

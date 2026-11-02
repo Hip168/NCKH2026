@@ -22,7 +22,7 @@ from sklearn.model_selection import train_test_split
 
 from fraudfl.config import DATA_PROCESSED, IBM_MAX_DAY, RESULTS, SEED
 from fraudfl.data.ibm_features import feature_columns
-from fraudfl.data.sampling import subsample_negatives
+from fraudfl.data.sampling import sampling_groups, subsample_negatives
 from fraudfl.eval.metrics import evaluate
 from fraudfl.runlog import archive_run
 
@@ -62,7 +62,7 @@ def main():
     clean.join(uni.set_index("dac_trung")).to_csv(out / "sach_du_lieu.csv", float_format="%.4f")
 
     # 3. Mô hình thử
-    s = subsample_negatives(np.arange(len(g)), y, g["FROM_BANK"].to_numpy(), args.rate, SEED)   # chỉ số dòng sau khi lọc
+    s = subsample_negatives(np.arange(len(g)), y, sampling_groups(g["FROM_BANK"].to_numpy(), y), args.rate, SEED)  # giống 05
     b = load("bank")
     tr, te = train_test_split(np.arange(len(s)), test_size=0.2, stratify=s["LABEL"], random_state=SEED)
     rows = []

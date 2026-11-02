@@ -28,7 +28,7 @@ import pandas as pd
 
 from fraudfl.config import DATA_SPLITS, IBM_MAX_DAY, SEED
 from fraudfl.data.ibm_aml import load_raw
-from fraudfl.data.sampling import subsample_negatives
+from fraudfl.data.sampling import SMALL_GROUP, sampling_groups, subsample_negatives
 from fraudfl.data.splits import stratified_nested, temporal
 from fraudfl.runlog import archive_run
 from fraudfl.config import RESULTS
@@ -56,10 +56,8 @@ def main():
     labels = df["Is Laundering"].to_numpy()
     # D18: bỏ đuôi dữ liệu bất thường (HI-Small ngày 10–17: ~60% rửa tiền). TX_ID vẫn là số dòng trong file gốc.
     keep = df["TX_TIME_DAYS"].to_numpy() <= args.max_day
-    SMALL = "_nho"                                                # mã ngân hàng là chuỗi → dùng nhãn chuỗi
-    bank = df["From Bank"].to_numpy()[keep]
-    n_neg = pd.Series(labels[keep] == 0).groupby(bank).transform("sum").to_numpy()
-    samp_group = np.where(n_neg >= args.min_bank_neg, bank, SMALL)
+    SMALL = SMALL_GROUP                                           # mã ngân hàng là chuỗi → dùng nhãn chuỗi
+    samp_group = sampling_groups(df["From Bank"].to_numpy()[keep], labels[keep], args.min_bank_neg)
     s = subsample_negatives(np.flatnonzero(keep), labels[keep], samp_group, args.rate, args.seed)
     s.insert(2, "BANK", df["From Bank"].to_numpy()[s["TX_ID"]])
 

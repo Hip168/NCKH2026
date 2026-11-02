@@ -96,7 +96,8 @@ Kết quả chạy **trước ngày 02/11** chưa có kho lưu trữ; bản gố
 - **Lưu ở:** `results/_luu_tru/2026-11-02_2231_ibm_kiem_tra_dac_trung`, `..._2232_..._ngay0_9`,
   `..._2233_..._ngay0_9_bo_tuoi`.
 - **Rút ra:**
-  1. Đặc trưng có tín hiệu thật: PR-AUC khoảng 0,29 ở tỷ lệ thật 0,09% (gấp khoảng 300 lần ngẫu nhiên).
+  1. Đặc trưng có tín hiệu thật. ~~PR-AUC khoảng 0,29~~ — **ĐÍNH CHÍNH ở giai đoạn 8:** con số này quá lạc quan do
+     tập test r = 0,02 quá nhỏ; ước lượng đúng hơn khoảng 0,10 (vẫn gấp khoảng 100 lần mức ngẫu nhiên 0,001).
   2. PR-AUC không trọng số cao giả khoảng 2,5 lần → bắt buộc đánh giá có trọng số (D17).
   3. Đuôi dữ liệu thổi phồng VDR (0,10 → 0,55) vì ca rửa tiền ở đuôi có giá trị lớn.
   4. Chế độ bank (cho FL) kém global khoảng 0,07 PR-AUC — đây là giá của việc không thấy thông tin tài khoản nhận.
@@ -115,3 +116,33 @@ Kết quả chạy **trước ngày 02/11** chưa có kho lưu trữ; bản gố
   105.973 giao dịch, 4.522 ca rửa tiền (4,27% trong mẫu; 0,089% thật), 806 ngân hàng lấy mẫu riêng + nhóm `_nho`
   (4.905 ngân hàng); mỗi fold test 895–913 ca rửa tiền; tổng trọng số ca bình thường = 5.072.715, khớp đúng số thật.
 - **Chờ:** chốt r, rồi chạy chính thức vào `data/splits/` và commit.
+
+## Giai đoạn 8 — Đường học theo r và phát hiện: tập test lấy mẫu nhỏ cho PR-AUC lạc quan (02/11/2026)
+
+- **Làm:** `07_ibm_kiem_tra_dac_trung.py` với r ∈ {0,01; 0,02; 0,05; 0,1} (ngày 0–9, bỏ tuổi tài khoản, cách gộp
+  ngân hàng nhỏ giống `05`). Lưu ở `results/_luu_tru/2026-11-02_*_ibm_kiem_tra_dac_trung_duong_hoc_r*`.
+
+  | r | PR-AUC có trọng số (global) | (bank) | VDR@1% (global) |
+  |---|---|---|---|
+  | 0,01 | 0,186 | 0,097 | 0,895 |
+  | 0,02 | 0,294 | 0,189 | 0,728 |
+  | 0,05 | 0,088 | 0,079 | 0,977 |
+  | 0,10 | 0,095 | 0,081 | 0,029 |
+
+  r lớn hơn mà PR-AUC giảm, VDR nhảy loạn → bất thường.
+- **Chẩn đoán (chạy trực tiếp, không lưu trữ thành thư mục; số liệu ghi ở đây):**
+  - Đổi seed chia test (42, 7) và bật/tắt early stopping: r = 0,02 cho 0,25–0,29; r = 0,1 cho 0,07–0,10 → không phải
+    do một lần chia may rủi.
+  - **Chấm chéo trên CÙNG tập test r = 0,1** (bỏ giao dịch đã dùng để train): mô hình học với r = 0,02 đạt **0,104**,
+    mô hình học với r = 0,1 đạt **0,095**.
+  - Các giao dịch bình thường bị chấm điểm cao nhất: không phải ACH, tài khoản gửi gần như chưa có lịch sử, số tiền lớn
+    (1.700–44.000 USD) — "trông giống rửa tiền".
+- **Rút ra:**
+  1. **Để HUẤN LUYỆN, r = 0,02 là đủ**: mô hình tốt ngang r = 0,1.
+  2. **Để ĐÁNH GIÁ, tập test lấy mẫu r = 0,02 KHÔNG tin được**: PR-AUC phụ thuộc vào vài ca bình thường "khó", với
+     r nhỏ phần lớn các ca này không lọt vào test → con số lạc quan khoảng 3 lần (0,29 so với ~0,10). Trọng số 1/r
+     sửa được tỷ lệ trung bình nhưng không sửa được độ dao động này.
+  3. → Đề xuất sửa D17: **lấy mẫu chỉ cho train/validation; tập test giữ TOÀN BỘ ca bình thường của fold đó**
+     (hoặc r_test lớn, ≥ 0,2). Mô hình dạng bảng chấm 1 triệu dòng mất vài giây.
+  4. VDR@1% dao động rất mạnh giữa các lần (0,03–0,98) vì VDR bị chi phối bởi một vài ca rửa tiền giá trị rất lớn →
+     cần báo cáo VDR kèm khoảng dao động, và cũng cần tập test đầy đủ.
