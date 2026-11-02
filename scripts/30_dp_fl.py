@@ -14,6 +14,8 @@ Tùy chọn thêm (02/11, xem docs/luu_y_dp_muc_client.md):
        --local-epochs E  số epoch cục bộ mỗi vòng ở chế độ client (mặc định 3)
        --noise server    chế độ client: ngân hàng chỉ cắt, server cộng nhiễu một lần (trung bình đều, std = zC/K)
        --small           chế độ client: GraphSAGE nhỏ 32 → 16 thay cho 128 → 64
+       --model mlp       chế độ client: MLP dạng bảng (TabMLP, không dùng đồ thị) thay cho GraphSAGE — "cách B" trên
+                         synthetic (docs/ghi_chu_cach_A_B.md)
        --tag T           hậu tố thư mục kết quả, ví dụ results/dp_client_T/
 Ra:    results/dp_<mode>[_<tag>][_seed<S>]/per_fold.csv, summary.csv, history.csv, log.txt
 """
@@ -63,7 +65,11 @@ def run_client_level(tx, x, y, masks, ei_local, clients, eps, opt):
             privatize = lambda local, global_: privatize_update(local, global_, CLIP, 0.0, gen)   # chỉ cắt
             server_privatize = lambda avg, global_: add_server_noise(avg, global_, z * CLIP / K, gen)
     torch.manual_seed(opt.seed)
-    model = SageMLP(x.shape[1], hidden=32, emb=16) if opt.small else SageMLP(x.shape[1])
+    if opt.model == "mlp":
+        model = TabMLP(x.shape[1])
+        per_client = [make_data(x, y, masks, None, d.node_ids) for d in per_client]   # bỏ cạnh đồ thị
+    else:
+        model = SageMLP(x.shape[1], hidden=32, emb=16) if opt.small else SageMLP(x.shape[1])
     model, hist = fedavg(model, per_client, GNN_LR, opt.rounds, opt.local_epochs, privatize=privatize,
                          server_privatize=server_privatize, uniform_weights=opt.noise == "server")
     return scores(model, per_client, len(tx)), hist, {"noise_multiplier": z}
@@ -105,6 +111,7 @@ def main():
     ap.add_argument("--local-epochs", type=int, default=GNN_LOCAL_EPOCHS)
     ap.add_argument("--noise", choices=["client", "server"], default="client")
     ap.add_argument("--small", action="store_true")
+    ap.add_argument("--model", choices=["sage", "mlp"], default="sage")
     ap.add_argument("--tag", default="")
     args = ap.parse_args()
     if args.rounds is None:
@@ -129,7 +136,7 @@ def main():
     ei_local = build_edge_index(tx, cross_client=False) if args.mode == "client" else None
     log(f"Chế độ {args.mode}-level DP, δ = {DELTA}, C = {CLIP}, folds {folds}, ε {eps_list}, seed {args.seed}, "
         f"{args.rounds} vòng" + (f", {args.local_epochs} epoch cục bộ, nhiễu ở {args.noise}"
-                                 f"{', GNN nhỏ' if args.small else ''}" if args.mode == "client" else ""))
+                                 f"{', GNN nhỏ' if args.small else ''}{', MLP (cách B)' if args.model == 'mlp' else ''}" if args.mode == "client" else ""))
 
     rows, history = [], []
     for k in folds:

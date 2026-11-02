@@ -178,3 +178,11 @@ Kết quả chạy **trước ngày 02/11** chưa có kho lưu trữ; bản gố
      đủ để con số ổn định (và validation đầy đủ để chọn ngưỡng).
   4. **VDR@1% trên IBM dao động quá mạnh** (độ lệch chuẩn 0,27–0,40) → chỉ báo cáo làm chỉ số phụ kèm khoảng dao động.
   5. Mốc tham chiếu cho E7: mô hình cây dạng bảng đạt PR-AUC ~0,21, F1 ~0,28 (mức ngẫu nhiên 0,00089).
+
+## Giai đoạn 10 — Ghi chú cách A / cách B, chuẩn bị chạy lại (02/11/2026)
+
+- **Làm:** thêm `--model mlp` cho `30_dp_fl.py --mode client` (cách B trên synthetic: TabMLP, bỏ cạnh đồ thị); viết
+  [ghi_chu_cach_A_B.md](ghi_chu_cach_A_B.md) gồm định nghĩa, những gì đã biết, lệnh chạy lại, cách đọc kết quả.
+- **Đính chính:** câu "cách B chịu DP tốt hơn" (trả lời trong buổi trao đổi) chưa có căn cứ — GraphSAGE nhỏ cỡ
+  3,2 nghìn tham số (bằng MLP) vẫn sụp; nguyên nhân chính là ít ngân hàng.
+- **Kế tiếp:** Đạt chạy lại lần lượt theo mục 3 của ghi chú; nếu cách B cũng sụp → họp lập kế hoạch tăng số ngân hàng.
