@@ -1,0 +1,9 @@
+{
+  "thoi_diem": "2026-11-03T00:27:30",
+  "script": "09_ibm_fl_dp.py",
+  "lenh": "scripts/09_ibm_fl_dp.py --folds 0 --rounds 30 --eps 8 4 2 1",
+  "commit": "fec10cd",
+  "co_thay_doi_chua_commit": true,
+  "thu_muc_luu_tru": "results/_luu_tru/2026-11-03_0027_ibm_fl_dp",
+  "ghi_chu": "FL+DP mức client IBM HI-Small, K=28, folds [0], ε [8.0, 4.0, 2.0, 1.0], 30 vòng"
+}

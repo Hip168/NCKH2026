@@ -236,3 +236,32 @@ Kết quả chạy **trước ngày 02/11** chưa có kho lưu trữ; bản gố
 - **Số ngân hàng dùng được làm client (ngày 0–9):** ≥ 1.000 giao dịch: 802; ≥ 10.000: 91; có ≥ 1 ca rửa tiền: 987;
   ≥ 5 ca: 223; **≥ 20 ca: 27**; ≥ 50 ca: 3.
 - **Bài học:** đối chiếu với file `accounts.csv` (nguồn chuẩn) trước khi kết luận về định danh.
+
+## Giai đoạn 13 — FL + DP mức client trên IBM, 27 ngân hàng + 1 client gộp (03/11/2026)
+
+- **Làm:** `scripts/09_ibm_fl_dp.py` (D19), fold 0, K = 28, MLP (cách B), đặc trưng view bank, train r = 0,02,
+  val/test đầy đủ, 30 vòng. Lưu ở `results/_luu_tru/2026-11-03_0027_ibm_fl_dp`.
+- **Kết quả** (mức ngẫu nhiên PR-AUC tổng ≈ 0,0009):
+
+  | Cách | PR-AUC tổng | PR-AUC TB theo client | Recall@1% | z |
+  |---|---|---|---|---|
+  | Gộp chung | 0,055 | 0,231 | 0,454 | |
+  | Tự học riêng | 0,041 | 0,182 | 0,439 | |
+  | FedAvg | 0,033 | 0,127 | 0,343 | |
+  | DP ε = 8 | 0,011 | 0,104 | 0,155 | 3,50 |
+  | DP ε = 4 | 0,005 | 0,039 | 0,083 | 6,35 |
+  | DP ε = 2 | 0,002 | 0,017 | (0,372)* | 11,80 |
+  | DP ε = 1 | 0,002 | 0,025 | (0,381)* | 22,19 |
+
+- **Rút ra:**
+  1. Tăng K từ 5 lên 28 có tác dụng: ε = 8 không còn sụp hoàn toàn (PR-AUC gấp ~12 lần ngẫu nhiên). Nhưng ε ≤ 4 vẫn
+     gần như sụp; ε ≤ 2 sụp.
+  2. **MLP yếu:** gộp chung chỉ 0,055, trong khi mô hình cây (giai đoạn 9/12) đạt ~0,22 → mọi con số đang bị mô hình
+     yếu kéo xuống. FedAvg còn đang tăng ở vòng 30 (val 0,014 → 0,020 → 0,026 → 0,028 ở vòng 5/10/20/30) → học thiếu.
+  3. FedAvg (0,033) kém tự học riêng (0,041) — có thể do học thiếu và do client gộp `_nho` (68% ca rửa tiền) khác hẳn
+     các ngân hàng lẻ.
+  4. *Lỗi đo phát hiện thêm (#41):* Recall@1% = 0,37–0,38 ở ε = 2 và 1 dù PR-AUC ≈ ngẫu nhiên. Khi mô hình sụp, điểm gần
+     như bằng nhau; `top_frac_daily` phá hòa theo thứ tự xuất hiện → thứ tự dòng trong file (không ngẫu nhiên) quyết
+     định ai bị gắn cờ. Cần phá hòa ngẫu nhiên (seed cố định) hoặc theo trung bình hạng.
+- **Kế tiếp đề xuất:** (1) làm MLP mạnh lên trước (nhiều vòng/epoch hơn, chỉnh lr) để FedAvg không DP tiến gần gộp
+  chung; (2) sửa #41; (3) mới chạy lại DP và 5 fold.
