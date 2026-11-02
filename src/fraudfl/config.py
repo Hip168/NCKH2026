@@ -25,6 +25,7 @@ BURN_IN_DAYS = 30            # bỏ 30 ngày đầu khỏi train/test: kịch b�
 N_OUTER_FOLDS = 5
 N_INNER_FOLDS = 3
 TERMINAL_DELAY_DAYS = 7      # nhãn gian lận chỉ được biết sau 7 ngày (dùng cho đặc trưng rủi ro terminal)
+IBM_MAX_DAY = 9              # D18: IBM HI-Small chỉ dùng ngày 0–9 (ngày 10–17 ~60% rửa tiền — lỗi bộ sinh dữ liệu)
 
 
 @dataclass

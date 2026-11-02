@@ -96,5 +96,11 @@ def build_ibm_features(df: pd.DataFrame, view: str = "global") -> pd.DataFrame:
 KEY_COLUMNS = ["TX_ID", "FROM_BANK", "TO_BANK", "TX_TIME_DAYS", "LABEL", "AMOUNT_USD"]
 
 
-def feature_columns(feat: pd.DataFrame) -> list[str]:
-    return [c for c in feat.columns if c not in KEY_COLUMNS]
+# D18: tuổi tài khoản gắn chặt với thời gian trong dữ liệu (proxy của "ngày") → vẫn tính và lưu, nhưng KHÔNG đưa vào
+# mô hình. Bỏ chỉ giảm ~0,01 PR-AUC (docs/nhat_ky_ket_qua.md giai đoạn 6).
+EXCLUDED_FEATURES = ["SND_AGE_DAYS"]
+
+
+def feature_columns(feat: pd.DataFrame, include_excluded: bool = False) -> list[str]:
+    skip = KEY_COLUMNS + ([] if include_excluded else EXCLUDED_FEATURES)
+    return [c for c in feat.columns if c not in skip]

@@ -101,3 +101,17 @@ Kết quả chạy **trước ngày 02/11** chưa có kho lưu trữ; bản gố
   3. Đuôi dữ liệu thổi phồng VDR (0,10 → 0,55) vì ca rửa tiền ở đuôi có giá trị lớn.
   4. Chế độ bank (cho FL) kém global khoảng 0,07 PR-AUC — đây là giá của việc không thấy thông tin tài khoản nhận.
   5. VDR thấp (0,04–0,10) dù Recall khoảng 0,6: mô hình bắt được nhiều ca nhưng bỏ sót ca giá trị lớn.
+
+## Giai đoạn 7 — Chốt D18 và chạy thử lấy mẫu IBM (02/11/2026)
+
+- **Quyết định:** D18 — IBM HI-Small chỉ dùng ngày 0–9; bỏ `SND_AGE_DAYS` khỏi đầu vào mô hình. Đạt chốt, cần báo
+  lại anh Hùng.
+- **Sửa `05_ibm_sample.py`:**
+  1. Lọc ngày ≤ 9 trước khi lấy mẫu; `TX_ID` vẫn là số dòng trong file gốc.
+  2. Lỗi: sau khi mã ngân hàng thành chuỗi, nhóm "ngân hàng nhỏ" (-1) không còn so khớp được → đổi sang nhãn `_nho`.
+  3. Lỗi thiết kế: quy tắc "mỗi ngân hàng giữ ít nhất 1 ca bình thường" áp lên ~30 nghìn ngân hàng tí hon làm mẫu phình
+     từ ~106 nghìn lên 130 nghìn. Sửa: ngân hàng có ≥ 1.000 ca bình thường lấy mẫu riêng, còn lại gộp nhóm `_nho`.
+- **Chạy thử trên HI-Small thật, r = 0,02, ghi ra thư mục tạm (CHƯA phải mẫu chính thức vì r chưa chốt):**
+  105.973 giao dịch, 4.522 ca rửa tiền (4,27% trong mẫu; 0,089% thật), 806 ngân hàng lấy mẫu riêng + nhóm `_nho`
+  (4.905 ngân hàng); mỗi fold test 895–913 ca rửa tiền; tổng trọng số ca bình thường = 5.072.715, khớp đúng số thật.
+- **Chờ:** chốt r, rồi chạy chính thức vào `data/splits/` và commit.

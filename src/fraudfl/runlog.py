@@ -46,7 +46,7 @@ def archive_run(out_dir: Path, note: str = "", argv: list[str] | None = None) ->
         "lenh": " ".join(argv),
         "commit": _git("rev-parse", "--short", "HEAD"),
         "co_thay_doi_chua_commit": bool(_git("status", "--porcelain", "--untracked-files=no")),
-        "thu_muc_luu_tru": dest.relative_to(ROOT).as_posix(),
+        "thu_muc_luu_tru": (dest.relative_to(ROOT) if dest.is_relative_to(ROOT) else dest).as_posix(),
         "ghi_chu": note,
     }
     (dest / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")

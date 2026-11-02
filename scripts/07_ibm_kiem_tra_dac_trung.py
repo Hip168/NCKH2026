@@ -20,7 +20,7 @@ from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.metrics import average_precision_score, roc_auc_score
 from sklearn.model_selection import train_test_split
 
-from fraudfl.config import DATA_PROCESSED, RESULTS, SEED
+from fraudfl.config import DATA_PROCESSED, IBM_MAX_DAY, RESULTS, SEED
 from fraudfl.data.ibm_features import feature_columns
 from fraudfl.data.sampling import subsample_negatives
 from fraudfl.eval.metrics import evaluate
@@ -31,7 +31,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--stem", default="HI-Small")
     ap.add_argument("--rate", type=float, default=0.02)
-    ap.add_argument("--max-day", type=int, default=None, help="chỉ giữ TX_TIME_DAYS <= giá trị này (đuôi HI-Small từ ngày 10 bất thường)")
+    ap.add_argument("--max-day", type=int, default=IBM_MAX_DAY, help="chỉ giữ TX_TIME_DAYS <= giá trị này (đuôi HI-Small từ ngày 10 bất thường)")
     ap.add_argument("--drop", nargs="*", default=[], help="bỏ các đặc trưng này")
     ap.add_argument("--tag", default="")
     args = ap.parse_args()

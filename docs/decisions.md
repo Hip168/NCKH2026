@@ -13,7 +13,8 @@ Trạng thái "đề xuất" = đã áp vào code để chạy thử, **chờ c�
 | D4 | 2026-10-31 | Đặc trưng tính riêng trong từng ngân hàng; rủi ro terminal chỉ dùng nhãn có độ trễ 7 ngày | Đúng tinh thần FL; tránh rò rỉ nhãn |
 | D5 | 2026-10-31 | Synthetic: 5 ngân hàng × ~100k giao dịch, 120 ngày, tỷ lệ gian lận 1,0–1,8%, terminal dùng chung | Theo Slide 5. 81% terminal bị xâm nhập xuất hiện ở >1 ngân hàng → động lực cho FL |
 | D6 | 2026-10-31 | Chia fold: nested stratified 5×3 theo (nhãn × client), seed 42; thêm cột chia theo thời gian | Theo Slide 8 |
-| D17 | 2026-11-02 | **Lấy mẫu con IBM AML** (anh Hùng duyệt): giữ 100% ca rửa tiền, bốc tỷ lệ r ca bình thường **trong từng ngân hàng** (From Bank), seed 42; lưu cố định `data/splits/ibm_sample_ids.csv` + `ibm_sample_meta.json` (script `05_ibm_sample.py`, từ chối ghi đè); sau đó nested stratified 5×3 trên mẫu → `fold_assignments_ibm.csv`. Đặc trưng và đồ thị tính trên dữ liệu đầy đủ trước khi lọc. Trong báo cáo chỉ nhắc ngắn | 5 triệu giao dịch không chạy được trên máy nhóm; gian lận chỉ ~0,1% nên bỏ bớt ca bình thường ít mất thông tin. **Chờ chốt:** giá trị r (theo đường học) và việc tính chỉ số trên test có trọng số 1/r (`evaluate(..., weight=)`) để PR-AUC đúng tỷ lệ thật |
+| D18 | 2026-11-02 | **IBM HI-Small chỉ dùng ngày 0–9** (`config.IBM_MAX_DAY = 9`, áp trong `05_ibm_sample.py` trước khi lấy mẫu). Đặc trưng `SND_AGE_DAYS` vẫn tính nhưng không đưa vào mô hình (`ibm_features.EXCLUDED_FEATURES`). Chi tiết ở mục D18 bên dưới | Ngày 10–17 chỉ ~1.100 gd nhưng ~60% rửa tiền (lỗi bộ sinh dữ liệu); bỏ chỉ mất 0,02% giao dịch, còn 4.522/5.177 ca rửa tiền; giữ lại thì đặc trưng thời gian rò rỉ và VDR bị thổi phồng 0,10 → 0,55 |
+| D17 | 2026-11-02 | **Lấy mẫu con IBM AML** (anh Hùng duyệt): giữ 100% ca rửa tiền, bốc tỷ lệ r ca bình thường **trong từng ngân hàng** có ≥ 1.000 ca bình thường, các ngân hàng nhỏ hơn gộp thành một nhóm `_nho` rồi bốc chung (tránh phình mẫu), seed 42; lưu cố định `data/splits/ibm_sample_ids.csv` + `ibm_sample_meta.json` (script `05_ibm_sample.py`, từ chối ghi đè); sau đó nested stratified 5×3 trên mẫu → `fold_assignments_ibm.csv`. Đặc trưng và đồ thị tính trên dữ liệu đầy đủ trước khi lọc. Trong báo cáo chỉ nhắc ngắn | 5 triệu giao dịch không chạy được trên máy nhóm; gian lận chỉ ~0,1% nên bỏ bớt ca bình thường ít mất thông tin. **Chờ chốt:** giá trị r (theo đường học) và việc tính chỉ số trên test có trọng số 1/r (`evaluate(..., weight=)`) để PR-AUC đúng tỷ lệ thật |
 | D12 | 2026-11-02 | **Giữ DP mức client** (đúng Slide 4) làm cơ chế chính, không chuyển sang mức bản ghi. Đọc [luu_y_dp_muc_client.md](luu_y_dp_muc_client.md) | Giữ bài toán tổng quát: che được cả một ngân hàng, áp dụng được cho GNN. Với 5 ngân hàng, ε ≤ 2 hiện làm mô hình sụp (PR-AUC 0,028); cần chốt lại tiêu chí Slide 10 và thêm thí nghiệm quét số ngân hàng |
 
 ## Đề xuất — đã áp vào code, chờ nhóm duyệt
@@ -42,7 +43,7 @@ Trạng thái "đề xuất" = đã áp vào code để chạy thử, **chờ c�
 D8 xóa gần hết khoảng cách centralized–local (RF: 0,694 so với 0,690). Recall@1% giờ phân biệt rõ mô hình
 (0,37 → 0,54), không còn bão hòa như k = 100.
 
-### D18 (đề xuất, 2026-11-02): IBM HI-Small chỉ dùng ngày 0–9
+### D18 (ĐÃ CHỐT 2026-11-02, Đạt quyết định — báo lại anh Hùng): IBM HI-Small chỉ dùng ngày 0–9
 
 Từ ngày 10 đến 17 chỉ còn khoảng 1.100 giao dịch nhưng khoảng 60% là rửa tiền (trước đó 0,03–0,21%) — lỗi của bộ sinh
 dữ liệu. Giữ lại thì mọi đặc trưng gắn với thời gian bị rò rỉ và VDR bị thổi phồng (0,10 → 0,55). Đề xuất: lọc
