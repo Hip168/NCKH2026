@@ -349,3 +349,30 @@ Kết quả chạy **trước ngày 02/11** chưa có kho lưu trữ; bản gố
 - **Rút ra:** FedAvg tốt lên ~3,7 lần và bão hòa từ vòng ~20, nhưng chỉ đạt ~22% so với gộp chung (0,111). Nhiều khả năng do
   802 ngân hàng rất khác nhau (non-IID: 94 ngân hàng không có ca, trung vị 2 ca). Hướng thử: FedProx (E6), momentum ở server.
 - **Kế tiếp:** chạy DP với cấu hình F2 (ε ∈ {8, 4, 2, 1}) để đo mức giảm so với mốc FedAvg 0,025.
+
+## Giai đoạn 18 — DP mức client trên IBM K = 802: ε = 1 dùng được; nút thắt là cắt cập nhật + FedAvg (03/11/2026)
+
+- **Làm:** DP với cấu hình F2 (5 epoch, lr 5e-3, lô 512, 200 ngân hàng/vòng, r = 0,1, 30 vòng), fold 0; thêm lần kiểm
+  chứng "cắt + trung bình đều, gần như không nhiễu" (ε = 1000, z = 0,11). Lưu ở
+  `results/_luu_tru/2026-11-03_0111_ibm_fl_dp_K802_F2_dp`, `..._0114_ibm_fl_dp_K802_F2_cat_khong_nhieu`.
+
+  | Cách | PR-AUC | TB client | Recall@1% | % FedAvg | % gộp chung | Nhiễu/tham số |
+  |---|---|---|---|---|---|---|
+  | Gộp chung | 0,111 | 0,376 | 0,531 | | 100% | |
+  | FedAvg | 0,0248 | 0,213 | 0,305 | 100% | 22% | |
+  | Chỉ cắt + trung bình đều (ε = 1000) | 0,0156 | 0,170 | 0,245 | 63% | 14% | 0,0006 |
+  | DP ε = 8 | 0,0158 | 0,176 | 0,240 | 64% | 14% | 0,0060 |
+  | DP ε = 4 | 0,0156 | 0,170 | 0,240 | 63% | 14% | 0,0096 |
+  | DP ε = 2 | 0,0157 | 0,173 | 0,245 | 63% | 14% | 0,0163 |
+  | **DP ε = 1** | **0,0152** | **0,161** | **0,245** | **61%** | **14%** | 0,0293 |
+
+  Đường val theo vòng của 4 mức ε gần như trùng nhau; vòng tốt nhất 17–30.
+- **Rút ra:**
+  1. **Với 802 ngân hàng, DP mức client ở ε = 1 học được** (gấp ~17 lần ngẫu nhiên) — khác hẳn K = 5 (synthetic) và
+     K = 28 (IBM) đều sụp. Đây là bằng chứng chính cho luận điểm "DP mức client cần nhiều bên tham gia".
+  2. **Nhiễu gần như không tốn gì:** chỉ cắt + trung bình đều (không nhiễu) cũng ra 0,0156, bằng DP ε = 1–8. Toàn bộ phần
+     tụt FedAvg → DP (0,0248 → ~0,0155) là do **cắt cập nhật C = 1 và trung bình đều**, không phải do nhiễu.
+  3. So với tiêu chí Slide 10 (≥ 85% gộp chung) mới đạt 14%. Nút thắt: (a) FedAvg chỉ 22% gộp chung (802 ngân hàng
+     non-IID); (b) ngưỡng cắt C = 1 có thể quá nhỏ.
+- **Kế tiếp đề xuất:** đo độ lớn thật của bản cập nhật để chọn C; thử C lớn hơn (nhiễu vẫn còn dư địa); thử FedProx /
+  momentum ở server để kéo FedAvg lên; sau đó chạy đủ 5 fold.
