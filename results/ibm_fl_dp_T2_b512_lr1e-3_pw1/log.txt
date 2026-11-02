@@ -1,0 +1,13 @@
+HI-Small ngày 0–9: 5,077,237 gd, 4,522 ca; 22 đặc trưng (view bank); K = 28 client (27 ngân hàng >= 20 ca + '_nho'); r = 0.02; 30 vòng × 1 epoch; lr 0.001; batch 512; pos_weight 1.0; ε [8.0, 4.0, 2.0, 1.0]; seed 42
+Ca rửa tiền theo client: 70:633, 12:66, 119:51, 20:47, 10:46, 1:44, 22:36, 11:35, 15:33, 222:31, 148350:29, 15231:29, 223:26, 23:26, 211:25, 21749:25, 21174:24, 2591:24, 118:23, 150240:23, 23691:23, 116:22, 21745:22, 1267:21, 11107:20, 213:20, 9679:20, _nho:3098
+
+=== Fold 0: fit (lấy mẫu) 67,825 | val 812,358 | test 1,015,448 ===
+  central        PR-AUC 0.0863 | TB theo client 0.2693 | Recall@1% 0.5288 | VDR@1% 0.9419
+  fedavg         PR-AUC 0.0578 | TB theo client 0.2372 | Recall@1% 0.4967 | VDR@1% 0.1992
+
+=== Trung bình qua các fold ===
+         pr_auc  macro_pr_auc  recall@1%  vdr@1%
+setting                                         
+central  0.0863        0.2693     0.5288  0.9419
+fedavg   0.0578        0.2372     0.4967  0.1992
+Đã lưu trữ: D:\0 Project\2026 NCKH 2027\project\results\_luu_tru\2026-11-03_0032_ibm_fl_dp_T2_b512_lr1e-3_pw1

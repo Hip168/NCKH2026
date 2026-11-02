@@ -33,8 +33,10 @@ def top_frac_daily(y_true, y_score, amount, day, frac: float, weight=None) -> di
     a = np.asarray(amount, dtype=float)
     d = np.asarray(day)
     w = np.ones(len(y)) if weight is None else np.asarray(weight, dtype=float)
-    # Sắp theo (ngày, điểm giảm dần); hòa điểm giữ thứ tự xuất hiện để kết quả xác định
-    order = np.lexsort((np.arange(len(y)), -s, d))
+    # Sắp theo (ngày, điểm giảm dần). Hòa điểm phá bằng hoán vị ngẫu nhiên seed cố định (#41): phá theo thứ tự dòng
+    # làm mô hình đã sụp (điểm gần như bằng nhau) vẫn có Recall@p cao giả nếu thứ tự dòng tương quan với nhãn.
+    tie = np.random.default_rng(0).permutation(len(y))
+    order = np.lexsort((tie, -s, d))
     d_o, w_o = d[order], w[order]
     cum = pd.Series(w_o).groupby(d_o).cumsum().to_numpy()             # trọng số cộng dồn trong ngày
     budget = np.ceil(frac * pd.Series(w_o).groupby(d_o).transform("sum").to_numpy())

@@ -40,8 +40,18 @@ def predict(model: nn.Module, d: GraphData) -> np.ndarray:
     return torch.sigmoid(model(d.x, d.edge_index)).numpy()
 
 
-def _local_epochs(model, d: GraphData, opt, loss_fn, epochs: int):
+def _local_epochs(model, d: GraphData, opt, loss_fn, epochs: int, batch_size: int | None = None):
+    """Full-batch (mặc định, dùng cho GNN) hoặc mini-batch khi `batch_size` có giá trị và dữ liệu dạng bảng
+    (edge_index = None). Full-batch chỉ có 1 bước cập nhật mỗi epoch → MLP dạng bảng học thiếu (giai đoạn 13)."""
     model.train()
+    if batch_size and d.edge_index is None:
+        idx = torch.nonzero(d.fit).squeeze(1)
+        for _ in range(epochs):
+            for b in idx[torch.randperm(len(idx))].split(batch_size):
+                opt.zero_grad()
+                loss_fn(model(d.x[b]), d.y[b]).backward()
+                opt.step()
+        return
     for _ in range(epochs):
         opt.zero_grad()
         loss = loss_fn(model(d.x, d.edge_index)[d.fit], d.y[d.fit])
@@ -56,12 +66,14 @@ def _val_ap(model, datas: list[GraphData]) -> float:
 
 
 def train_full_batch(model: nn.Module, d: GraphData, lr: float, max_epochs: int, patience: int,
-                     eval_every: int = 5, log=None) -> nn.Module:
+                     eval_every: int = 5, log=None, batch_size: int | None = None,
+                     pos_weight: float | None = None) -> nn.Module:
     opt = torch.optim.Adam(model.parameters(), lr=lr)
-    loss_fn = nn.BCEWithLogitsLoss(pos_weight=_pos_weight([d]))
+    pw = _pos_weight([d]) if pos_weight is None else torch.tensor(pos_weight)
+    loss_fn = nn.BCEWithLogitsLoss(pos_weight=pw)
     best, best_state, bad = -1.0, None, 0
     for epoch in range(eval_every, max_epochs + 1, eval_every):
-        _local_epochs(model, d, opt, loss_fn, eval_every)
+        _local_epochs(model, d, opt, loss_fn, eval_every, batch_size)
         ap = _val_ap(model, [d])
         if ap > best:
             best, best_state, bad = ap, copy.deepcopy(model.state_dict()), 0
@@ -77,7 +89,8 @@ def train_full_batch(model: nn.Module, d: GraphData, lr: float, max_epochs: int,
 
 def fedavg(model: nn.Module, clients: list[GraphData], lr: float, rounds: int, local_epochs: int,
            log=None, privatize=None, local_train=None, server_privatize=None,
-           uniform_weights: bool = False) -> tuple[nn.Module, list[dict]]:
+           uniform_weights: bool = False, batch_size: int | None = None,
+           pos_weight: float | None = None) -> tuple[nn.Module, list[dict]]:
     """FedAvg (McMahan et al., 2017): trung bình trọng số theo số mẫu fit của từng client.
 
     Mỗi vòng: client nhận mô hình chung → train `local_epochs` epoch trên dữ liệu riêng (Adam mới mỗi vòng)
@@ -89,7 +102,7 @@ def fedavg(model: nn.Module, clients: list[GraphData], lr: float, rounds: int, l
     `uniform_weights`: lấy trung bình đều 1/K thay vì theo số mẫu (cần cho DP mức client để độ nhạy là C/K).
     Trả về (mô hình tốt nhất, lịch sử từng vòng).
     """
-    pos_weight = _pos_weight(clients)   # chỉ là một số vô hướng; thực tế có thể để từng client tự tính
+    pos_weight = _pos_weight(clients) if pos_weight is None else torch.tensor(pos_weight)   # vô hướng
     weights = np.array([1.0 if uniform_weights else c.n_fit for c in clients], dtype=np.float64)
     weights /= weights.sum()
     best, best_state, history = -1.0, None, []
@@ -102,7 +115,7 @@ def fedavg(model: nn.Module, clients: list[GraphData], lr: float, rounds: int, l
                 local_train(model, c)
             else:
                 opt = torch.optim.Adam(model.parameters(), lr=lr)
-                _local_epochs(model, c, opt, nn.BCEWithLogitsLoss(pos_weight=pos_weight), local_epochs)
+                _local_epochs(model, c, opt, nn.BCEWithLogitsLoss(pos_weight=pos_weight), local_epochs, batch_size)
             state = copy.deepcopy(model.state_dict())
             states.append(privatize(state, global_state) if privatize else state)
         avg = {k: sum(w * s[k] for w, s in zip(weights, states)) for k in global_state}

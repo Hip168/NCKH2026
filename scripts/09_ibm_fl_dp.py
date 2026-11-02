@@ -56,6 +56,10 @@ def main():
     ap.add_argument("--min-cases", type=int, default=20)
     ap.add_argument("--seed", type=int, default=SEED)
     ap.add_argument("--tag", default="")
+    ap.add_argument("--batch-size", type=int, default=None, help="mini-batch cho MLP (mặc định full-batch như bản đầu)")
+    ap.add_argument("--pos-weight", type=float, default=None, help="trọng số lớp rửa tiền (mặc định = neg/pos)")
+    ap.add_argument("--local-epochs", type=int, default=LOCAL_EPOCHS)
+    ap.add_argument("--lr", type=float, default=LR)
     args = ap.parse_args()
     out = RESULTS / ("ibm_fl_dp" + (f"_{args.tag}" if args.tag else ""))
     out.mkdir(parents=True, exist_ok=True)
@@ -81,7 +85,8 @@ def main():
     K = len(names)
     log(f"{args.stem} ngày 0–{IBM_MAX_DAY}: {len(f):,} gd, {y.sum():,} ca; {len(fc)} đặc trưng (view bank); "
         f"K = {K} client ({len(big)} ngân hàng >= {args.min_cases} ca + '{SMALL_GROUP}'); r = {args.rate}; "
-        f"{args.rounds} vòng; ε {args.eps}; seed {args.seed}")
+        f"{args.rounds} vòng × {args.local_epochs} epoch; lr {args.lr}; batch {args.batch_size}; pos_weight {args.pos_weight}; "
+        f"ε {args.eps}; seed {args.seed}")
     log("Ca rửa tiền theo client: " + ", ".join(f"{n}:{int((y[cid == i]).sum())}" for i, n in enumerate(names)))
 
     rows, per_client_rows, history = [], [], []
@@ -143,7 +148,8 @@ def main():
             cat = lambda a: torch.cat([getattr(d, a) for d in clients])
             d_all = GraphData(cat("x"), None, cat("y"), cat("fit"), cat("val"), cat("test"), nodes)
             torch.manual_seed(args.seed)
-            m = train_full_batch(TabMLP(len(fc)), d_all, LR, MAX_EPOCHS, PATIENCE)
+            m = train_full_batch(TabMLP(len(fc)), d_all, args.lr, MAX_EPOCHS, PATIENCE, batch_size=args.batch_size,
+                                 pos_weight=args.pos_weight)
             report("central", full_score(m, [d_all]), {"seconds": round(time.time() - t0)})
 
         if "local" in args.settings:
@@ -151,14 +157,16 @@ def main():
             sc = np.full(len(y), np.nan)
             for d in clients:
                 torch.manual_seed(args.seed)
-                m = train_full_batch(TabMLP(len(fc)), d, LR, MAX_EPOCHS, PATIENCE)
+                m = train_full_batch(TabMLP(len(fc)), d, args.lr, MAX_EPOCHS, PATIENCE, batch_size=args.batch_size,
+                                     pos_weight=args.pos_weight)
                 sc[d.node_ids] = predict(m, d)
             report("local", sc, {"seconds": round(time.time() - t0)})
 
         if "fedavg" in args.settings:
             t0 = time.time()
             torch.manual_seed(args.seed)
-            m, hist = fedavg(TabMLP(len(fc)), clients, LR, args.rounds, LOCAL_EPOCHS)
+            m, hist = fedavg(TabMLP(len(fc)), clients, args.lr, args.rounds, args.local_epochs,
+                             batch_size=args.batch_size, pos_weight=args.pos_weight)
             history += [{"fold": k, "setting": "fedavg", **h} for h in hist]
             report("fedavg", full_score(m, clients), {"seconds": round(time.time() - t0)})
 
@@ -168,7 +176,8 @@ def main():
                 gen = torch.Generator().manual_seed(args.seed + k)
                 z = noise_multiplier(eps, sample_rate=1.0, steps=args.rounds)
                 torch.manual_seed(args.seed)
-                m, hist = fedavg(TabMLP(len(fc)), clients, LR, args.rounds, LOCAL_EPOCHS,
+                m, hist = fedavg(TabMLP(len(fc)), clients, args.lr, args.rounds, args.local_epochs,
+                                 batch_size=args.batch_size, pos_weight=args.pos_weight,
                                  privatize=lambda loc, glo: privatize_update(loc, glo, CLIP, 0.0, gen),
                                  server_privatize=lambda avg, glo: add_server_noise(avg, glo, z * CLIP / K, gen),
                                  uniform_weights=True)

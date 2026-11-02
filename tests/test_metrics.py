@@ -48,7 +48,7 @@ def test_no_weight_matches_previous_definition():
     rng = np.random.default_rng(1)
     n = 5000
     y = (rng.uniform(size=n) < 0.02).astype(int)
-    s = np.round(rng.uniform(size=n) + y * 0.5, 2)        # làm tròn để có nhiều điểm hòa
+    s = rng.uniform(size=n) + y * 0.5                      # không có điểm hòa → phải khớp định nghĩa cũ
     a, d = rng.uniform(1, 100, n), rng.integers(0, 20, n)
     r = top_frac_daily(y, s, a, d, 0.01)
     assert (r["recall@1%"], r["precision@1%"], r["vdr@1%"]) == pytest.approx(_old_top_frac_daily(y, s, a, d, 0.01))
@@ -73,3 +73,12 @@ def test_weighted_subsample_approximates_full_data():
     assert sub["recall@1%"] == pytest.approx(full["recall@1%"], abs=0.03)
     assert sub["fraud_rate"] == pytest.approx(full["fraud_rate"], rel=0.1)
     assert naive["pr_auc"] > full["pr_auc"] + 0.2          # không trọng số thì PR-AUC cao giả
+
+
+def test_ties_do_not_depend_on_row_order():
+    # Mô hình "sụp": mọi điểm bằng nhau, ca gian lận nằm hết ở đầu file → Recall@1% phải ≈ 1% (ngẫu nhiên),
+    # không được ≈ 100% như khi phá hòa theo thứ tự dòng (#41)
+    n = 100_000
+    y = np.r_[np.ones(500, int), np.zeros(n - 500, int)]
+    r = top_frac_daily(y, np.zeros(n), np.ones(n), np.zeros(n, int), 0.01)
+    assert r["recall@1%"] < 0.05

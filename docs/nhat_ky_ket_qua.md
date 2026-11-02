@@ -265,3 +265,25 @@ Kết quả chạy **trước ngày 02/11** chưa có kho lưu trữ; bản gố
      định ai bị gắn cờ. Cần phá hòa ngẫu nhiên (seed cố định) hoặc theo trung bình hạng.
 - **Kế tiếp đề xuất:** (1) làm MLP mạnh lên trước (nhiều vòng/epoch hơn, chỉnh lr) để FedAvg không DP tiến gần gộp
   chung; (2) sửa #41; (3) mới chạy lại DP và 5 fold.
+
+## Giai đoạn 14 — Sửa lỗi đo #41, làm MLP mạnh lên (03/11/2026)
+
+- **#41 (phá hòa theo thứ tự dòng):** `top_frac_daily` nay phá hòa bằng hoán vị ngẫu nhiên seed 0. Test mới: mọi điểm
+  bằng nhau, ca xấu dồn đầu file → Recall@1% < 5%. Ảnh hưởng: chỉ các mô hình có nhiều điểm hòa (mô hình sụp) —
+  Recall@p/VDR@p của các lần DP sụp trước đây (synthetic giai đoạn 4/11, IBM giai đoạn 13) có thể bị cao giả; PR-AUC
+  không bị ảnh hưởng.
+- **Nguyên nhân MLP yếu:** huấn luyện full-batch → 1 bước cập nhật/epoch; FedAvg chỉ 90 bước cả quá trình. Thêm
+  mini-batch cho mô hình dạng bảng (`train._local_epochs(batch_size=...)`; GNN vẫn full-batch).
+- **Thử 3 cấu hình** (fold 0, K = 28, lô 512, 1 epoch cục bộ, 30 vòng; lưu `results/_luu_tru/2026-11-03_*_ibm_fl_dp_T*`):
+
+  | Cấu hình | Gộp chung PR-AUC | Gộp chung TB client | FedAvg PR-AUC | FedAvg TB client |
+  |---|---|---|---|---|
+  | Cũ (full-batch, lr 5e-3, pos_weight cân bằng) | 0,055 | 0,231 | 0,033 | 0,127 |
+  | T1 lr 1e-3, pos_weight cân bằng | 0,058 | 0,259 | 0,045 | 0,173 |
+  | **T2 lr 1e-3, pos_weight 1** | **0,086** | **0,269** | 0,058 | **0,237** |
+  | T3 lr 5e-3, pos_weight 1 | 0,072 | 0,227 | 0,062 | 0,219 |
+
+- **So sánh công bằng với mô hình cây** (HGB, cùng fold 0 và cách chia như script 09; chạy trực tiếp): view bank
+  PR-AUC 0,128 (TB client 0,308); view global 0,174 (0,394). → MLP T2 kém cây ~1,5 lần trên cùng đặc trưng; view
+  global (biết tài khoản nhận) tốt hơn view bank rõ rệt.
+- **Chọn T2** cho các thí nghiệm DP tiếp theo.
