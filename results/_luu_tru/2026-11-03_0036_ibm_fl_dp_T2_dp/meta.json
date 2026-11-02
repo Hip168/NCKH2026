@@ -1,0 +1,9 @@
+{
+  "thoi_diem": "2026-11-03T00:36:53",
+  "script": "09_ibm_fl_dp.py",
+  "lenh": "scripts/09_ibm_fl_dp.py --settings dp --eps 8 4 2 1 --batch-size 512 --lr 1e-3 --local-epochs 1 --pos-weight 1 --tag T2_dp",
+  "commit": "b441f53",
+  "co_thay_doi_chua_commit": false,
+  "thu_muc_luu_tru": "results/_luu_tru/2026-11-03_0036_ibm_fl_dp_T2_dp",
+  "ghi_chu": "FL+DP mức client IBM HI-Small, K=28, folds [0], ε [8.0, 4.0, 2.0, 1.0], 30 vòng"
+}

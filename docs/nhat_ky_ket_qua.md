@@ -287,3 +287,24 @@ Kết quả chạy **trước ngày 02/11** chưa có kho lưu trữ; bản gố
   PR-AUC 0,128 (TB client 0,308); view global 0,174 (0,394). → MLP T2 kém cây ~1,5 lần trên cùng đặc trưng; view
   global (biết tài khoản nhận) tốt hơn view bank rõ rệt.
 - **Chọn T2** cho các thí nghiệm DP tiếp theo.
+
+## Giai đoạn 15 — DP mức client với cấu hình T2 trên IBM, K = 28 (03/11/2026)
+
+- **Làm:** `09_ibm_fl_dp.py --settings dp --batch-size 512 --lr 1e-3 --local-epochs 1 --pos-weight 1`, fold 0,
+  ε ∈ {8, 4, 2, 1}. Lưu ở `results/_luu_tru/2026-11-03_0036_ibm_fl_dp_T2_dp`.
+- **Kết quả** (PR-AUC tổng / TB theo client; ngẫu nhiên ≈ 0,0009; FedAvg không DP T2 = 0,058 / 0,237):
+
+  | ε | z | Giai đoạn 13 (full-batch) | T2 (mini-batch) |
+  |---|---|---|---|
+  | 8 | 3,50 | 0,011 / 0,104 | 0,0019 / 0,048 |
+  | 4 | 6,35 | 0,005 / 0,039 | 0,0013 / 0,042 |
+  | 2 | 11,80 | 0,002 / 0,017 | 0,0013 / 0,018 |
+  | 1 | 22,19 | 0,002 / 0,025 | 0,0012 / 0,016 |
+
+- **Rút ra:**
+  1. Mô hình mạnh hơn không cứu được DP mức client với K = 28: sụp ở mọi ε ≤ 8.
+  2. Ước lượng: ở ε = 8 nhiễu mỗi tham số z·C/K ≈ 0,125; với ~3,5 nghìn tham số, độ lớn vector nhiễu ≈ 7,4 so với tín
+     hiệu (trung bình cập nhật đã cắt) ≤ 1. Kết quả ε = 8 ở giai đoạn 13 tốt hơn nhiều khả năng do dao động trong vùng
+     nhiễu át tín hiệu.
+  3. Hướng chưa thử: dùng mọi ngân hàng đủ giao dịch làm client (802 ngân hàng có ≥ 1.000 giao dịch, kể cả không có ca
+     rửa tiền) → K vài trăm, kèm chọn ngẫu nhiên một phần ngân hàng mỗi vòng. Hoặc chuyển sang DP mức bản ghi.
