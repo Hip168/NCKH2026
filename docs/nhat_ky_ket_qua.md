@@ -405,3 +405,21 @@ Kết quả chạy **trước ngày 02/11** chưa có kho lưu trữ; bản gố
   3. Nút thắt lớn nhất còn lại: bản thân FedAvg chỉ đạt 16–22% gộp chung (802 ngân hàng rất khác nhau).
 - **Kế tiếp đề xuất:** (a) cách lấy trung bình có trọng số bị chặn tương thích DP (McMahan et al., 2018) để lấy lại phần
   do trung bình đều; (b) FedProx / momentum ở server để kéo FedAvg lên.
+
+## Giai đoạn 20 — FedProx và momentum ở server (03/11/2026)
+
+- **Làm:** thêm FedProx (`--prox-mu`) và FedAvgM (`--server-lr`, `--server-momentum`) vào `train.fedavg` (mặc định giống
+  FedAvg cũ; test `tests/test_fedavg_options.py`). Chạy `fedavg_deu` (trung bình đều — mốc của DP), K = 802, fold 0, cấu
+  hình F2. Lưu ở `results/_luu_tru/2026-11-03_*_ibm_fl_dp_K802_deu_*`.
+
+  | Cấu hình (trung bình đều) | PR-AUC | TB client | Recall@1% | So với mốc 0,0178 |
+  |---|---|---|---|---|
+  | Mốc FedAvg trung bình đều (giai đoạn 19) | 0,0178 | 0,193 | 0,254 | |
+  | FedProx μ = 0,01 | 0,0229 | 0,210 | 0,280 | +29% |
+  | **FedProx μ = 0,1** | **0,0282** | **0,236** | **0,323** | **+58%** |
+  | Momentum server β = 0,9 | 0,0166 | 0,163 | 0,226 | −7% |
+  | Momentum server β = 0,7 | 0,0202 | 0,198 | 0,280 | +13% |
+
+- **Rút ra:** FedProx μ = 0,1 tốt nhất, vượt cả FedAvg trung bình theo số giao dịch (0,0248) dù dùng trung bình đều →
+  hợp với 802 ngân hàng rất khác nhau. μ tăng thì tốt hơn → thử μ = 0,3; 1. Momentum ở server giúp ít/không giúp.
+- **Kế tiếp:** FedProx μ = 0,3 và 1; DP ε = 1, C = 1,6 với FedProx tốt nhất.

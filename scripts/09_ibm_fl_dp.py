@@ -66,6 +66,9 @@ def main():
     ap.add_argument("--clients-per-round", type=int, default=None, help="m ngân hàng chọn ngẫu nhiên mỗi vòng")
     ap.add_argument("--clip", type=float, default=CLIP, help="ngưỡng cắt C cho DP mức client (mặc định 1)")
     ap.add_argument("--log-norms", action="store_true", help="ghi độ lớn cập nhật của từng client (FedAvg) → update_norms.csv")
+    ap.add_argument("--prox-mu", type=float, default=0.0, help="FedProx μ (0 = tắt)")
+    ap.add_argument("--server-lr", type=float, default=1.0, help="learning rate ở server (FedAvgM)")
+    ap.add_argument("--server-momentum", type=float, default=0.0, help="momentum ở server β (0 = tắt)")
     args = ap.parse_args()
     out = RESULTS / ("ibm_fl_dp" + (f"_{args.tag}" if args.tag else ""))
     out.mkdir(parents=True, exist_ok=True)
@@ -103,7 +106,7 @@ def main():
     log(f"{args.stem} ngày 0–{IBM_MAX_DAY}: {len(f):,} gd, {y.sum():,} ca; {len(fc)} đặc trưng (view bank); "
         f"K = {K} client ({desc}); {m_round} client/vòng; r = {args.rate}; "
         f"{args.rounds} vòng × {args.local_epochs} epoch; lr {args.lr}; batch {args.batch_size}; pos_weight {args.pos_weight}; "
-        f"ε {args.eps}; seed {args.seed}")
+        f"ε {args.eps}; seed {args.seed}; FedProx μ {args.prox_mu}; server lr {args.server_lr}, momentum {args.server_momentum}; C {args.clip}")
     cc = np.bincount(cid, weights=y, minlength=K)
     log(f"Ca rửa tiền: {int(y.sum()):,} trên {K} client; client không có ca nào: {(cc == 0).sum()}; "
         f"nhiều nhất {int(cc.max())}; trung vị {np.median(cc):.0f}")
@@ -190,7 +193,8 @@ def main():
             t0 = time.time()
             torch.manual_seed(args.seed)
             m, hist = fedavg(TabMLP(len(fc)), clients, args.lr, args.rounds, args.local_epochs,
-                             batch_size=args.batch_size, pos_weight=args.pos_weight, clients_per_round=m_round,
+                             batch_size=args.batch_size, pos_weight=args.pos_weight, prox_mu=args.prox_mu,
+                             server_lr=args.server_lr, server_momentum=args.server_momentum, clients_per_round=m_round,
                              sample_gen=torch.Generator().manual_seed(args.seed + 1000 + k),
                              update_norms=norms if args.log_norms else None)
             history += [{"fold": k, "setting": "fedavg", **h} for h in hist]
@@ -206,7 +210,8 @@ def main():
             t0 = time.time()
             torch.manual_seed(args.seed)
             m, hist = fedavg(TabMLP(len(fc)), clients, args.lr, args.rounds, args.local_epochs,
-                             batch_size=args.batch_size, pos_weight=args.pos_weight, clients_per_round=m_round,
+                             batch_size=args.batch_size, pos_weight=args.pos_weight, prox_mu=args.prox_mu,
+                             server_lr=args.server_lr, server_momentum=args.server_momentum, clients_per_round=m_round,
                              sample_gen=torch.Generator().manual_seed(args.seed + 1000 + k), uniform_weights=True)
             history += [{"fold": k, "setting": "fedavg_deu", **h} for h in hist]
             report("fedavg_deu", full_score(m, clients), {"seconds": round(time.time() - t0)})
@@ -221,7 +226,8 @@ def main():
                 std = z * args.clip / m_round
                 torch.manual_seed(args.seed)
                 m, hist = fedavg(TabMLP(len(fc)), clients, args.lr, args.rounds, args.local_epochs,
-                                 batch_size=args.batch_size, pos_weight=args.pos_weight,
+                                 batch_size=args.batch_size, pos_weight=args.pos_weight, prox_mu=args.prox_mu,
+                             server_lr=args.server_lr, server_momentum=args.server_momentum,
                                  privatize=lambda loc, glo: privatize_update(loc, glo, args.clip, 0.0, gen),
                                  server_privatize=lambda avg, glo: add_server_noise(avg, glo, std, gen),
                                  uniform_weights=True, clients_per_round=m_round,
