@@ -423,3 +423,31 @@ Kết quả chạy **trước ngày 02/11** chưa có kho lưu trữ; bản gố
 - **Rút ra:** FedProx μ = 0,1 tốt nhất, vượt cả FedAvg trung bình theo số giao dịch (0,0248) dù dùng trung bình đều →
   hợp với 802 ngân hàng rất khác nhau. μ tăng thì tốt hơn → thử μ = 0,3; 1. Momentum ở server giúp ít/không giúp.
 - **Kế tiếp:** FedProx μ = 0,3 và 1; DP ε = 1, C = 1,6 với FedProx tốt nhất.
+
+## Giai đoạn 21 — Chọn μ cho FedProx và ghép FedProx với DP (03/11/2026)
+
+- **FedProx thêm μ** (trung bình đều, không DP): μ = 0,3 → 0,0269; μ = 1 → 0,0140. Cùng giai đoạn 20: đỉnh ở μ = 0,1
+  (0,0282); μ quá lớn kéo mọi ngân hàng về mô hình chung nên không học được.
+- **DP ε = 1, C = 1,6, FedProx μ = 0,1:** 0,0176 — gần như không hơn không FedProx (0,0173).
+- **Nguyên nhân:** FedProx làm bản cập nhật nhỏ đi ~3,5 lần: ‖Δ‖ p10/p25/p50/p75/p90 = 0,23/0,27/0,35/0,46/0,67 (vòng 1
+  trung vị 0,91 → vòng cuối 0,34), so với 1,08/…/1,21/…/1,55 khi không FedProx. C = 1,6 đặt theo bản cập nhật cũ làm
+  nhiễu quá lớn so với tín hiệu mới.
+- **DP với C = 0,67** (p90 khi có FedProx), K = 802, fold 0:
+
+  | Cách | PR-AUC | TB client | Recall@1% | Nhiễu/tham số |
+  |---|---|---|---|---|
+  | FedAvg + FedProx (trung bình theo số giao dịch, có ghi norm) | 0,0265 | 0,230 | 0,312 | |
+  | FedProx, cắt C = 0,67, ε = 1000 | 0,0276 | 0,235 | 0,320 | 0,0004 |
+  | **DP ε = 1, FedProx μ = 0,1, C = 0,67** | **0,0221** | **0,186** | **0,275** | 0,020 |
+
+  Lưu ở `results/_luu_tru/2026-11-03_*_ibm_fl_dp_K802_deu_P3_prox0.3`, `..._P4_prox1`, `..._K802_dp1_C1.6_prox0.1`,
+  `..._K802_prox0.1_do_norm`, `..._K802_dp_prox0.1_C0.67`.
+- **Rút ra:**
+  1. **DP ε = 1 tăng 0,0173 → 0,0221 (+28%)** = 89% FedAvg thường, 20% gộp chung (0,111).
+  2. Bước cắt với C = 0,67 gần như không mất gì (0,0276 ≈ FedProx không DP 0,0282). Giờ **nhiễu mới là phần tốn**:
+     0,0276 → 0,0221 (−20%). Có đánh đổi C ↔ nhiễu: C nhỏ hơn thì nhiễu nhỏ hơn nhưng cắt nhiều hơn.
+  3. C phải chọn theo đúng cấu hình huấn luyện (FedProx đổi hẳn độ lớn cập nhật). Hạn chế: C chọn từ lần chạy không DP
+     (ngoài ngân sách ε) → nên dùng cắt thích ứng hoặc chọn trên dữ liệu công khai/synthetic khi viết bài.
+  4. Khoảng cách tới gộp chung vẫn lớn (20%): tiêu chí "≥ 85% gộp chung" của Slide 10 khó đạt trong thiết lập này; cần
+     nhóm bàn lại cách đặt tiêu chí (vd so với FedAvg, hoặc so theo trung bình theo ngân hàng).
+- **Kế tiếp đề xuất:** thử C = 0,35 / 0,5 (đánh đổi cắt ↔ nhiễu); rồi chạy đủ 5 fold với cấu hình tốt nhất.
