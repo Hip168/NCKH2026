@@ -451,3 +451,20 @@ Kết quả chạy **trước ngày 02/11** chưa có kho lưu trữ; bản gố
   4. Khoảng cách tới gộp chung vẫn lớn (20%): tiêu chí "≥ 85% gộp chung" của Slide 10 khó đạt trong thiết lập này; cần
      nhóm bàn lại cách đặt tiêu chí (vd so với FedAvg, hoặc so theo trung bình theo ngân hàng).
 - **Kế tiếp đề xuất:** thử C = 0,35 / 0,5 (đánh đổi cắt ↔ nhiễu); rồi chạy đủ 5 fold với cấu hình tốt nhất.
+
+## Giai đoạn 22 — Chọn ngưỡng cắt C cho DP + FedProx (03/11/2026)
+
+- **Làm:** DP ε = 1, FedProx μ = 0,1, K = 802, fold 0, thử C = 0,35 và 0,5. Lưu ở
+  `results/_luu_tru/2026-11-03_1102_..._C0.35`, `..._1105_..._C0.5`.
+
+  | C | Vị trí trong phân bố ‖Δ‖ (có FedProx) | PR-AUC | TB client | Recall@1% | Nhiễu/tham số |
+  |---|---|---|---|---|---|
+  | **0,35** | trung vị | **0,0233** | 0,212 | 0,300 | 0,010 |
+  | 0,5 | ~p70 | 0,0230 | 0,217 | 0,300 | 0,015 |
+  | 0,67 | p90 (giai đoạn 21) | 0,0221 | 0,186 | 0,275 | 0,020 |
+
+- **Rút ra:** C nhỏ hơn tốt hơn một chút (chênh nhỏ, có thể nằm trong dao động của 1 fold). Chọn **C = 0,35 = trung vị độ
+  lớn cập nhật** — khớp cách làm phổ biến của cắt thích ứng (Andrew et al., 2021, nhắm phân vị 0,5).
+  DP ε = 1 đạt **0,0233 = 94% FedAvg thường (0,0248), 83% FedProx không DP (0,0282), 21% gộp chung (0,111)**.
+- **Cấu hình chốt cho chạy 5 fold:** K = 802 (≥ 1.000 giao dịch), 200 ngân hàng/vòng, r = 0,1, 30 vòng, MLP, lô 512,
+  lr 5e-3, 5 epoch cục bộ, pos_weight 1, FedProx μ = 0,1, C = 0,35, ε ∈ {8, 4, 2, 1}.
