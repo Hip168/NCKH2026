@@ -376,3 +376,32 @@ Kết quả chạy **trước ngày 02/11** chưa có kho lưu trữ; bản gố
      non-IID); (b) ngưỡng cắt C = 1 có thể quá nhỏ.
 - **Kế tiếp đề xuất:** đo độ lớn thật của bản cập nhật để chọn C; thử C lớn hơn (nhiễu vẫn còn dư địa); thử FedProx /
   momentum ở server để kéo FedAvg lên; sau đó chạy đủ 5 fold.
+
+## Giai đoạn 19 — Tách nguyên nhân FedAvg → DP tụt: chủ yếu do TRUNG BÌNH ĐỀU (03/11/2026)
+
+- **Làm:** (1) FedAvg F2 có ghi độ lớn cập nhật (`--log-norms`) — tái lập đúng PR-AUC 0,0248; (2) FedAvg trung bình đều
+  không cắt không nhiễu (setting mới `fedavg_deu`); (3) DP với C = 1,6 (`--clip`), ε = 1000 và 1. K = 802, fold 0.
+  Lưu ở `results/_luu_tru/2026-11-03_1011_..._K802_F2_do_norm`, `..._1015_..._K802_F2_fedavg_deu`,
+  `..._1020_..._K802_F2_C1.6`.
+- **Độ lớn cập nhật ‖Δ‖ (30 vòng × 200 ngân hàng):** p10/p25/p50/p75/p90 = 1,08/1,14/1,21/1,28/1,55; 98,5% > 1, 0,3% > 3;
+  trung vị gần như không đổi theo vòng (1,28 → 1,20).
+- **Phân rã mức tụt** (PR-AUC tổng, fold 0):
+
+  | Bước | PR-AUC | Thay đổi |
+  |---|---|---|
+  | FedAvg trung bình theo số giao dịch | 0,0248 | |
+  | → trung bình ĐỀU (không cắt, không nhiễu) | 0,0178 | **−0,0070** |
+  | → + cắt C = 1,6 (ε = 1000) | 0,0174 | −0,0004 |
+  | → + cắt C = 1 (ε = 1000, giai đoạn 18) | 0,0156 | −0,0022 so với C = 1,6 |
+  | **DP ε = 1, C = 1,6** | **0,0173** | ≈ 0 so với không nhiễu (nhiễu/tham số 0,047) |
+  | DP ε = 1, C = 1 (giai đoạn 18) | 0,0152 | |
+
+- **Rút ra:**
+  1. Khoảng 75% mức tụt FedAvg → DP là do **trung bình đều** (bắt buộc với DP mức client chuẩn: mọi ngân hàng cùng độ
+     nhạy). Cắt C = 1 gây thêm ~10%; nhiễu ở ε = 1 gần như không tốn gì.
+  2. **C = 1,6** (p90 độ lớn cập nhật) tốt hơn C = 1: DP ε = 1 đạt **0,0173** = 97% FedAvg trung bình đều, 70% FedAvg
+     thường, 16% gộp chung. Hạn chế cần ghi: chọn C từ độ lớn cập nhật của lần chạy không DP là dùng thông tin dữ liệu
+     ngoài ngân sách ε; cách đúng chuẩn là cắt thích ứng (Andrew et al., 2021).
+  3. Nút thắt lớn nhất còn lại: bản thân FedAvg chỉ đạt 16–22% gộp chung (802 ngân hàng rất khác nhau).
+- **Kế tiếp đề xuất:** (a) cách lấy trung bình có trọng số bị chặn tương thích DP (McMahan et al., 2018) để lấy lại phần
+  do trung bình đều; (b) FedProx / momentum ở server để kéo FedAvg lên.

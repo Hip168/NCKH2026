@@ -64,6 +64,8 @@ def main():
                     help="D20: client = ngân hàng có >= min_tx giao dịch (ngày 0–9); ngân hàng nhỏ hơn BỎ khỏi FL")
     ap.add_argument("--max-clients", type=int, default=None, help="chỉ lấy K ngân hàng lớn nhất (quét K)")
     ap.add_argument("--clients-per-round", type=int, default=None, help="m ngân hàng chọn ngẫu nhiên mỗi vòng")
+    ap.add_argument("--clip", type=float, default=CLIP, help="ngưỡng cắt C cho DP mức client (mặc định 1)")
+    ap.add_argument("--log-norms", action="store_true", help="ghi độ lớn cập nhật của từng client (FedAvg) → update_norms.csv")
     args = ap.parse_args()
     out = RESULTS / ("ibm_fl_dp" + (f"_{args.tag}" if args.tag else ""))
     out.mkdir(parents=True, exist_ok=True)
@@ -183,14 +185,31 @@ def main():
                 sc[d.node_ids] = predict(m, d)
             report("local", sc, {"seconds": round(time.time() - t0)})
 
+        norms = []
         if "fedavg" in args.settings:
             t0 = time.time()
             torch.manual_seed(args.seed)
             m, hist = fedavg(TabMLP(len(fc)), clients, args.lr, args.rounds, args.local_epochs,
                              batch_size=args.batch_size, pos_weight=args.pos_weight, clients_per_round=m_round,
-                             sample_gen=torch.Generator().manual_seed(args.seed + 1000 + k))
+                             sample_gen=torch.Generator().manual_seed(args.seed + 1000 + k),
+                             update_norms=norms if args.log_norms else None)
             history += [{"fold": k, "setting": "fedavg", **h} for h in hist]
+            if args.log_norms:
+                nr = pd.DataFrame(norms)
+                nr.to_csv(out / "update_norms.csv", index=False, float_format="%.5f")
+                q = nr["norm"].quantile([0.1, 0.25, 0.5, 0.75, 0.9]).round(3).tolist()
+                log(f"  Độ lớn cập nhật (FedAvg, mọi vòng × client): p10/p25/p50/p75/p90 = {q}; "
+                    f"vòng 1 trung vị {nr[nr['round'] == 1]['norm'].median():.3f}, vòng cuối {nr[nr['round'] == nr['round'].max()]['norm'].median():.3f}")
             report("fedavg", full_score(m, clients), {"seconds": round(time.time() - t0)})
+
+        if "fedavg_deu" in args.settings:   # FedAvg trung bình ĐỀU (như DP) nhưng không cắt, không nhiễu — để tách nguyên nhân
+            t0 = time.time()
+            torch.manual_seed(args.seed)
+            m, hist = fedavg(TabMLP(len(fc)), clients, args.lr, args.rounds, args.local_epochs,
+                             batch_size=args.batch_size, pos_weight=args.pos_weight, clients_per_round=m_round,
+                             sample_gen=torch.Generator().manual_seed(args.seed + 1000 + k), uniform_weights=True)
+            history += [{"fold": k, "setting": "fedavg_deu", **h} for h in hist]
+            report("fedavg_deu", full_score(m, clients), {"seconds": round(time.time() - t0)})
 
         if "dp" in args.settings:
             for eps in args.eps:
@@ -199,11 +218,11 @@ def main():
                 # m client/vòng chọn ngẫu nhiên trong K → lấy mẫu con q = m/K; trung bình đều trên m → std = zC/m
                 q = m_round / K
                 z = noise_multiplier(eps, sample_rate=q, steps=args.rounds)
-                std = z * CLIP / m_round
+                std = z * args.clip / m_round
                 torch.manual_seed(args.seed)
                 m, hist = fedavg(TabMLP(len(fc)), clients, args.lr, args.rounds, args.local_epochs,
                                  batch_size=args.batch_size, pos_weight=args.pos_weight,
-                                 privatize=lambda loc, glo: privatize_update(loc, glo, CLIP, 0.0, gen),
+                                 privatize=lambda loc, glo: privatize_update(loc, glo, args.clip, 0.0, gen),
                                  server_privatize=lambda avg, glo: add_server_noise(avg, glo, std, gen),
                                  uniform_weights=True, clients_per_round=m_round,
                                  sample_gen=torch.Generator().manual_seed(args.seed + 1000 + k))
@@ -215,7 +234,7 @@ def main():
     df = pd.DataFrame(rows)
     log("\n=== Trung bình qua các fold ===")
     log(df.groupby("setting", sort=False)[["pr_auc", "macro_pr_auc", "recall@1%", "vdr@1%"]].mean().round(4).to_string())
-    log(f"Đã lưu trữ: {archive_run(out, note=f'FL+DP mức client IBM {args.stem}, K={K}, folds {args.folds}, ε {args.eps}, {args.rounds} vòng')}")
+    log(f"Đã lưu trữ: {archive_run(out, note=f'FL+DP mức client IBM {args.stem}, K={K}, C={args.clip}, folds {args.folds}, ε {args.eps}, {args.rounds} vòng')}")
 
 
 if __name__ == "__main__":

@@ -91,7 +91,8 @@ def fedavg(model: nn.Module, clients: list[GraphData], lr: float, rounds: int, l
            log=None, privatize=None, local_train=None, server_privatize=None,
            uniform_weights: bool = False, batch_size: int | None = None,
            pos_weight: float | None = None, clients_per_round: int | None = None,
-           sample_gen: torch.Generator | None = None) -> tuple[nn.Module, list[dict]]:
+           sample_gen: torch.Generator | None = None,
+           update_norms: list | None = None) -> tuple[nn.Module, list[dict]]:
     """FedAvg (McMahan et al., 2017): trung bình trọng số theo số mẫu fit của từng client.
 
     Mỗi vòng: client nhận mô hình chung → train `local_epochs` epoch trên dữ liệu riêng (Adam mới mỗi vòng)
@@ -124,6 +125,9 @@ def fedavg(model: nn.Module, clients: list[GraphData], lr: float, rounds: int, l
                 opt = torch.optim.Adam(model.parameters(), lr=lr)
                 _local_epochs(model, c, opt, nn.BCEWithLogitsLoss(pos_weight=pos_weight), local_epochs, batch_size)
             state = copy.deepcopy(model.state_dict())
+            if update_norms is not None:     # độ lớn L2 của Δ = w_local − w_global TRƯỚC khi cắt (để chọn ngưỡng C)
+                update_norms.append({"round": r, "norm": float(torch.cat([(state[k] - global_state[k]).flatten().float()
+                                                                       for k in global_state]).norm())})
             states.append(privatize(state, global_state) if privatize else state)
         avg = {k: sum(w * s[k] for w, s in zip(weights, states)) for k in global_state}
         model.load_state_dict(server_privatize(avg, global_state) if server_privatize else avg)
