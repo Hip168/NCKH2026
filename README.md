@@ -25,7 +25,7 @@ Python 3.11. Đã kiểm tra trên Windows 11 với các phiên bản ghi trong 
 | 8. Biểu đồ cho bài báo | `python scripts/40_figures.py` | `results/figures/` |
 | Kiểm thử | `python -m pytest -q tests` | |
 
-**Người mới vào nhóm: đọc [docs/BAO_CAO_TONG_HOP.md](docs/BAO_CAO_TONG_HOP.md) trước** (tiến độ, kết quả, phân công).
+**Mới nhất (03/11/2026): đọc [docs/BAO_CAO_BAN_GIAO_2026-11-03.md](docs/BAO_CAO_BAN_GIAO_2026-11-03.md) trước** (mục tiêu, kết quả IBM 802 ngân hàng, cách chạy, việc tiếp theo). Báo cáo cũ: [docs/BAO_CAO_TONG_HOP.md](docs/BAO_CAO_TONG_HOP.md).
 Chạy bằng Docker, không cần cài Python: [docs/huong_dan_docker.md](docs/huong_dan_docker.md).
 Bảng số đầy đủ: [docs/results.md](docs/results.md).
 
@@ -64,6 +64,9 @@ project/
 - Không chọn siêu tham số, ngưỡng hay chỉ số dựa trên tập test. Ngưỡng F1 chọn trên tập validation (inner fold).
 - Thay đổi quyết định quan trọng (chỉ số, k, cách chia, tham số dữ liệu) → ghi vào `docs/decisions.md` trước.
 - Code mới trong `src/` cần có test tương ứng trong `tests/`.
+- **Lưu trữ kết quả từng giai đoạn** để viết báo cáo cả quá trình: không xóa kết quả cũ; mọi script gọi
+  `fraudfl.runlog.archive_run` ở cuối (tự chép vào `results/_luu_tru/` và ghi `results/NHAT_KY_CHAY.csv`);
+  hết mỗi giai đoạn thêm một mục vào [docs/nhat_ky_ket_qua.md](docs/nhat_ky_ket_qua.md). Chi tiết ở đầu tài liệu đó.
 
 ## Lộ trình
 

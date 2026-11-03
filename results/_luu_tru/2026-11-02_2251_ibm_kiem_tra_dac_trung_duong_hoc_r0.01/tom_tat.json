@@ -1,0 +1,9 @@
+{
+  "stem": "HI-Small",
+  "rate_tam": 0.01,
+  "max_day": 9,
+  "drop": [],
+  "n_mau": 55244,
+  "n_test": 11049,
+  "ghi_chu": "Mẫu tạm, chia ngẫu nhiên 80/20 — chỉ để kiểm tra đặc trưng, không dùng làm kết quả bài báo"
+}

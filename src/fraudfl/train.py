@@ -40,11 +40,24 @@ def predict(model: nn.Module, d: GraphData) -> np.ndarray:
     return torch.sigmoid(model(d.x, d.edge_index)).numpy()
 
 
-def _local_epochs(model, d: GraphData, opt, loss_fn, epochs: int):
+def _local_epochs(model, d: GraphData, opt, loss_fn, epochs: int, batch_size: int | None = None,
+                  prox_mu: float = 0.0, anchor: list | None = None):
+    """Full-batch (mặc định, dùng cho GNN) hoặc mini-batch khi `batch_size` có giá trị và dữ liệu dạng bảng
+    (edge_index = None). Full-batch chỉ có 1 bước cập nhật mỗi epoch → MLP dạng bảng học thiếu (giai đoạn 13).
+    `prox_mu` > 0: FedProx (Li et al., 2020) — cộng μ/2·‖w − w_anchor‖² vào loss, `anchor` = tham số mô hình chung."""
     model.train()
+    prox = (lambda: 0.5 * prox_mu * sum(((p - a) ** 2).sum() for p, a in zip(model.parameters(), anchor)))         if prox_mu > 0 else (lambda: 0.0)
+    if batch_size and d.edge_index is None:
+        idx = torch.nonzero(d.fit).squeeze(1)
+        for _ in range(epochs):
+            for b in idx[torch.randperm(len(idx))].split(batch_size):
+                opt.zero_grad()
+                (loss_fn(model(d.x[b]), d.y[b]) + prox()).backward()
+                opt.step()
+        return
     for _ in range(epochs):
         opt.zero_grad()
-        loss = loss_fn(model(d.x, d.edge_index)[d.fit], d.y[d.fit])
+        loss = loss_fn(model(d.x, d.edge_index)[d.fit], d.y[d.fit]) + prox()
         loss.backward()
         opt.step()
 
@@ -56,12 +69,14 @@ def _val_ap(model, datas: list[GraphData]) -> float:
 
 
 def train_full_batch(model: nn.Module, d: GraphData, lr: float, max_epochs: int, patience: int,
-                     eval_every: int = 5, log=None) -> nn.Module:
+                     eval_every: int = 5, log=None, batch_size: int | None = None,
+                     pos_weight: float | None = None) -> nn.Module:
     opt = torch.optim.Adam(model.parameters(), lr=lr)
-    loss_fn = nn.BCEWithLogitsLoss(pos_weight=_pos_weight([d]))
+    pw = _pos_weight([d]) if pos_weight is None else torch.tensor(pos_weight)
+    loss_fn = nn.BCEWithLogitsLoss(pos_weight=pw)
     best, best_state, bad = -1.0, None, 0
     for epoch in range(eval_every, max_epochs + 1, eval_every):
-        _local_epochs(model, d, opt, loss_fn, eval_every)
+        _local_epochs(model, d, opt, loss_fn, eval_every, batch_size)
         ap = _val_ap(model, [d])
         if ap > best:
             best, best_state, bad = ap, copy.deepcopy(model.state_dict()), 0
@@ -76,32 +91,61 @@ def train_full_batch(model: nn.Module, d: GraphData, lr: float, max_epochs: int,
 
 
 def fedavg(model: nn.Module, clients: list[GraphData], lr: float, rounds: int, local_epochs: int,
-           log=None, privatize=None, local_train=None) -> tuple[nn.Module, list[dict]]:
+           log=None, privatize=None, local_train=None, server_privatize=None,
+           uniform_weights: bool = False, batch_size: int | None = None,
+           pos_weight: float | None = None, clients_per_round: int | None = None,
+           sample_gen: torch.Generator | None = None,
+           update_norms: list | None = None, prox_mu: float = 0.0, server_lr: float = 1.0,
+           server_momentum: float = 0.0) -> tuple[nn.Module, list[dict]]:
     """FedAvg (McMahan et al., 2017): trung bình trọng số theo số mẫu fit của từng client.
 
     Mỗi vòng: client nhận mô hình chung → train `local_epochs` epoch trên dữ liệu riêng (Adam mới mỗi vòng)
     → gửi trọng số → server lấy trung bình có trọng số. Chọn vòng có PR-AUC val (gộp) cao nhất.
     `privatize(local_state, global_state) -> state`: nếu có, client áp DP lên cập nhật trước khi gửi.
     `local_train(model, client)`: thay cho bước train Adam mặc định (ví dụ DP-SGD).
+    `server_privatize(avg_state, global_state) -> state`: nếu có, server áp lên mô hình SAU khi lấy trung bình
+    (DP mức client kiểu McMahan et al. 2018: client chỉ cắt, server cộng nhiễu một lần).
+    `uniform_weights`: lấy trung bình đều 1/K thay vì theo số mẫu (cần cho DP mức client để độ nhạy là C/K).
+    `clients_per_round`: mỗi vòng chọn ngẫu nhiên m client (không hoàn lại, dùng `sample_gen`); trung bình chỉ trên m
+    client đó (DP: độ nhạy C/m, khuếch đại nhờ lấy mẫu con với q = m/K).
+    `prox_mu`: FedProx (E6). `server_lr`, `server_momentum`: FedAvgM (Hsu et al., 2019) — server cập nhật
+    v ← β·v + Δ_tb, w ← w + η·v với Δ_tb = (trung bình [đã thêm nhiễu]) − w; là hậu xử lý nên không tốn thêm ε.
+    Mặc định (0, 1, 0) = FedAvg gốc.
     Trả về (mô hình tốt nhất, lịch sử từng vòng).
     """
-    pos_weight = _pos_weight(clients)   # chỉ là một số vô hướng; thực tế có thể để từng client tự tính
-    weights = np.array([c.n_fit for c in clients], dtype=np.float64)
-    weights /= weights.sum()
+    pos_weight = _pos_weight(clients) if pos_weight is None else torch.tensor(pos_weight)   # vô hướng
     best, best_state, history = -1.0, None, []
+    velocity = None
     for r in range(1, rounds + 1):
         global_state = copy.deepcopy(model.state_dict())
+        if clients_per_round and clients_per_round < len(clients):
+            chosen = [clients[i] for i in torch.randperm(len(clients), generator=sample_gen)[:clients_per_round].tolist()]
+        else:
+            chosen = clients
+        weights = np.array([1.0 if uniform_weights else c.n_fit for c in chosen], dtype=np.float64)
+        weights /= weights.sum()
         states = []
-        for c in clients:
+        for c in chosen:
             model.load_state_dict(global_state)
             if local_train:
                 local_train(model, c)
             else:
                 opt = torch.optim.Adam(model.parameters(), lr=lr)
-                _local_epochs(model, c, opt, nn.BCEWithLogitsLoss(pos_weight=pos_weight), local_epochs)
+                anchor = [p.detach().clone() for p in model.parameters()] if prox_mu > 0 else None
+                _local_epochs(model, c, opt, nn.BCEWithLogitsLoss(pos_weight=pos_weight), local_epochs, batch_size,
+                              prox_mu, anchor)
             state = copy.deepcopy(model.state_dict())
+            if update_norms is not None:     # độ lớn L2 của Δ = w_local − w_global TRƯỚC khi cắt (để chọn ngưỡng C)
+                update_norms.append({"round": r, "norm": float(torch.cat([(state[k] - global_state[k]).flatten().float()
+                                                                       for k in global_state]).norm())})
             states.append(privatize(state, global_state) if privatize else state)
-        model.load_state_dict({k: sum(w * s[k] for w, s in zip(weights, states)) for k in global_state})
+        avg = {k: sum(w * s[k] for w, s in zip(weights, states)) for k in global_state}
+        new = server_privatize(avg, global_state) if server_privatize else avg
+        if server_lr != 1.0 or server_momentum > 0:
+            delta = {k: new[k] - global_state[k] for k in global_state}
+            velocity = delta if velocity is None else {k: server_momentum * velocity[k] + delta[k] for k in delta}
+            new = {k: global_state[k] + server_lr * velocity[k] for k in global_state}
+        model.load_state_dict(new)
         ap = _val_ap(model, clients)
         history.append({"round": r, "val_pr_auc": ap})
         if ap > best:

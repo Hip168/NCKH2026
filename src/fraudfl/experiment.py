@@ -40,4 +40,28 @@ def test_metrics(tx: pd.DataFrame, masks: dict, score: np.ndarray, thr_per_row: 
     res = evaluate(test["TX_FRAUD"], score[te], test["TX_AMOUNT"], test["TX_TIME_DAYS"])
     res["f1"] = float(f1_score(test["TX_FRAUD"], score[te] >= thr_per_row[te], zero_division=0))
     res.pop("threshold")
+    res.update(per_client_metrics(tx, masks, score))
     return res
+
+
+PER_CLIENT_KEYS = ("pr_auc", "recall@1%", "vdr@1%")
+
+
+def per_client_metrics(tx: pd.DataFrame, masks: dict, score: np.ndarray) -> dict:
+    """Chỉ số tính RIÊNG trên tập test của từng ngân hàng, với ngân sách cảnh báo riêng của ngân hàng đó.
+
+    Cần vì: (1) ở local-only mỗi ngân hàng có mô hình riêng, thang điểm khác nhau nên không được xếp hạng chung;
+    (2) thực tế mỗi ngân hàng có đội chuyên viên riêng kiểm tra 1% giao dịch của mình.
+    Trả về cột `c<id>_<chỉ số>` và trung bình không trọng số `macro_<chỉ số>`.
+    """
+    te = masks["test"]
+    out, per = {}, {k: [] for k in PER_CLIENT_KEYS}
+    for c in np.unique(tx["CLIENT_ID"].to_numpy()):
+        m = te & (tx["CLIENT_ID"].to_numpy() == c)
+        t = tx[m]
+        r = evaluate(t["TX_FRAUD"], score[m], t["TX_AMOUNT"], t["TX_TIME_DAYS"])
+        for k in PER_CLIENT_KEYS:
+            out[f"c{c}_{k}"] = r[k]
+            per[k].append(r[k])
+    out.update({f"macro_{k}": float(np.mean(v)) for k, v in per.items()})
+    return out

@@ -1,0 +1,9 @@
+{
+  "thoi_diem": "2026-11-02T22:33:26",
+  "script": "07_ibm_kiem_tra_dac_trung.py",
+  "lenh": "scripts/07_ibm_kiem_tra_dac_trung.py --max-day 9 --drop SND_AGE_DAYS --tag ngay0_9_bo_tuoi",
+  "commit": "e721c0c",
+  "co_thay_doi_chua_commit": true,
+  "thu_muc_luu_tru": "results/_luu_tru/2026-11-02_2233_ibm_kiem_tra_dac_trung_ngay0_9_bo_tuoi",
+  "ghi_chu": "Kiểm tra đặc trưng IBM HI-Small, mẫu tạm r=0.02, max_day=9, bỏ ['SND_AGE_DAYS']"
+}

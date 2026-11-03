@@ -8,7 +8,16 @@ Hai chế độ (docs/decisions.md D12):
 
 Chạy:  python scripts/30_dp_fl.py --mode record [--folds 0 1 2 3 4] [--eps inf 2 1 0.5]
        python scripts/30_dp_fl.py --mode client [--folds 0] [--eps 2 1 0.5]
-Ra:    results/dp_<mode>/per_fold.csv, summary.csv, history.csv, log.txt
+Tùy chọn thêm (02/11, xem docs/luu_y_dp_muc_client.md):
+       --seed S          seed huấn luyện (mặc định config.SEED); kết quả ghi vào thư mục có hậu tố _seedS
+       --rounds R        số vòng FedAvg (mặc định 50 cho client, 30 cho record)
+       --local-epochs E  số epoch cục bộ mỗi vòng ở chế độ client (mặc định 3)
+       --noise server    chế độ client: ngân hàng chỉ cắt, server cộng nhiễu một lần (trung bình đều, std = zC/K)
+       --small           chế độ client: GraphSAGE nhỏ 32 → 16 thay cho 128 → 64
+       --model mlp       chế độ client: MLP dạng bảng (TabMLP, không dùng đồ thị) thay cho GraphSAGE — "cách B" trên
+                         synthetic (docs/ghi_chu_cach_A_B.md)
+       --tag T           hậu tố thư mục kết quả, ví dụ results/dp_client_T/
+Ra:    results/dp_<mode>[_<tag>][_seed<S>]/per_fold.csv, summary.csv, history.csv, log.txt
 """
 
 import argparse
@@ -27,7 +36,8 @@ from fraudfl.eval.metrics import MAIN_METRICS, best_f1_threshold
 from fraudfl.experiment import make_data, scores, test_metrics
 from fraudfl.graph import build_edge_index
 from fraudfl.models import SageMLP, TabMLP
-from fraudfl.privacy import CLIP, DELTA, dpsgd_steps, noise_multiplier, privatize_update
+from fraudfl.privacy import CLIP, DELTA, add_server_noise, dpsgd_steps, noise_multiplier, privatize_update
+from fraudfl.runlog import archive_run
 from fraudfl.train import fedavg
 
 # Client-level (GNN): giống E3 để so sánh trực tiếp
@@ -39,22 +49,35 @@ EXPECTED_BATCH = 1024
 POS_WEIGHT = 10.0   # hằng số công khai; tính từ dữ liệu sẽ tốn thêm ngân sách riêng tư
 
 
-def run_client_level(tx, x, y, masks, ei_local, clients, eps):
+def run_client_level(tx, x, y, masks, ei_local, clients, eps, opt):
     per_client = [make_data(x, y, masks, ei_local, np.flatnonzero(clients == c)) for c in np.unique(clients)]
-    gen = torch.Generator().manual_seed(SEED)
+    K = len(per_client)
+    gen = torch.Generator().manual_seed(opt.seed)
+    privatize = server_privatize = None
     if math.isinf(eps):
-        z, privatize = 0.0, None
+        z = 0.0
     else:
         # mỗi vòng = 1 cơ chế Gauss (không lấy mẫu con client) → sample_rate = 1, steps = số vòng
-        z = noise_multiplier(eps, sample_rate=1.0, steps=GNN_ROUNDS)
-        privatize = lambda local, global_: privatize_update(local, global_, CLIP, z, gen)
-    torch.manual_seed(SEED)
-    model, hist = fedavg(SageMLP(x.shape[1]), per_client, GNN_LR, GNN_ROUNDS, GNN_LOCAL_EPOCHS,
-                         privatize=privatize)
+        z = noise_multiplier(eps, sample_rate=1.0, steps=opt.rounds)
+        if opt.noise == "client":
+            privatize = lambda local, global_: privatize_update(local, global_, CLIP, z, gen)
+        else:
+            privatize = lambda local, global_: privatize_update(local, global_, CLIP, 0.0, gen)   # chỉ cắt
+            server_privatize = lambda avg, global_: add_server_noise(avg, global_, z * CLIP / K, gen)
+    torch.manual_seed(opt.seed)
+    if opt.model == "mlp":
+        model = TabMLP(x.shape[1])
+        per_client = [make_data(x, y, masks, None, d.node_ids) for d in per_client]   # bỏ cạnh đồ thị
+    else:
+        model = SageMLP(x.shape[1], hidden=32, emb=16) if opt.small else SageMLP(x.shape[1])
+    model, hist = fedavg(model, per_client, GNN_LR, opt.rounds, opt.local_epochs, privatize=privatize,
+                         server_privatize=server_privatize, uniform_weights=opt.noise == "server")
     return scores(model, per_client, len(tx)), hist, {"noise_multiplier": z}
 
 
-def run_record_level(tx, x, y, masks, clients, eps):
+def run_record_level(tx, x, y, masks, clients, eps, opt):
+    MLP_ROUNDS = opt.rounds
+    SEED = opt.seed
     per_client = [make_data(x, y, masks, None, np.flatnonzero(clients == c)) for c in np.unique(clients)]
     gen = torch.Generator().manual_seed(SEED)
     plan = {}
@@ -83,12 +106,22 @@ def main():
     ap.add_argument("--mode", choices=["client", "record"], required=True)
     ap.add_argument("--folds", type=int, nargs="+", default=None)
     ap.add_argument("--eps", type=float, nargs="+", default=None)
+    ap.add_argument("--seed", type=int, default=SEED)
+    ap.add_argument("--rounds", type=int, default=None)
+    ap.add_argument("--local-epochs", type=int, default=GNN_LOCAL_EPOCHS)
+    ap.add_argument("--noise", choices=["client", "server"], default="client")
+    ap.add_argument("--small", action="store_true")
+    ap.add_argument("--model", choices=["sage", "mlp"], default="sage")
+    ap.add_argument("--tag", default="")
     args = ap.parse_args()
+    if args.rounds is None:
+        args.rounds = GNN_ROUNDS if args.mode == "client" else MLP_ROUNDS
     folds = args.folds if args.folds is not None else ([0] if args.mode == "client" else [0, 1, 2, 3, 4])
     eps_list = args.eps if args.eps is not None else (
         [2.0, 1.0, 0.5] if args.mode == "client" else [math.inf, 2.0, 1.0, 0.5])
 
-    out = RESULTS / f"dp_{args.mode}"
+    name = f"dp_{args.mode}" + (f"_{args.tag}" if args.tag else "") + (f"_seed{args.seed}" if args.seed != SEED else "")
+    out = RESULTS / name
     out.mkdir(parents=True, exist_ok=True)
     (out / "log.txt").write_text("", encoding="utf-8")
 
@@ -101,7 +134,9 @@ def main():
     y = tx["TX_FRAUD"].to_numpy()
     clients = tx["CLIENT_ID"].to_numpy()
     ei_local = build_edge_index(tx, cross_client=False) if args.mode == "client" else None
-    log(f"Chế độ {args.mode}-level DP, δ = {DELTA}, C = {CLIP}, folds {folds}, ε {eps_list}")
+    log(f"Chế độ {args.mode}-level DP, δ = {DELTA}, C = {CLIP}, folds {folds}, ε {eps_list}, seed {args.seed}, "
+        f"{args.rounds} vòng" + (f", {args.local_epochs} epoch cục bộ, nhiễu ở {args.noise}"
+                                 f"{', GNN nhỏ' if args.small else ''}{', MLP (cách B)' if args.model == 'mlp' else ''}" if args.mode == "client" else ""))
 
     rows, history = [], []
     for k in folds:
@@ -111,16 +146,17 @@ def main():
         for eps in eps_list:
             t0 = time.time()
             if args.mode == "client":
-                score, hist, extra = run_client_level(tx, x, y, masks, ei_local, clients, eps)
+                score, hist, extra = run_client_level(tx, x, y, masks, ei_local, clients, eps, args)
             else:
-                score, hist, extra = run_record_level(tx, x, y, masks, clients, eps)
+                score, hist, extra = run_record_level(tx, x, y, masks, clients, eps, args)
             thr = best_f1_threshold(y[masks["val"]], score[masks["val"]])
             res = test_metrics(tx, masks, score, np.full(len(tx), thr))
             best_round = max(hist, key=lambda h: h["val_pr_auc"])["round"]
             rows.append({"fold": k, "epsilon": eps, **res, **extra, "best_round": best_round,
                          "seconds": time.time() - t0})
             history += [{"fold": k, "epsilon": eps, **h} for h in hist]
-            log(f"  ε={eps:<4} z={extra['noise_multiplier']:6.2f}  PR-AUC {res['pr_auc']:.4f}  "
+            log(f"  ε={eps:<4} z={extra['noise_multiplier']:6.2f}  PR-AUC {res['pr_auc']:.4f} "
+                f"(TB theo ngân hàng {res['macro_pr_auc']:.4f})  "
                 f"Recall@1% {res['recall@1%']:.4f}  VDR@1% {res['vdr@1%']:.4f}  "
                 f"(vòng tốt nhất {best_round}, {time.time() - t0:.0f}s)")
             pd.DataFrame(rows).to_csv(out / "per_fold.csv", index=False)
@@ -130,6 +166,7 @@ def main():
     per_fold.groupby("epsilon")[MAIN_METRICS].agg(["mean", "std"]).to_csv(out / "summary.csv")
     log("\n=== Trung bình qua các fold ===")
     log(per_fold.groupby("epsilon")[MAIN_METRICS + ["noise_multiplier"]].mean().round(4).to_string())
+    log(f"Đã lưu trữ: {archive_run(out, note=f'DP {args.mode}, folds {folds}, eps {eps_list}, seed {args.seed}')}")
 
 
 if __name__ == "__main__":

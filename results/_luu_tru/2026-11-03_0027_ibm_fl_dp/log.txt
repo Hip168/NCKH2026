@@ -1,0 +1,22 @@
+HI-Small ngày 0–9: 5,077,237 gd, 4,522 ca; 22 đặc trưng (view bank); K = 28 client (27 ngân hàng >= 20 ca + '_nho'); r = 0.02; 30 vòng; ε [8.0, 4.0, 2.0, 1.0]; seed 42
+Ca rửa tiền theo client: 70:633, 12:66, 119:51, 20:47, 10:46, 1:44, 22:36, 11:35, 15:33, 222:31, 148350:29, 15231:29, 223:26, 23:26, 211:25, 21749:25, 21174:24, 2591:24, 118:23, 150240:23, 23691:23, 116:22, 21745:22, 1267:21, 11107:20, 213:20, 9679:20, _nho:3098
+
+=== Fold 0: fit (lấy mẫu) 67,825 | val 812,358 | test 1,015,448 ===
+  central        PR-AUC 0.0551 | TB theo client 0.2313 | Recall@1% 0.4535 | VDR@1% 0.2125
+  local          PR-AUC 0.0410 | TB theo client 0.1821 | Recall@1% 0.4392 | VDR@1% 0.2039
+  fedavg         PR-AUC 0.0333 | TB theo client 0.1267 | Recall@1% 0.3429 | VDR@1% 0.8090
+  dp ε=8         PR-AUC 0.0113 | TB theo client 0.1042 | Recall@1% 0.1549 | VDR@1% 0.3768 | z=3.50
+  dp ε=4         PR-AUC 0.0047 | TB theo client 0.0390 | Recall@1% 0.0830 | VDR@1% 0.0136 | z=6.35
+  dp ε=2         PR-AUC 0.0021 | TB theo client 0.0174 | Recall@1% 0.3717 | VDR@1% 0.2174 | z=11.80
+  dp ε=1         PR-AUC 0.0016 | TB theo client 0.0253 | Recall@1% 0.3805 | VDR@1% 0.1967 | z=22.19
+
+=== Trung bình qua các fold ===
+         pr_auc  macro_pr_auc  recall@1%  vdr@1%
+setting                                         
+central  0.0551        0.2313     0.4535  0.2125
+local    0.0410        0.1821     0.4392  0.2039
+fedavg   0.0333        0.1267     0.3429  0.8090
+dp ε=8   0.0113        0.1042     0.1549  0.3768
+dp ε=4   0.0047        0.0390     0.0830  0.0136
+dp ε=2   0.0021        0.0174     0.3717  0.2174
+dp ε=1   0.0016        0.0253     0.3805  0.1967

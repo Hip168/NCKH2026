@@ -1,0 +1,6 @@
+,,pr_auc,pr_auc,f1,f1,recall@1%,recall@1%,vdr@1%,vdr@1%
+,,mean,std,mean,std,mean,std,mean,std
+r_train,test,,,,,,,,
+0.0200,day_du,0.2420,,0.3173,,0.6276,,0.9885,
+0.0200,lay_mau_0.02,0.2183,,0.3293,,0.6320,,0.9906,
+0.0200,lay_mau_0.1,0.2402,,0.3002,,0.6199,,0.9885,

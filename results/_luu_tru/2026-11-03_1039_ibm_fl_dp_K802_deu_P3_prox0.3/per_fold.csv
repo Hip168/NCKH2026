@@ -1,0 +1,2 @@
+fold,setting,pr_auc,macro_pr_auc,recall@1%,vdr@1%,seconds
+0,fedavg_deu,0.02690,0.22906,0.31592,0.65734,157

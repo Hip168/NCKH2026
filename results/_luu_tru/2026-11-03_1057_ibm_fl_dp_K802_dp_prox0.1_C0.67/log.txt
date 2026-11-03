@@ -1,0 +1,12 @@
+HI-Small ngày 0–9: 4,557,222 gd, 4,021 ca; 22 đặc trưng (view bank); K = 802 client (ngân hàng >= 1000 giao dịch); 200 client/vòng; r = 0.1; 30 vòng × 5 epoch; lr 0.005; batch 512; pos_weight 1.0; ε [1000.0, 1.0]; seed 42; FedProx μ 0.1; server lr 1.0, momentum 0.0; C 0.67
+Ca rửa tiền: 4,021 trên 802 client; client không có ca nào: 94; nhiều nhất 633; trung vị 2
+
+=== Fold 0: fit (lấy mẫu) 293,983 | val 729,156 | test 911,445 ===
+  dp ε=1000      PR-AUC 0.0276 | TB theo client 0.2345 | Recall@1% 0.3197 | VDR@1% 0.5408 | z=0.11, nhiễu/tham số=0.0004
+  dp ε=1         PR-AUC 0.0221 | TB theo client 0.1858 | Recall@1% 0.2749 | VDR@1% 0.5319 | z=5.86, nhiễu/tham số=0.0196
+
+=== Trung bình qua các fold ===
+           pr_auc  macro_pr_auc  recall@1%  vdr@1%
+setting                                           
+dp ε=1000  0.0276        0.2345     0.3197  0.5408
+dp ε=1     0.0221        0.1858     0.2749  0.5319

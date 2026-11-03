@@ -13,6 +13,11 @@ Trạng thái "đề xuất" = đã áp vào code để chạy thử, **chờ c�
 | D4 | 2026-10-31 | Đặc trưng tính riêng trong từng ngân hàng; rủi ro terminal chỉ dùng nhãn có độ trễ 7 ngày | Đúng tinh thần FL; tránh rò rỉ nhãn |
 | D5 | 2026-10-31 | Synthetic: 5 ngân hàng × ~100k giao dịch, 120 ngày, tỷ lệ gian lận 1,0–1,8%, terminal dùng chung | Theo Slide 5. 81% terminal bị xâm nhập xuất hiện ở >1 ngân hàng → động lực cho FL |
 | D6 | 2026-10-31 | Chia fold: nested stratified 5×3 theo (nhãn × client), seed 42; thêm cột chia theo thời gian | Theo Slide 8 |
+| D20 | 2026-11-03 | **DP mức client trên IBM với 802 ngân hàng** (Đạt quyết định): client = mọi ngân hàng có ≥ 1.000 giao dịch trong ngày 0–9 (gồm cả ngân hàng không có ca rửa tiền); ngân hàng nhỏ hơn BỎ khỏi FL (không gộp) để mỗi client là một ngân hàng thật. Mỗi vòng chọn ngẫu nhiên 200 ngân hàng (q = 0,25), ε tính với sample_rate = q; server cộng nhiễu std = z·C/m. Train lấy mẫu r = 0,1; val/test đầy đủ. Sau đó quét K ∈ {28, 100, 200, 400, 802} | K = 28 sụp ở mọi ε ≤ 8 (giai đoạn 15). 802 ngân hàng bao phủ 90% giao dịch, 89% ca rửa tiền; nhiễu mỗi tham số ở ε = 1 giảm từ 0,79 (K = 28) xuống 0,029 |
+| D19 | 2026-11-03 | **IBM HI-Small là dữ liệu chính** (Đạt quyết định). FL + DP mức client chạy trên **27 ngân hàng có ≥ 20 ca rửa tiền (ngày 0–9) + 1 client gộp phần còn lại** (K = 28), mô hình MLP dạng bảng (cách B), script `09_ibm_fl_dp.py`. Kết quả synthetic (E1–E5, thử nhanh DP) giữ làm phần thử nghiệm ban đầu | Synthetic chỉ có 5 ngân hàng → DP mức client sụp ở mọi ε ≤ 8 (giai đoạn 11); IBM có đủ ngân hàng để tăng K. Lưu ý: client gộp `_nho` chứa ~68% ca rửa tiền |
+| D18 | 2026-11-02 | **IBM HI-Small chỉ dùng ngày 0–9** (`config.IBM_MAX_DAY = 9`, áp trong `05_ibm_sample.py` trước khi lấy mẫu). Đặc trưng `SND_AGE_DAYS` vẫn tính nhưng không đưa vào mô hình (`ibm_features.EXCLUDED_FEATURES`). Chi tiết ở mục D18 bên dưới | Ngày 10–17 chỉ ~1.100 gd nhưng ~60% rửa tiền (lỗi bộ sinh dữ liệu); bỏ chỉ mất 0,02% giao dịch, còn 4.522/5.177 ca rửa tiền; giữ lại thì đặc trưng thời gian rò rỉ và VDR bị thổi phồng 0,10 → 0,55 |
+| D17 | 2026-11-02 | **Lấy mẫu con IBM AML** (anh Hùng duyệt): giữ 100% ca rửa tiền, bốc tỷ lệ r ca bình thường **trong từng ngân hàng** có ≥ 1.000 ca bình thường, các ngân hàng nhỏ hơn gộp thành một nhóm `_nho` rồi bốc chung (tránh phình mẫu), seed 42; lưu cố định `data/splits/ibm_sample_ids.csv` + `ibm_sample_meta.json` (script `05_ibm_sample.py`, từ chối ghi đè); sau đó nested stratified 5×3 trên mẫu → `fold_assignments_ibm.csv`. Đặc trưng và đồ thị tính trên dữ liệu đầy đủ trước khi lọc. Trong báo cáo chỉ nhắc ngắn | 5 triệu giao dịch không chạy được trên máy nhóm; gian lận chỉ ~0,1% nên bỏ bớt ca bình thường ít mất thông tin. **Chờ chốt:** giá trị r (theo đường học) và việc tính chỉ số trên test có trọng số 1/r (`evaluate(..., weight=)`) để PR-AUC đúng tỷ lệ thật |
+| D12 | 2026-11-02 | **Giữ DP mức client** (đúng Slide 4) làm cơ chế chính, không chuyển sang mức bản ghi. Đọc [luu_y_dp_muc_client.md](luu_y_dp_muc_client.md) | Giữ bài toán tổng quát: che được cả một ngân hàng, áp dụng được cho GNN. Với 5 ngân hàng, ε ≤ 2 hiện làm mô hình sụp (PR-AUC 0,028); cần chốt lại tiêu chí Slide 10 và thêm thí nghiệm quét số ngân hàng |
 
 ## Đề xuất — đã áp vào code, chờ nhóm duyệt
 
@@ -22,7 +27,7 @@ Trạng thái "đề xuất" = đã áp vào code để chạy thử, **chờ c�
 | D8 | 2026-10-31 | Thêm `TX_AMOUNT_RATIO_30DAY` (giá trị / chi tiêu TB 30 ngày của khách) + chuẩn hóa z-score **riêng từng client** (`prep.scale_per_client`) | Giá trị tiền khác quy mô giữa ngân hàng; chuẩn hóa cục bộ không cần chia sẻ thống kê → tương thích FL | Q2 |
 | D9 | 2026-10-31 | Bỏ 30 ngày đầu khỏi fit/val/test (`config.BURN_IN_DAYS`); vẫn dùng làm lịch sử cho đặc trưng và nút đồ thị | Kịch bản gian lận và cửa sổ 30 ngày chưa ổn định | Q3 |
 | D10 | 2026-10-31 | GNN: huấn luyện **full-batch**, lr = 5e-3 (Slide 6: batch 64, lr = 1e-3); dừng sớm theo PR-AUC val, patience 30 epoch, tối đa 300; FedAvg **50 vòng** × 3 epoch cục bộ | Đồ thị liên kết nên mini-batch cần thư viện lấy mẫu láng giềng (pyg-lib) chưa có trên Windows; lr 1e-3 full-batch hội tụ quá chậm. FedAvg 30 vòng chưa hội tụ ở fold 0 (val PR-AUC còn tăng ở vòng 28–30) | Slide 6 |
-| D12 | 2026-11-01 | DP có **2 mức** (`src/fraudfl/privacy.py`, `scripts/30_dp_fl.py`): (a) **client-level** đúng Slide 4 — cắt Δ của cả ngân hàng, cộng nhiễu, GNN; (b) **record-level** — DP-SGD trong từng ngân hàng (cắt gradient từng giao dịch, lấy mẫu Poisson, batch kỳ vọng 1024), MLP dạng bảng. ε tính bằng RDP accountant (Opacus), δ = 1e-5, C = 1 | Với 5 client, client-level ε = 1 cần hệ số nhiễu z ≈ 29 (nhiễu lớn hơn tín hiệu hàng nghìn lần). Record-level ε = 1 chỉ cần z ≈ 3 nhờ khuếch đại lấy mẫu con. Bài toán ngân hàng cần bảo vệ **từng khách/giao dịch** → record-level là đơn vị riêng tư đúng | Slide 4 |
+| ~~D12~~ | 2026-11-01 | **Đã thay bằng D12 ngày 2026-11-02 ở mục "Đã chốt".** Đề xuất cũ: DP có **2 mức** (`src/fraudfl/privacy.py`, `scripts/30_dp_fl.py`): (a) **client-level** đúng Slide 4 — cắt Δ của cả ngân hàng, cộng nhiễu, GNN; (b) **record-level** — DP-SGD trong từng ngân hàng (cắt gradient từng giao dịch, lấy mẫu Poisson, batch kỳ vọng 1024), MLP dạng bảng. ε tính bằng RDP accountant (Opacus), δ = 1e-5, C = 1 | Với 5 client, client-level ε = 1 cần hệ số nhiễu z ≈ 29 (nhiễu lớn hơn tín hiệu hàng nghìn lần). Record-level ε = 1 chỉ cần z ≈ 3 nhờ khuếch đại lấy mẫu con. Bài toán ngân hàng cần bảo vệ **từng khách/giao dịch** → record-level là đơn vị riêng tư đúng | Slide 4 |
 | D13 | 2026-11-01 | Record-level dùng SGD momentum 0,9, lr 0,5 (không phải Adam); pos_weight = 10 cố định | Adam khuếch đại nhiễu DP (thử trên val: 0,14 so với 0,67). pos_weight tính từ dữ liệu sẽ tốn ngân sách riêng tư | Slide 6 |
 | D11 | 2026-10-31 | Đồ thị: nút = giao dịch; cạnh từ 3 giao dịch liền trước của cùng khách và cùng terminal, **chỉ chiều quá khứ → hiện tại**. Local/FL: cạnh trong cùng ngân hàng. Centralized: cạnh terminal xuyên ngân hàng | Không dùng thông tin tương lai; centralized có lợi thế thông tin thật sự so với FL | — |
 
@@ -39,6 +44,13 @@ Trạng thái "đề xuất" = đã áp vào code để chạy thử, **chờ c�
 
 D8 xóa gần hết khoảng cách centralized–local (RF: 0,694 so với 0,690). Recall@1% giờ phân biệt rõ mô hình
 (0,37 → 0,54), không còn bão hòa như k = 100.
+
+### D18 (ĐÃ CHỐT 2026-11-02, Đạt quyết định — báo lại anh Hùng): IBM HI-Small chỉ dùng ngày 0–9
+
+Từ ngày 10 đến 17 chỉ còn khoảng 1.100 giao dịch nhưng khoảng 60% là rửa tiền (trước đó 0,03–0,21%) — lỗi của bộ sinh
+dữ liệu. Giữ lại thì mọi đặc trưng gắn với thời gian bị rò rỉ và VDR bị thổi phồng (0,10 → 0,55). Đề xuất: lọc
+`TX_TIME_DAYS <= 9` TRƯỚC khi lấy mẫu (D17); đặc trưng vẫn tính trên toàn bộ dữ liệu (chỉ nhìn quá khứ nên không bị
+ảnh hưởng bởi đuôi). Cân nhắc bỏ `SND_AGE_DAYS` (chênh PR-AUC 0,01). Bằng chứng: `docs/nhat_ky_ket_qua.md` giai đoạn 6.
 
 ## Câu hỏi còn mở
 

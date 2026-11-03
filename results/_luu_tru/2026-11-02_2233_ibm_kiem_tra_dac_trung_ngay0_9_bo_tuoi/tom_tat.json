@@ -1,0 +1,11 @@
+{
+  "stem": "HI-Small",
+  "rate_tam": 0.02,
+  "max_day": 9,
+  "drop": [
+    "SND_AGE_DAYS"
+  ],
+  "n_mau": 130467,
+  "n_test": 26094,
+  "ghi_chu": "Mẫu tạm, chia ngẫu nhiên 80/20 — chỉ để kiểm tra đặc trưng, không dùng làm kết quả bài báo"
+}

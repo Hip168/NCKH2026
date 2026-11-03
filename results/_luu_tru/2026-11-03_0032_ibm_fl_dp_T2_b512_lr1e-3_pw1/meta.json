@@ -1,0 +1,9 @@
+{
+  "thoi_diem": "2026-11-03T00:32:56",
+  "script": "09_ibm_fl_dp.py",
+  "lenh": "scripts/09_ibm_fl_dp.py --settings central fedavg --batch-size 512 --lr 1e-3 --local-epochs 1 --pos-weight 1 --tag T2_b512_lr1e-3_pw1",
+  "commit": "16a6d92",
+  "co_thay_doi_chua_commit": true,
+  "thu_muc_luu_tru": "results/_luu_tru/2026-11-03_0032_ibm_fl_dp_T2_b512_lr1e-3_pw1",
+  "ghi_chu": "FL+DP mức client IBM HI-Small, K=28, folds [0], ε [8.0, 4.0, 2.0, 1.0], 30 vòng"
+}

@@ -1,0 +1,9 @@
+{
+  "thoi_diem": "2026-11-02T22:24:45",
+  "script": "06_ibm_features.py",
+  "lenh": "scripts/06_ibm_features.py --input data/raw/ibm_aml/HI-Small_Trans.csv --view global",
+  "commit": "cabad04",
+  "co_thay_doi_chua_commit": true,
+  "thu_muc_luu_tru": "results/_luu_tru/2026-11-02_2224_ibm_features_global",
+  "ghi_chu": "Đặc trưng IBM HI-Small, view=global, 29 đặc trưng"
+}

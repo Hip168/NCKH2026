@@ -1,0 +1,16 @@
+Chế độ client-level DP, δ = 1e-05, C = 1.0, folds [0], ε [inf, 8.0, 4.0, 1.0], seed 42, 10 vòng, 3 epoch cục bộ, nhiễu ở server, MLP (cách B)
+
+=== Outer fold 0 ===
+  ε=inf  z=  0.00  PR-AUC 0.6525 (TB theo ngân hàng 0.6557)  Recall@1% 0.4843  VDR@1% 0.7631  (vòng tốt nhất 10, 5s)
+  ε=8.0  z=  2.02  PR-AUC 0.0578 (TB theo ngân hàng 0.0624)  Recall@1% 0.1099  VDR@1% 0.1242  (vòng tốt nhất 1, 13s)
+  ε=4.0  z=  3.66  PR-AUC 0.0225 (TB theo ngân hàng 0.0226)  Recall@1% 0.0107  VDR@1% 0.0117  (vòng tốt nhất 5, 8s)
+  ε=1.0  z= 12.81  PR-AUC 0.0202 (TB theo ngân hàng 0.0203)  Recall@1% 0.0157  VDR@1% 0.0104  (vòng tốt nhất 5, 5s)
+
+=== Trung bình qua các fold ===
+         pr_auc  roc_auc      f1  recall@1%  precision@1%  vdr@1%  recall@2%  precision@2%  vdr@2%  noise_multiplier
+epsilon                                                                                                             
+1.0      0.0202   0.5916  0.0426     0.0157        0.0240  0.0104     0.0372        0.0293  0.0343           12.8125
+4.0      0.0225   0.6346  0.0451     0.0107        0.0164  0.0117     0.0306        0.0241  0.0232            3.6621
+8.0      0.0578   0.5055  0.1353     0.1099        0.1677  0.1242     0.1512        0.1193  0.1647            2.0166
+inf      0.6525   0.9035  0.6299     0.4843        0.7390  0.7631     0.6719        0.5300  0.8806            0.0000
+Đã lưu trữ: D:\0 Project\2026 NCKH 2027\project\results\_luu_tru\2026-11-02_2357_dp_client_B_server_mlp

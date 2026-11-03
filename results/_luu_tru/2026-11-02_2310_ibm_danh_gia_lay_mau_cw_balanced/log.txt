@@ -1,0 +1,38 @@
+HI-Small ngày 0–9: 5,077,237 gd, 4,522 ca rửa tiền; 28 đặc trưng; r_train [0.02, 0.05, 0.1, 0.2]; r_test [0.02, 0.1]; class_weight balanced
+fold 0 r_train=0.02  n_train= 67,824  test đầy đủ: PR-AUC 0.1823 F1 0.2613 VDR@1% 0.9885 | test lấy mẫu: r=0.02: 0.2279, r=0.1: 0.1586  (5s)
+fold 0 r_train=0.05  n_train=165,207  test đầy đủ: PR-AUC 0.1783 F1 0.2558 VDR@1% 0.7804 | test lấy mẫu: r=0.02: 0.1689, r=0.1: 0.1707  (4s)
+fold 0 r_train=0.1   n_train=327,552  test đầy đủ: PR-AUC 0.1765 F1 0.2518 VDR@1% 0.3200 | test lấy mẫu: r=0.02: 0.1971, r=0.1: 0.1648  (4s)
+fold 0 r_train=0.2   n_train=652,197  test đầy đủ: PR-AUC 0.1628 F1 0.2380 VDR@1% 0.5171 | test lấy mẫu: r=0.02: 0.1624, r=0.1: 0.1424  (6s)
+fold 1 r_train=0.02  n_train= 67,829  test đầy đủ: PR-AUC 0.1753 F1 0.2699 VDR@1% 0.6462 | test lấy mẫu: r=0.02: 0.2240, r=0.1: 0.1798  (4s)
+fold 1 r_train=0.05  n_train=165,224  test đầy đủ: PR-AUC 0.1578 F1 0.2388 VDR@1% 0.6593 | test lấy mẫu: r=0.02: 0.2222, r=0.1: 0.1472  (4s)
+fold 1 r_train=0.1   n_train=327,545  test đầy đủ: PR-AUC 0.1693 F1 0.2530 VDR@1% 0.6530 | test lấy mẫu: r=0.02: 0.2007, r=0.1: 0.1774  (4s)
+fold 1 r_train=0.2   n_train=652,205  test đầy đủ: PR-AUC 0.1742 F1 0.2650 VDR@1% 0.6569 | test lấy mẫu: r=0.02: 0.2031, r=0.1: 0.1713  (6s)
+fold 2 r_train=0.02  n_train= 67,819  test đầy đủ: PR-AUC 0.1640 F1 0.2494 VDR@1% 0.8283 | test lấy mẫu: r=0.02: 0.1762, r=0.1: 0.1578  (4s)
+fold 2 r_train=0.05  n_train=165,229  test đầy đủ: PR-AUC 0.1686 F1 0.2600 VDR@1% 0.7414 | test lấy mẫu: r=0.02: 0.2227, r=0.1: 0.1761  (4s)
+fold 2 r_train=0.1   n_train=327,550  test đầy đủ: PR-AUC 0.1708 F1 0.2529 VDR@1% 0.8317 | test lấy mẫu: r=0.02: 0.1778, r=0.1: 0.1560  (5s)
+fold 2 r_train=0.2   n_train=652,207  test đầy đủ: PR-AUC 0.1564 F1 0.2442 VDR@1% 0.8085 | test lấy mẫu: r=0.02: 0.1553, r=0.1: 0.1701  (6s)
+fold 3 r_train=0.02  n_train= 67,821  test đầy đủ: PR-AUC 0.1677 F1 0.2448 VDR@1% 0.0317 | test lấy mẫu: r=0.02: 0.1638, r=0.1: 0.1766  (4s)
+fold 3 r_train=0.05  n_train=165,219  test đầy đủ: PR-AUC 0.1706 F1 0.2570 VDR@1% 0.0317 | test lấy mẫu: r=0.02: 0.1679, r=0.1: 0.1791  (4s)
+fold 3 r_train=0.1   n_train=327,528  test đầy đủ: PR-AUC 0.1861 F1 0.2625 VDR@1% 0.0236 | test lấy mẫu: r=0.02: 0.1700, r=0.1: 0.1987  (5s)
+fold 3 r_train=0.2   n_train=652,204  test đầy đủ: PR-AUC 0.1604 F1 0.2607 VDR@1% 0.0532 | test lấy mẫu: r=0.02: 0.1740, r=0.1: 0.1525  (6s)
+fold 4 r_train=0.02  n_train= 67,827  test đầy đủ: PR-AUC 0.1377 F1 0.2333 VDR@1% 0.4996 | test lấy mẫu: r=0.02: 0.1189, r=0.1: 0.1233  (4s)
+fold 4 r_train=0.05  n_train=165,216  test đầy đủ: PR-AUC 0.1629 F1 0.2399 VDR@1% 0.6609 | test lấy mẫu: r=0.02: 0.1554, r=0.1: 0.1641  (4s)
+fold 4 r_train=0.1   n_train=327,537  test đầy đủ: PR-AUC 0.1627 F1 0.2421 VDR@1% 0.4995 | test lấy mẫu: r=0.02: 0.1480, r=0.1: 0.1611  (5s)
+fold 4 r_train=0.2   n_train=652,221  test đầy đủ: PR-AUC 0.1501 F1 0.2391 VDR@1% 0.6292 | test lấy mẫu: r=0.02: 0.1602, r=0.1: 0.1408  (7s)
+
+=== Trung bình ± độ lệch qua các fold ===
+                      pr_auc              f1         recall@1%          vdr@1%        
+                        mean     std    mean     std      mean     std    mean     std
+r_train test                                                                          
+0.02    day_du        0.1654  0.0170  0.2517  0.0143    0.6106  0.0091  0.5988  0.3668
+        lay_mau_0.02  0.1822  0.0453  0.2602  0.0364    0.6199  0.0268  0.5955  0.3687
+        lay_mau_0.1   0.1592  0.0225  0.2447  0.0194    0.6026  0.0155  0.5133  0.3076
+0.05    day_du        0.1676  0.0078  0.2503  0.0101    0.6141  0.0118  0.5747  0.3080
+        lay_mau_0.02  0.1874  0.0324  0.2738  0.0340    0.6207  0.0163  0.6241  0.3534
+        lay_mau_0.1   0.1675  0.0127  0.2372  0.0175    0.6090  0.0144  0.4977  0.3218
+0.10    day_du        0.1731  0.0088  0.2525  0.0072    0.6137  0.0117  0.4656  0.3110
+        lay_mau_0.02  0.1787  0.0214  0.2526  0.0301    0.6119  0.0220  0.5029  0.2995
+        lay_mau_0.1   0.1716  0.0171  0.2398  0.0155    0.6073  0.0139  0.4721  0.3072
+0.20    day_du        0.1608  0.0089  0.2494  0.0126    0.6101  0.0079  0.5330  0.2877
+        lay_mau_0.02  0.1710  0.0192  0.2552  0.0353    0.6117  0.0163  0.4906  0.2649
+        lay_mau_0.1   0.1554  0.0146  0.2428  0.0188    0.6050  0.0134  0.5198  0.2873

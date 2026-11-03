@@ -1,0 +1,10 @@
+HI-Small ngày 0–9: 5,077,237 gd, 4,522 ca rửa tiền; 28 đặc trưng; r_train [0.02]; r_test [0.02, 0.1]
+fold 0 r_train=0.02  n_train= 67,824  test đầy đủ: PR-AUC 0.2420 F1 0.3173 VDR@1% 0.9885 | test lấy mẫu: r=0.02: 0.2183, r=0.1: 0.2402  (6s)
+
+=== Trung bình ± độ lệch qua các fold ===
+                      pr_auc          f1     recall@1%      vdr@1%    
+                        mean std    mean std      mean std    mean std
+r_train test                                                          
+0.02    day_du        0.2420 NaN  0.3173 NaN    0.6276 NaN  0.9885 NaN
+        lay_mau_0.02  0.2183 NaN  0.3293 NaN    0.6320 NaN  0.9906 NaN
+        lay_mau_0.1   0.2402 NaN  0.3002 NaN    0.6199 NaN  0.9885 NaN

@@ -1,0 +1,9 @@
+{
+  "thoi_diem": "2026-11-03T01:04:21",
+  "script": "09_ibm_fl_dp.py",
+  "lenh": "scripts/09_ibm_fl_dp.py --min-tx 1000 --clients-per-round 200 --rate 0.1 --rounds 30 --settings fedavg --batch-size 512 --lr 5e-3 --local-epochs 5 --pos-weight 1 --tag K802_F2_e5_lr5e-3",
+  "commit": "cb80f10",
+  "co_thay_doi_chua_commit": true,
+  "thu_muc_luu_tru": "results/_luu_tru/2026-11-03_0104_ibm_fl_dp_K802_F2_e5_lr5e-3",
+  "ghi_chu": "FL+DP mức client IBM HI-Small, K=802, folds [0], ε [8.0, 4.0, 2.0, 1.0], 30 vòng"
+}

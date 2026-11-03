@@ -7,8 +7,8 @@
 Siêu tham số cố định theo Slide 6, trừ: full-batch thay cho batch 64 và lr = 5e-3 thay cho 1e-3
 (xem docs/decisions.md D10). Val (inner fold 0) dùng cho dừng sớm và chọn ngưỡng F1.
 
-Chạy:  python scripts/20_gnn_synthetic.py [--folds 0] [--settings centralized local fedavg]
-Ra:    results/gnn_synthetic/per_fold.csv, summary.csv, fedavg_history.csv, log.txt
+Chạy:  python scripts/20_gnn_synthetic.py [--folds 0] [--settings centralized local fedavg] [--seed S] [--rounds R]
+Ra:    results/gnn_synthetic[_seedS]/per_fold.csv, summary.csv, fedavg_history.csv, log.txt
 """
 
 import argparse
@@ -26,6 +26,7 @@ from fraudfl.eval.metrics import MAIN_METRICS, best_f1_threshold
 from fraudfl.experiment import make_data, scores, test_metrics
 from fraudfl.graph import build_edge_index
 from fraudfl.models import SageMLP
+from fraudfl.runlog import archive_run
 from fraudfl.train import fedavg, predict, train_full_batch
 
 LR = 5e-3
@@ -55,7 +56,12 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--folds", type=int, nargs="+", default=list(range(N_OUTER_FOLDS)))
     ap.add_argument("--settings", nargs="+", default=["centralized", "local", "fedavg"])
+    ap.add_argument("--seed", type=int, default=SEED, help="seed huấn luyện; khác mặc định thì ghi vào thư mục _seedS")
+    ap.add_argument("--rounds", type=int, default=ROUNDS, help="số vòng FedAvg")
     args = ap.parse_args()
+    global OUT
+    if args.seed != SEED:
+        OUT = RESULTS / f"gnn_synthetic_seed{args.seed}"
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / "log.txt").write_text("", encoding="utf-8")
 
@@ -65,6 +71,7 @@ def main():
     t0 = time.time()
     ei_central = build_edge_index(tx, cross_client=True)
     ei_local = build_edge_index(tx, cross_client=False)
+    log(f"Seed {args.seed}, FedAvg {args.rounds} vòng")
     log(f"Đồ thị: {len(tx):,} nút; cạnh centralized {ei_central.shape[1]:,}, local {ei_local.shape[1]:,} "
         f"({time.time() - t0:.1f}s)")
 
@@ -77,7 +84,7 @@ def main():
 
         if "centralized" in args.settings:
             t0 = time.time()
-            torch.manual_seed(SEED)
+            torch.manual_seed(args.seed)
             d = make_data(x, y, masks, ei_central)
             model = train_full_batch(SageMLP(x.shape[1]), d, LR, MAX_EPOCHS, PATIENCE)
             score = scores(model, [d], len(tx))
@@ -89,7 +96,7 @@ def main():
             t0 = time.time()
             score, thr = np.full(len(tx), np.nan), np.zeros(len(tx))
             for c, d in enumerate(per_client):
-                torch.manual_seed(SEED)
+                torch.manual_seed(args.seed)
                 model = train_full_batch(SageMLP(x.shape[1]), d, LR, MAX_EPOCHS, PATIENCE)
                 s = predict(model, d)
                 score[d.node_ids] = s
@@ -99,8 +106,8 @@ def main():
 
         if "fedavg" in args.settings:
             t0 = time.time()
-            torch.manual_seed(SEED)
-            model, hist = fedavg(SageMLP(x.shape[1]), per_client, LR, ROUNDS, LOCAL_EPOCHS)
+            torch.manual_seed(args.seed)
+            model, hist = fedavg(SageMLP(x.shape[1]), per_client, LR, args.rounds, LOCAL_EPOCHS)
             history += [{"fold": k, **h} for h in hist]
             score = scores(model, per_client, len(tx))
             thr = best_f1_threshold(y[masks["val"]], score[masks["val"]])
@@ -117,6 +124,7 @@ def main():
     summary.to_csv(OUT / "summary.csv")
     log("\n=== Trung bình qua các fold ===")
     log(per_fold.groupby("setting")[MAIN_METRICS].mean().round(4).to_string())
+    log(f"Đã lưu trữ: {archive_run(OUT, note=f'GNN E1–E3, folds {args.folds}, seed {args.seed}, {args.rounds} vòng')}")
 
 
 if __name__ == "__main__":
