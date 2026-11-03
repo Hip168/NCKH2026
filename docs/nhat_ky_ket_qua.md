@@ -468,3 +468,33 @@ Kết quả chạy **trước ngày 02/11** chưa có kho lưu trữ; bản gố
   DP ε = 1 đạt **0,0233 = 94% FedAvg thường (0,0248), 83% FedProx không DP (0,0282), 21% gộp chung (0,111)**.
 - **Cấu hình chốt cho chạy 5 fold:** K = 802 (≥ 1.000 giao dịch), 200 ngân hàng/vòng, r = 0,1, 30 vòng, MLP, lô 512,
   lr 5e-3, 5 epoch cục bộ, pos_weight 1, FedProx μ = 0,1, C = 0,35, ε ∈ {8, 4, 2, 1}.
+
+## Giai đoạn 23 — KẾT QUẢ CHÍNH 5 fold trên IBM HI-Small, 802 ngân hàng (03/11/2026)
+
+- **Cấu hình** (chốt ở giai đoạn 22): K = 802 ngân hàng (≥ 1.000 giao dịch, ngày 0–9), 200 ngân hàng/vòng, train r = 0,1,
+  val/test đầy đủ, 30 vòng, MLP, lô 512, lr 5e-3, 5 epoch cục bộ, pos_weight 1. FedProx μ = 0,1 và trung bình đều cho
+  `fedavg_deu` và DP; DP mức client: client cắt C = 0,35, server cộng nhiễu, δ = 1e-5. 1 seed (42).
+- **Lưu ở:** `results/_luu_tru/2026-11-03_*_ibm_fl_dp_CHINH_5fold_moc`, `..._1225_ibm_fl_dp_CHINH_5fold_fedprox_dp`,
+  bảng so với mục tiêu `..._1225_so_voi_muc_tieu_CHINH_5fold` (`scripts/11_so_voi_muc_tieu.py`).
+- **Kết quả** (PR-AUC trung bình ± độ lệch 5 fold; ngẫu nhiên ≈ 0,0009):
+
+  | Cách | PR-AUC | % gộp chung (mục tiêu ≥ 85%) | % FedProx không DP | Đạt? |
+  |---|---|---|---|---|
+  | Gộp chung (E7) | 0,0979 ± 0,0089 | 100% | | mốc |
+  | FedAvg thường | 0,0236 ± 0,0022 | 24% ± 4 | | mốc |
+  | FedProx μ = 0,1, trung bình đều (E6) | 0,0291 ± 0,0019 | 30% ± 3 | 100% | mốc |
+  | DP ε = 8 | 0,0260 ± 0,0014 | 27% ± 3 | 90% ± 2 | ❌ |
+  | DP ε = 4 | 0,0256 ± 0,0012 | 26% ± 3 | 88% ± 3 | ❌ |
+  | DP ε = 2 | 0,0255 ± 0,0016 | 26% ± 4 | 88% ± 7 | ❌ |
+  | **DP ε = 1 (E8)** | **0,0246 ± 0,0017** | **25% ± 4** | **85% ± 8** | ❌ theo tiêu chí Slide 10 |
+
+  VDR@1% trung bình 0,00–0,48, dao động rất mạnh → chỉ tham khảo.
+- **Rút ra:**
+  1. Theo tiêu chí Slide 10 (FL + DP ≥ 85% gộp chung): **chưa đạt** — 25%, thiếu 60 điểm %. ε = 1 đạt.
+  2. **Chi phí của DP chỉ ~15%**: DP ε = 1 giữ 85% ± 8 so với FedProx không DP (đúng ngưỡng 85% nếu tiêu chí tách
+     riêng chi phí DP). Từ ε = 8 xuống ε = 1 chỉ mất thêm ~5 điểm %.
+  3. **Chi phí của FL ~70–76%**: FL chỉ đạt 24–30% gộp chung — 802 ngân hàng rất khác nhau (non-IID); FedProx cải thiện
+     FedAvg từ 24% lên 30%.
+  4. Đối lập với synthetic (5 ngân hàng): ở đó FL đạt 98% gộp chung nhưng DP mức client sụp. → Luận điểm cho bài báo:
+     DP mức client cần nhiều ngân hàng, nhưng nhiều ngân hàng thì dữ liệu khác nhau hơn, FL khó học hơn.
+  5. Còn thiếu so với Slide 8/8b: 3 seed, kiểm định Wilcoxon/bootstrap CI; ε = 0,5; E9/E10; tự học riêng với K = 802.
