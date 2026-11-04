@@ -1,0 +1,245 @@
+Cách 1 | HI-Small ngày 0–9 | ngân hàng >= 1000 gd | rate 0.1 | khối 100,000 | lô 512 | lr 0.001 | pos_weight 1.0 | tối đa 100 lượt, dừng sau 10 lượt không tăng | thứ tự xao | seed 42 | 4 luồng
+Chuẩn bị: 4,557,222 giao dịch, 4,021 ca, 802 ngân hàng, 22 đặc trưng (3 giây đọc)
+  fold 0: fit 293,983 (2574 ca) | val 729,156 (643 ca) | test 911,445 (804 ca) → /Users/leminhdao168/Documents/NCKH/dat-ai/data/processed/cach1/HI-Small_mintx1000_r0.1_seed42/fold0
+  fold 1: fit 293,985 (2575 ca) | val 729,156 (642 ca) | test 911,445 (804 ca) → /Users/leminhdao168/Documents/NCKH/dat-ai/data/processed/cach1/HI-Small_mintx1000_r0.1_seed42/fold1
+  fold 2: fit 293,995 (2574 ca) | val 729,156 (644 ca) | test 911,444 (803 ca) → /Users/leminhdao168/Documents/NCKH/dat-ai/data/processed/cach1/HI-Small_mintx1000_r0.1_seed42/fold2
+  fold 3: fit 293,975 (2569 ca) | val 729,156 (647 ca) | test 911,444 (805 ca) → /Users/leminhdao168/Documents/NCKH/dat-ai/data/processed/cach1/HI-Small_mintx1000_r0.1_seed42/fold3
+  fold 4: fit 293,982 (2571 ca) | val 729,156 (645 ca) | test 911,444 (805 ca) → /Users/leminhdao168/Documents/NCKH/dat-ai/data/processed/cach1/HI-Small_mintx1000_r0.1_seed42/fold4
+Chuẩn bị xong sau 11 giây, RAM đỉnh 2,540 MB
+
+=== Fold 0 ===
+    lượt  1  loss 0.0632  val PR-AUC 0.0306  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  2  loss 0.0302  val PR-AUC 0.0380  576 bước  1s học  RAM đỉnh 2,540 MB
+    lượt  3  loss 0.0288  val PR-AUC 0.0408  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  4  loss 0.0281  val PR-AUC 0.0445  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  5  loss 0.0275  val PR-AUC 0.0516  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  6  loss 0.0270  val PR-AUC 0.0618  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  7  loss 0.0266  val PR-AUC 0.0728  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  8  loss 0.0264  val PR-AUC 0.0747  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  9  loss 0.0262  val PR-AUC 0.0872  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 10  loss 0.0259  val PR-AUC 0.0841  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 11  loss 0.0257  val PR-AUC 0.0868  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 12  loss 0.0256  val PR-AUC 0.0916  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 13  loss 0.0255  val PR-AUC 0.0889  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 14  loss 0.0252  val PR-AUC 0.0930  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 15  loss 0.0251  val PR-AUC 0.0837  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 16  loss 0.0251  val PR-AUC 0.0873  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 17  loss 0.0250  val PR-AUC 0.0841  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 18  loss 0.0248  val PR-AUC 0.0991  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 19  loss 0.0248  val PR-AUC 0.0940  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 20  loss 0.0247  val PR-AUC 0.0923  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 21  loss 0.0246  val PR-AUC 0.0986  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 22  loss 0.0246  val PR-AUC 0.0947  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 23  loss 0.0245  val PR-AUC 0.0972  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 24  loss 0.0245  val PR-AUC 0.0970  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 25  loss 0.0243  val PR-AUC 0.1059  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 26  loss 0.0243  val PR-AUC 0.1036  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 27  loss 0.0243  val PR-AUC 0.1017  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 28  loss 0.0242  val PR-AUC 0.0897  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 29  loss 0.0241  val PR-AUC 0.0992  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 30  loss 0.0242  val PR-AUC 0.1036  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 31  loss 0.0240  val PR-AUC 0.0883  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 32  loss 0.0240  val PR-AUC 0.1061  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 33  loss 0.0239  val PR-AUC 0.0970  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 34  loss 0.0239  val PR-AUC 0.0843  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 35  loss 0.0239  val PR-AUC 0.0943  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 36  loss 0.0238  val PR-AUC 0.1052  576 bước  1s học  RAM đỉnh 2,540 MB
+    lượt 37  loss 0.0238  val PR-AUC 0.1035  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 38  loss 0.0236  val PR-AUC 0.0974  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 39  loss 0.0238  val PR-AUC 0.1045  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 40  loss 0.0235  val PR-AUC 0.1061  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 41  loss 0.0236  val PR-AUC 0.1032  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 42  loss 0.0236  val PR-AUC 0.1032  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 43  loss 0.0234  val PR-AUC 0.1016  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 44  loss 0.0234  val PR-AUC 0.1022  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 45  loss 0.0234  val PR-AUC 0.1071  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 46  loss 0.0234  val PR-AUC 0.1068  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 47  loss 0.0233  val PR-AUC 0.0981  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 48  loss 0.0233  val PR-AUC 0.0902  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 49  loss 0.0231  val PR-AUC 0.0990  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 50  loss 0.0232  val PR-AUC 0.1093  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 51  loss 0.0231  val PR-AUC 0.1027  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 52  loss 0.0231  val PR-AUC 0.0947  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 53  loss 0.0230  val PR-AUC 0.0933  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 54  loss 0.0229  val PR-AUC 0.1003  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 55  loss 0.0228  val PR-AUC 0.1002  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 56  loss 0.0229  val PR-AUC 0.0988  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 57  loss 0.0229  val PR-AUC 0.0916  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 58  loss 0.0228  val PR-AUC 0.0973  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 59  loss 0.0227  val PR-AUC 0.1037  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 60  loss 0.0227  val PR-AUC 0.1002  576 bước  0s học  RAM đỉnh 2,540 MB
+  TEST  PR-AUC 0.1057 | TB theo ngân hàng 0.3780 | Recall@1% 0.5174 | VDR@1% 0.8644 | tốt nhất ở lượt 50/60 | 33s | gộp chung lấy mẫu 0.1006 → 105%
+
+=== Fold 1 ===
+    lượt  1  loss 0.0601  val PR-AUC 0.0308  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  2  loss 0.0302  val PR-AUC 0.0439  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  3  loss 0.0288  val PR-AUC 0.0453  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  4  loss 0.0280  val PR-AUC 0.0491  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  5  loss 0.0274  val PR-AUC 0.0515  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  6  loss 0.0270  val PR-AUC 0.0621  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  7  loss 0.0268  val PR-AUC 0.0690  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  8  loss 0.0264  val PR-AUC 0.0812  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  9  loss 0.0262  val PR-AUC 0.0794  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 10  loss 0.0259  val PR-AUC 0.0842  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 11  loss 0.0257  val PR-AUC 0.0827  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 12  loss 0.0256  val PR-AUC 0.0863  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 13  loss 0.0254  val PR-AUC 0.0890  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 14  loss 0.0251  val PR-AUC 0.0871  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 15  loss 0.0251  val PR-AUC 0.0948  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 16  loss 0.0249  val PR-AUC 0.0887  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 17  loss 0.0249  val PR-AUC 0.0980  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 18  loss 0.0246  val PR-AUC 0.0948  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 19  loss 0.0246  val PR-AUC 0.0992  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 20  loss 0.0245  val PR-AUC 0.0947  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 21  loss 0.0244  val PR-AUC 0.0927  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 22  loss 0.0244  val PR-AUC 0.0954  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 23  loss 0.0243  val PR-AUC 0.0901  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 24  loss 0.0241  val PR-AUC 0.0889  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 25  loss 0.0241  val PR-AUC 0.0911  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 26  loss 0.0240  val PR-AUC 0.0908  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 27  loss 0.0240  val PR-AUC 0.0950  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 28  loss 0.0239  val PR-AUC 0.1002  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 29  loss 0.0238  val PR-AUC 0.0947  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 30  loss 0.0238  val PR-AUC 0.0941  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 31  loss 0.0238  val PR-AUC 0.0883  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 32  loss 0.0237  val PR-AUC 0.0880  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 33  loss 0.0237  val PR-AUC 0.0917  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 34  loss 0.0236  val PR-AUC 0.0836  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 35  loss 0.0236  val PR-AUC 0.0889  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 36  loss 0.0234  val PR-AUC 0.0999  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 37  loss 0.0234  val PR-AUC 0.0939  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 38  loss 0.0235  val PR-AUC 0.0911  576 bước  0s học  RAM đỉnh 2,540 MB
+  TEST  PR-AUC 0.1061 | TB theo ngân hàng 0.3577 | Recall@1% 0.5087 | VDR@1% 0.7288 | tốt nhất ở lượt 28/38 | 22s | gộp chung lấy mẫu 0.1050 → 101%
+
+=== Fold 2 ===
+    lượt  1  loss 0.0706  val PR-AUC 0.0310  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  2  loss 0.0306  val PR-AUC 0.0399  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  3  loss 0.0293  val PR-AUC 0.0474  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  4  loss 0.0286  val PR-AUC 0.0545  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  5  loss 0.0281  val PR-AUC 0.0564  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  6  loss 0.0277  val PR-AUC 0.0649  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  7  loss 0.0272  val PR-AUC 0.0654  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  8  loss 0.0269  val PR-AUC 0.0784  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  9  loss 0.0266  val PR-AUC 0.0812  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 10  loss 0.0264  val PR-AUC 0.0875  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 11  loss 0.0261  val PR-AUC 0.0953  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 12  loss 0.0260  val PR-AUC 0.0938  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 13  loss 0.0258  val PR-AUC 0.1011  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 14  loss 0.0257  val PR-AUC 0.0991  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 15  loss 0.0255  val PR-AUC 0.1048  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 16  loss 0.0254  val PR-AUC 0.1029  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 17  loss 0.0254  val PR-AUC 0.1097  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 18  loss 0.0252  val PR-AUC 0.1107  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 19  loss 0.0252  val PR-AUC 0.1050  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 20  loss 0.0251  val PR-AUC 0.0940  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 21  loss 0.0250  val PR-AUC 0.1088  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 22  loss 0.0248  val PR-AUC 0.1053  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 23  loss 0.0249  val PR-AUC 0.1026  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 24  loss 0.0247  val PR-AUC 0.1116  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 25  loss 0.0246  val PR-AUC 0.1049  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 26  loss 0.0246  val PR-AUC 0.1152  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 27  loss 0.0246  val PR-AUC 0.1075  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 28  loss 0.0245  val PR-AUC 0.1177  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 29  loss 0.0244  val PR-AUC 0.1160  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 30  loss 0.0242  val PR-AUC 0.1057  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 31  loss 0.0242  val PR-AUC 0.1041  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 32  loss 0.0241  val PR-AUC 0.1082  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 33  loss 0.0240  val PR-AUC 0.1048  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 34  loss 0.0241  val PR-AUC 0.1127  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 35  loss 0.0239  val PR-AUC 0.1054  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 36  loss 0.0241  val PR-AUC 0.1111  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 37  loss 0.0238  val PR-AUC 0.1033  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 38  loss 0.0237  val PR-AUC 0.1103  576 bước  1s học  RAM đỉnh 2,540 MB
+  TEST  PR-AUC 0.1034 | TB theo ngân hàng 0.3415 | Recall@1% 0.5093 | VDR@1% 0.7009 | tốt nhất ở lượt 28/38 | 25s | gộp chung lấy mẫu 0.0825 → 125%
+
+=== Fold 3 ===
+    lượt  1  loss 0.0600  val PR-AUC 0.0320  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  2  loss 0.0306  val PR-AUC 0.0413  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  3  loss 0.0290  val PR-AUC 0.0576  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  4  loss 0.0280  val PR-AUC 0.0601  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  5  loss 0.0274  val PR-AUC 0.0726  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  6  loss 0.0271  val PR-AUC 0.0812  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  7  loss 0.0267  val PR-AUC 0.0847  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  8  loss 0.0263  val PR-AUC 0.0912  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  9  loss 0.0261  val PR-AUC 0.0840  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 10  loss 0.0259  val PR-AUC 0.0985  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 11  loss 0.0257  val PR-AUC 0.1014  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 12  loss 0.0256  val PR-AUC 0.0988  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 13  loss 0.0254  val PR-AUC 0.1105  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 14  loss 0.0253  val PR-AUC 0.1109  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 15  loss 0.0252  val PR-AUC 0.1106  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 16  loss 0.0250  val PR-AUC 0.1112  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 17  loss 0.0249  val PR-AUC 0.1222  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 18  loss 0.0249  val PR-AUC 0.1052  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 19  loss 0.0247  val PR-AUC 0.1083  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 20  loss 0.0247  val PR-AUC 0.1147  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 21  loss 0.0246  val PR-AUC 0.1091  576 bước  1s học  RAM đỉnh 2,540 MB
+    lượt 22  loss 0.0245  val PR-AUC 0.1022  576 bước  1s học  RAM đỉnh 2,540 MB
+    lượt 23  loss 0.0244  val PR-AUC 0.1235  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 24  loss 0.0242  val PR-AUC 0.1142  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 25  loss 0.0243  val PR-AUC 0.1265  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 26  loss 0.0242  val PR-AUC 0.1254  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 27  loss 0.0242  val PR-AUC 0.1033  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 28  loss 0.0241  val PR-AUC 0.1178  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 29  loss 0.0241  val PR-AUC 0.1207  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 30  loss 0.0239  val PR-AUC 0.1222  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 31  loss 0.0239  val PR-AUC 0.1184  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 32  loss 0.0238  val PR-AUC 0.1225  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 33  loss 0.0239  val PR-AUC 0.1164  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 34  loss 0.0237  val PR-AUC 0.1149  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 35  loss 0.0237  val PR-AUC 0.1150  576 bước  0s học  RAM đỉnh 2,540 MB
+  TEST  PR-AUC 0.0905 | TB theo ngân hàng 0.3279 | Recall@1% 0.4882 | VDR@1% 0.9939 | tốt nhất ở lượt 25/35 | 24s | gộp chung lấy mẫu 0.0985 → 92%
+
+=== Fold 4 ===
+    lượt  1  loss 0.0648  val PR-AUC 0.0296  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  2  loss 0.0303  val PR-AUC 0.0379  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  3  loss 0.0289  val PR-AUC 0.0446  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  4  loss 0.0282  val PR-AUC 0.0561  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  5  loss 0.0278  val PR-AUC 0.0550  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  6  loss 0.0273  val PR-AUC 0.0595  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  7  loss 0.0269  val PR-AUC 0.0590  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  8  loss 0.0266  val PR-AUC 0.0712  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt  9  loss 0.0263  val PR-AUC 0.0690  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 10  loss 0.0260  val PR-AUC 0.0763  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 11  loss 0.0258  val PR-AUC 0.0849  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 12  loss 0.0255  val PR-AUC 0.0816  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 13  loss 0.0253  val PR-AUC 0.0921  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 14  loss 0.0251  val PR-AUC 0.0857  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 15  loss 0.0249  val PR-AUC 0.0883  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 16  loss 0.0248  val PR-AUC 0.0884  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 17  loss 0.0247  val PR-AUC 0.0839  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 18  loss 0.0247  val PR-AUC 0.0934  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 19  loss 0.0245  val PR-AUC 0.0919  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 20  loss 0.0244  val PR-AUC 0.0917  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 21  loss 0.0243  val PR-AUC 0.0905  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 22  loss 0.0243  val PR-AUC 0.0881  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 23  loss 0.0242  val PR-AUC 0.0904  576 bước  1s học  RAM đỉnh 2,540 MB
+    lượt 24  loss 0.0241  val PR-AUC 0.0941  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 25  loss 0.0241  val PR-AUC 0.0874  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 26  loss 0.0240  val PR-AUC 0.0936  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 27  loss 0.0239  val PR-AUC 0.0946  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 28  loss 0.0239  val PR-AUC 0.0946  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 29  loss 0.0239  val PR-AUC 0.0939  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 30  loss 0.0238  val PR-AUC 0.0879  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 31  loss 0.0237  val PR-AUC 0.0935  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 32  loss 0.0236  val PR-AUC 0.0936  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 33  loss 0.0236  val PR-AUC 0.0958  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 34  loss 0.0236  val PR-AUC 0.0942  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 35  loss 0.0235  val PR-AUC 0.1047  576 bước  1s học  RAM đỉnh 2,540 MB
+    lượt 36  loss 0.0236  val PR-AUC 0.0932  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 37  loss 0.0235  val PR-AUC 0.0968  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 38  loss 0.0235  val PR-AUC 0.0984  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 39  loss 0.0234  val PR-AUC 0.0896  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 40  loss 0.0233  val PR-AUC 0.1006  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 41  loss 0.0233  val PR-AUC 0.1011  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 42  loss 0.0231  val PR-AUC 0.0927  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 43  loss 0.0232  val PR-AUC 0.0977  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 44  loss 0.0231  val PR-AUC 0.0991  576 bước  0s học  RAM đỉnh 2,540 MB
+    lượt 45  loss 0.0230  val PR-AUC 0.0948  576 bước  1s học  RAM đỉnh 2,540 MB
+  TEST  PR-AUC 0.1058 | TB theo ngân hàng 0.3580 | Recall@1% 0.5168 | VDR@1% 0.9869 | tốt nhất ở lượt 35/45 | 30s | gộp chung lấy mẫu 0.1028 → 103%
+
+=== Trung bình qua các fold ===
+      pr_auc  macro_pr_auc  recall@1%  vdr@1%  central_lay_mau  pct_so_voi_lay_mau  luot_tot     giay
+mean  0.1023        0.3526     0.5081  0.8550           0.0979            105.2395   33.2000  26.8000
+std   0.0067        0.0190     0.0118  0.1382           0.0089             12.2997   10.0846   4.5497
+Đã lưu trữ: /Users/leminhdao168/Documents/NCKH/dat-ai/results/_luu_tru/2026-11-04_0124_ibm_cach1_doichung_r0.1

@@ -1,0 +1,13 @@
+Cách 1 | HI-Small ngày 0–9 | ngân hàng >= 0 gd | rate 1 | khối 100,000 | lô 512 | lr 0.001 | pos_weight 1.0 | tối đa 1 lượt, dừng sau 3 lượt không tăng | thứ tự xao | seed 42 | 4 luồng | ngân hàng < 30 dòng fit dùng chuẩn hóa chung
+Chuẩn bị: 5,077,237 giao dịch, 4,522 ca, 30470 ngân hàng, 22 đặc trưng (3 giây đọc)
+  fold 0: fit 3,249,431 (2891 ca) | val 812,358 (726 ca) | test 1,015,448 (905 ca); 1,759/30,470 ngân hàng tự chuẩn hóa → /Users/leminhdao168/Documents/NCKH/dat-ai/data/processed/cach1/HI-Small_mintx0_r1_seed42/fold0
+Chuẩn bị xong sau 7 giây, RAM đỉnh 2,555 MB
+
+=== Fold 0 ===
+    lượt  1  loss 0.0080  val PR-AUC 0.0500  6369 bước  4s học  RAM đỉnh 2,555 MB
+  TEST  PR-AUC 0.0475 | TB theo ngân hàng 0.3066 | Recall@1% 0.3845 | VDR@1% 0.0023 | tốt nhất ở lượt 1/1 | 6s
+
+=== Trung bình qua các fold ===
+      pr_auc  pr_auc_nh_lon  pr_auc_nh_nho  macro_pr_auc  recall@1%  vdr@1%  luot_tot  giay
+mean  0.0475         0.0489         0.0436        0.3066     0.3845  0.0023       1.0   6.0
+std      NaN            NaN            NaN           NaN        NaN     NaN       NaN   NaN

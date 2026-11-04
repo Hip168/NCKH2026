@@ -1,0 +1,14 @@
+Cách 1 | HI-Small ngày 0–9 | ngân hàng >= 1000 gd | rate 1 | khối 100,000 | lô 1024 | lr 0.005 | pos_weight 1.0 | tối đa 1 lượt, dừng sau 3 lượt không tăng | thứ tự xao | seed 42 | 4 luồng
+Chuẩn bị: 4,557,222 giao dịch, 4,021 ca, 802 ngân hàng, 22 đặc trưng (3 giây đọc)
+  fold 0: fit 2,916,621 (2574 ca) | val 729,156 (643 ca) | test 911,445 (804 ca) → /Users/leminhdao168/Documents/NCKH/dat-ai/data/processed/cach1/HI-Small_mintx1000_r1_seed42/fold0
+Chuẩn bị xong sau 7 giây, RAM đỉnh 2,098 MB
+
+=== Fold 0 ===
+    lượt  1  loss 0.0067  val PR-AUC 0.0373  2859 bước  2s học  RAM đỉnh 2,098 MB
+  TEST  PR-AUC 0.0445 | TB theo ngân hàng 0.2587 | Recall@1% 0.3818 | VDR@1% 0.0076 | tốt nhất ở lượt 1/1 | 7s | gộp chung lấy mẫu 0.1006 → 44%
+
+=== Trung bình qua các fold ===
+      pr_auc  macro_pr_auc  recall@1%  vdr@1%  central_lay_mau  pct_so_voi_lay_mau  luot_tot  giay
+mean  0.0445        0.2587     0.3818  0.0076           0.1006             44.2181       1.0   7.0
+std      NaN           NaN        NaN     NaN              NaN                 NaN       NaN   NaN
+Đã lưu trữ: /Users/leminhdao168/Documents/NCKH/dat-ai/results/_luu_tru/2026-11-04_0104_ibm_cach1_thu

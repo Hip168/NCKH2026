@@ -1,0 +1,28 @@
+Cách 1 | HI-Small ngày 0–9 | ngân hàng >= 1000 gd | rate 1 | khối 100,000 | lô 256 | lr 0.001 | pos_weight 1.0 | tối đa 20 lượt, dừng sau 3 lượt không tăng | thứ tự xao | seed 42 | 4 luồng
+
+=== Fold 0 ===
+    lượt  1  loss 0.0067  val PR-AUC 0.0390  11404 bước  4s học  RAM đỉnh 904 MB
+    lượt  2  loss 0.0048  val PR-AUC 0.0677  11404 bước  4s học  RAM đỉnh 904 MB
+    lượt  3  loss 0.0047  val PR-AUC 0.0731  11404 bước  4s học  RAM đỉnh 904 MB
+    lượt  4  loss 0.0047  val PR-AUC 0.0781  11404 bước  4s học  RAM đỉnh 904 MB
+    lượt  5  loss 0.0046  val PR-AUC 0.0887  11404 bước  4s học  RAM đỉnh 904 MB
+    lượt  6  loss 0.0046  val PR-AUC 0.0871  11404 bước  4s học  RAM đỉnh 904 MB
+    lượt  7  loss 0.0045  val PR-AUC 0.0821  11404 bước  4s học  RAM đỉnh 904 MB
+    lượt  8  loss 0.0045  val PR-AUC 0.0947  11404 bước  4s học  RAM đỉnh 904 MB
+    lượt  9  loss 0.0045  val PR-AUC 0.1000  11404 bước  4s học  RAM đỉnh 904 MB
+    lượt 10  loss 0.0045  val PR-AUC 0.1024  11404 bước  4s học  RAM đỉnh 904 MB
+    lượt 11  loss 0.0045  val PR-AUC 0.0931  11404 bước  4s học  RAM đỉnh 904 MB
+    lượt 12  loss 0.0045  val PR-AUC 0.1026  11404 bước  4s học  RAM đỉnh 904 MB
+    lượt 13  loss 0.0045  val PR-AUC 0.0976  11404 bước  4s học  RAM đỉnh 904 MB
+    lượt 14  loss 0.0044  val PR-AUC 0.1063  11404 bước  4s học  RAM đỉnh 904 MB
+    lượt 15  loss 0.0044  val PR-AUC 0.1081  11404 bước  4s học  RAM đỉnh 904 MB
+    lượt 16  loss 0.0044  val PR-AUC 0.1186  11404 bước  4s học  RAM đỉnh 904 MB
+    lượt 17  loss 0.0044  val PR-AUC 0.1104  11404 bước  4s học  RAM đỉnh 904 MB
+    lượt 18  loss 0.0044  val PR-AUC 0.1166  11404 bước  4s học  RAM đỉnh 904 MB
+    lượt 19  loss 0.0043  val PR-AUC 0.1080  11404 bước  4s học  RAM đỉnh 904 MB
+  TEST  PR-AUC 0.1267 | TB theo ngân hàng 0.3754 | Recall@1% 0.5361 | VDR@1% 0.2606 | tốt nhất ở lượt 16/19 | 80s | gộp chung lấy mẫu 0.1006 → 126%
+
+=== Trung bình qua các fold ===
+      pr_auc  macro_pr_auc  recall@1%  vdr@1%  central_lay_mau  pct_so_voi_lay_mau  luot_tot  giay
+mean  0.1267        0.3754     0.5361  0.2606           0.1006            125.8712      16.0  80.0
+std      NaN           NaN        NaN     NaN              NaN                 NaN       NaN   NaN

@@ -498,3 +498,17 @@ Kết quả chạy **trước ngày 02/11** chưa có kho lưu trữ; bản gố
   4. Đối lập với synthetic (5 ngân hàng): ở đó FL đạt 98% gộp chung nhưng DP mức client sụp. → Luận điểm cho bài báo:
      DP mức client cần nhiều ngân hàng, nhưng nhiều ngân hàng thì dữ liệu khác nhau hơn, FL khó học hơn.
   5. Còn thiếu so với Slide 8/8b: 3 seed, kiểm định Wilcoxon/bootstrap CI; ε = 0,5; E9/E10; tự học riêng với K = 802.
+
+## Giai đoạn 24 — Cách 1 lô nhỏ trên đủ dữ liệu IBM; kiểm tra giả thuyết non-IID (04/11/2026, Đạo)
+
+- **Chi tiết:** [BAO_CAO_CACH1_VA_NON_IID_2026-11-04.md](BAO_CAO_CACH1_VA_NON_IID_2026-11-04.md). Script mới
+  `12_ibm_cach1_lo_nho.py`, `13_dong_bo_mlflow.py`, `14_ibm_ngan_hang_ngau_nhien.py`; không sửa code cũ.
+- **Cách 1** (gộp chung, 802 ngân hàng, train 100%, khối 100.000 đọc từ ổ cứng, lô 512, lr 1e-3, pos_weight 1, dừng sau 3
+  lượt không tăng): 0,1118 ± 0,0102 (3 seed × 5 fold) so với gộp chung lấy mẫu 10% 0,0979. Không xáo trộn: 0,0189.
+  Đủ 30.470 ngân hàng: 0,1090 ± 0,0104; ngân hàng nhỏ 0,112, ngân hàng lớn 0,110.
+- **Cỡ khối 10 nghìn – 3 triệu:** 2,0–2,6 giây/lượt, RAM đỉnh 0,8–1,3 GB → không tràn RAM ở cỡ nào.
+- **Non-IID:** chia ngẫu nhiên giao dịch vào 802 ngân hàng (giữ kích cỡ), chạy đúng lệnh chính giai đoạn 23. FedAvg
+  24% → 57% gộp chung; trung bình đều 21% → 24%; trung bình đều + FedProx 30% → 32%. → Với cấu hình DP (trung bình
+  đều), khác biệt giữa ngân hàng KHÔNG phải nút thắt chính. FedAvg 100 vòng (fold 0): 0,0248 → 0,0318, vẫn đang tăng.
+- **Đính chính** câu "FL chỉ 24–30% gộp chung vì 802 ngân hàng non-IID" ở giai đoạn 17, 19, 23: chỉ đúng một phần
+  cho FedAvg thường, không đúng cho trung bình đều / DP.

@@ -1,0 +1,9 @@
+{
+  "thoi_diem": "2026-11-04T01:36:45",
+  "script": "12_ibm_cach1_lo_nho.py",
+  "lenh": "scripts/12_ibm_cach1_lo_nho.py --folds 0 1 2 3 4 --batch-size 512 --pos-weight 1 --lr 0.001 --seed 2027 --tag CHINH_5fold_seed2027",
+  "commit": "aca50dd",
+  "co_thay_doi_chua_commit": true,
+  "thu_muc_luu_tru": "results/_luu_tru/2026-11-04_0136_ibm_cach1_CHINH_5fold_seed2027",
+  "ghi_chu": "Cách 1 lô nhỏ, rate 1, khối 100000, lô 512, pos_weight 1.0, thứ tự xao, folds [0, 1, 2, 3, 4]"
+}
