@@ -512,3 +512,28 @@ Kết quả chạy **trước ngày 02/11** chưa có kho lưu trữ; bản gố
   đều), khác biệt giữa ngân hàng KHÔNG phải nút thắt chính. FedAvg 100 vòng (fold 0): 0,0248 → 0,0318, vẫn đang tăng.
 - **Đính chính** câu "FL chỉ 24–30% gộp chung vì 802 ngân hàng non-IID" ở giai đoạn 17, 19, 23: chỉ đúng một phần
   cho FedAvg thường, không đúng cho trung bình đều / DP.
+
+## Giai đoạn 25 — Trọng số bị chặn tương thích DP (05/11/2026, Đạt)
+
+- **Làm:** thêm trọng số bị chặn (McMahan et al., 2018) vào `train.fedavg` (`client_weights`, `fixed_denom`; test mới) và
+  `09_ibm_fl_dp.py` (`--bounded-cap-q`, setting `fedavg_chan`). w_k = min(n_fit,k / ŵ, 1), ŵ = phân vị q của n_fit;
+  server cộng Σ w_k·Δ_k / (q_chọn·W); nhiễu std = z·C/(q_chọn·W). Fold 0, K = 802, FedProx μ = 0,1, C = 0,35, 30 vòng.
+  Nhánh `dat/trong-so-bi-chan` (tách từ nhánh của Đạo). Lưu ở `results/_luu_tru/2026-11-05_*_ibm_fl_dp_K802_chan_q*`.
+- **Kết quả** (mốc gộp chung fold 0 = 0,1006; mục tiêu FL + DP ≥ 85%):
+
+  | Cách | Mẫu số q·W | PR-AUC không DP | DP ε = 1 | DP: % gộp chung | Nhiễu/tham số |
+  |---|---|---|---|---|---|
+  | Trung bình đều (giai đoạn 22) | 200 | 0,0282 | 0,0233 | 23% ❌ | 0,010 |
+  | Bị chặn ŵ = p50 (184) | 162 | 0,0281 | 0,0230 | 23% ❌ | 0,013 |
+  | Bị chặn ŵ = p90 (688) | 78 | 0,0275 | 0,0179 | 18% ❌ | 0,026 |
+  | Bị chặn ŵ = p99 (1.992) | 32 | 0,0278 | 0,0144 | 14% ❌ | 0,064 |
+  | (Trung bình theo kích cỡ, không DP, giai đoạn 21) | | 0,0265 | — | | |
+
+- **Rút ra:**
+  1. **Trọng số bị chặn không giúp**: không DP gần như không đổi (0,0275–0,0281 so với 0,0282); có DP còn kém hơn vì
+     mẫu số nhỏ đi làm nhiễu tăng (đến 6 lần ở p99).
+  2. Khi đã có FedProx, **trung bình đều tốt hơn trung bình theo kích cỡ** (0,0282 so với 0,0265). Nhận định "trung bình
+     đều là nút thắt" (giai đoạn 24) đúng cho FedAvg thường, nhưng **không đúng cho cấu hình chính (FedProx)**.
+  3. → Cách lấy trung bình không còn là nút thắt. Ứng viên còn lại: **số vòng học** (giai đoạn 24: FedAvg chưa học xong
+     ở vòng 30). Giữ trung bình đều cho DP.
+- **Kế tiếp:** FedProx + DP ε = 1 với 100 vòng (fold 0 trước).
