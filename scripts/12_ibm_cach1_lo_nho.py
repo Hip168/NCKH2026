@@ -61,7 +61,8 @@ def ram_dinh_mb() -> float:
 
 
 def thu_muc_fold(args, k: int):
-    return CACHE / f"{args.stem}_mintx{args.min_tx}_r{args.rate:g}_seed{args.seed}" / f"fold{k}"
+    mau = f"_n{args.so_mau}" if args.so_mau else f"_r{args.rate:g}"
+    return CACHE / f"{args.stem}_mintx{args.min_tx}{mau}_seed{args.seed}" / f"fold{k}"
 
 
 # ---------------------------------------------------------------- bước 1: chuẩn bị (giống hệt cách chia của 09)
@@ -93,8 +94,14 @@ def chuan_bi(args, folds: list[int], log):
         if k not in can:
             continue
         fit_all, val = train_test_split(tr_all, test_size=0.2, stratify=strat[tr_all], random_state=args.seed + k)
-        if args.rate < 1:
-            fit = subsample_negatives(fit_all, y[fit_all], cid[fit_all], args.rate, args.seed + k)["TX_ID"].to_numpy()
+        w_fit = None
+        rate = args.rate
+        if args.so_mau:                            # giữ mọi ca rửa tiền, bốc ca bình thường cho đủ tổng --so-mau
+            am = int((y[fit_all] == 0).sum())
+            rate = min(1.0, (args.so_mau - int(y[fit_all].sum())) / am)
+        if rate < 1:
+            bang = subsample_negatives(fit_all, y[fit_all], cid[fit_all], rate, args.seed + k)
+            fit, w_fit = bang["TX_ID"].to_numpy(), bang["WEIGHT"].to_numpy(np.float32)   # trọng số bù = âm gốc / âm giữ
         else:
             fit = np.sort(fit_all)                 # giữ thứ tự thời gian trên đĩa; xáo trộn làm lúc học
         val, te = np.sort(val), np.sort(te)
@@ -114,9 +121,11 @@ def chuan_bi(args, folds: list[int], log):
             np.save(d / f"X_{ten}.npy", (X[idx] - mu[cid[idx]]) / sd[cid[idx]])
             np.save(d / f"y_{ten}.npy", y[idx].astype(np.float32))
         np.savez(d / "test_kem.npz", amt=amt[te], day=day[te], cid=cid[te], lon=lon[te])
+        if w_fit is not None:
+            np.save(d / "w_fit.npy", w_fit)
         info = {"n_fit": len(fit), "n_val": len(val), "n_test": len(te), "ca_fit": int(y[fit].sum()),
                 "ca_val": int(y[val].sum()), "ca_test": int(y[te].sum()), "dac_trung": fc, "K": K,
-                "nh_tu_chuan_hoa": int(len(du))}
+                "nh_tu_chuan_hoa": int(len(du)), "rate_thuc": rate}
         (d / "xong.json").write_text(json.dumps(info, ensure_ascii=False, indent=1), encoding="utf-8")
         log(f"  fold {k}: fit {len(fit):,} ({info['ca_fit']} ca) | val {len(val):,} ({info['ca_val']} ca) | "
             f"test {len(te):,} ({info['ca_test']} ca); {len(du):,}/{K:,} ngân hàng tự chuẩn hóa → {d}")
@@ -132,7 +141,7 @@ def cham(model, Xm, khoi: int) -> np.ndarray:
     return np.nan_to_num(np.concatenate(out), nan=0.0)
 
 
-def mot_luot(model, opt, loss_fn, Xf, yf, args, rng) -> tuple[float, int]:
+def mot_luot(model, opt, loss_fn, Xf, yf, args, rng, wf=None) -> tuple[float, int]:
     """Một lượt qua toàn bộ phần fit. Trả về (loss trung bình, số bước cập nhật)."""
     model.train()
     n = len(yf)
@@ -146,10 +155,15 @@ def mot_luot(model, opt, loss_fn, Xf, yf, args, rng) -> tuple[float, int]:
         doc = np.sort(idx)                         # đọc đĩa theo thứ tự tăng cho nhanh ...
         xb = torch.from_numpy(np.asarray(Xf[doc]))  # ... chỉ khối này nằm trong RAM
         yb = torch.from_numpy(np.asarray(yf[doc]))
+        wb = torch.from_numpy(np.asarray(wf[doc])) if wf is not None else None
         trong = torch.from_numpy(rng.permutation(len(doc))) if args.thu_tu == "xao" else torch.arange(len(doc))
         for b in trong.split(args.batch_size):     # ... rồi xáo lại trong khối trước khi chia lô
             opt.zero_grad()
             loss = loss_fn(model(xb[b]), yb[b])
+            if wb is not None:                     # bù phần ca bình thường đã bỏ: trung bình có trọng số
+                loss = (loss * wb[b]).sum() / wb[b].sum()
+            else:
+                loss = loss.mean()
             loss.backward()
             opt.step()
             tong += loss.item()
@@ -166,13 +180,14 @@ def hoc_mot_fold(args, k: int, log, max_luot: int | None = None) -> tuple[dict, 
     rng = np.random.default_rng(args.seed + k)
     model = TabMLP(Xf.shape[1])
     opt = torch.optim.Adam(model.parameters(), lr=args.lr)
-    loss_fn = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(args.pos_weight))
+    loss_fn = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(args.pos_weight), reduction="none")
+    wf = np.load(d / "w_fit.npy") if args.bu_trong_so and (d / "w_fit.npy").exists() else None
     yv_np = np.asarray(yv)
     best, best_state, best_luot, xau, hist = -1.0, copy.deepcopy(model.state_dict()), 0, 0, []
     t_dau = time.time()
     for luot in range(1, (max_luot or args.max_epochs) + 1):
         t0 = time.time()
-        loss, buoc = mot_luot(model, opt, loss_fn, Xf, yf, args, rng)
+        loss, buoc = mot_luot(model, opt, loss_fn, Xf, yf, args, rng, wf)
         t_hoc = time.time() - t0
         ap = float(average_precision_score(yv_np, cham(model, Xv, args.khoi)))
         hist.append({"fold": k, "luot": luot, "loss": loss, "buoc": buoc, "giay_hoc": t_hoc,
@@ -192,7 +207,8 @@ def hoc_mot_fold(args, k: int, log, max_luot: int | None = None) -> tuple[dict, 
     r = evaluate(yt, st, kem["amt"], kem["day"])
     nhom = pd.Series(np.arange(len(yt))).groupby(kem["cid"]).agg(list)      # chỉ số test theo ngân hàng
     pc = [float(average_precision_score(yt[ix], st[ix])) for ix in map(np.array, nhom) if yt[ix].sum() > 0]
-    row = {"fold": k, "setting": "cach1", "rate": args.rate, "thu_tu": args.thu_tu, "khoi": args.khoi,
+    row = {"fold": k, "setting": "cach1", "rate": info.get("rate_thuc", args.rate), "so_mau": args.so_mau,
+           "bu_trong_so": wf is not None, "thu_tu": args.thu_tu, "khoi": args.khoi,
            "batch": args.batch_size, "pos_weight": args.pos_weight, "lr": args.lr,
            "pr_auc": r["pr_auc"], "macro_pr_auc": float(np.mean(pc)), "recall@1%": r["recall@1%"],
            "vdr@1%": r["vdr@1%"], "val_pr_auc": best, "luot_tot": best_luot, "so_luot": len(hist),
@@ -251,6 +267,10 @@ def main():
     ap.add_argument("--patience", type=int, default=3)
     ap.add_argument("--lr", type=float, default=5e-3)
     ap.add_argument("--pos-weight", type=float, default=1.0)
+    ap.add_argument("--so-mau", type=int, default=0,
+                    help="> 0: lấy mẫu con phần fit còn khoảng N dòng (giữ hết ca rửa tiền, bốc ca bình thường theo từng ngân hàng)")
+    ap.add_argument("--bu-trong-so", action="store_true",
+                    help="nhân trọng số ca bình thường = số gốc / số giữ để bù phần bỏ đi (dùng với --so-mau hoặc --rate < 1)")
     ap.add_argument("--thu-tu", choices=["xao", "co_dinh"], default="xao")
     ap.add_argument("--threads", type=int, default=0, help="số luồng CPU cho torch (0 = mặc định)")
     ap.add_argument("--quet-khoi", type=int, nargs="*", default=None)
@@ -281,7 +301,7 @@ def main():
             fh.write(msg + "\n")
 
     log(f"Cách 1 | {args.stem} ngày 0–{IBM_MAX_DAY} | ngân hàng >= {args.min_tx} gd | rate {args.rate:g} | "
-        f"khối {args.khoi:,} | lô {args.batch_size} | lr {args.lr} | pos_weight {args.pos_weight} | "
+        f"số mẫu {args.so_mau or 'đủ'} | bù trọng số {args.bu_trong_so} | khối {args.khoi:,} | lô {args.batch_size} | lr {args.lr} | pos_weight {args.pos_weight} | "
         f"tối đa {args.max_epochs} lượt, dừng sau {args.patience} lượt không tăng | thứ tự {args.thu_tu} | "
         f"seed {args.seed} | {torch.get_num_threads()} luồng | ngân hàng < {args.min_fit_chuan_hoa} dòng fit dùng chuẩn hóa chung")
     chuan_bi(args, args.folds, log)
@@ -312,7 +332,7 @@ def main():
                         "luot_tot", "giay"] if c in df]
     log("\n=== Trung bình qua các fold ===")
     log(df[cols].agg(["mean", "std"]).round(4).to_string())
-    log(f"Đã lưu trữ: {archive_run(out, note=f'Cách 1 lô nhỏ, rate {args.rate:g}, khối {args.khoi}, lô {args.batch_size}, pos_weight {args.pos_weight}, thứ tự {args.thu_tu}, folds {args.folds}')}")
+    log(f"Đã lưu trữ: {archive_run(out, note=f'Cách 1 lô nhỏ, rate {args.rate:g}, số mẫu {args.so_mau}, bù trọng số {args.bu_trong_so}, khối {args.khoi}, lô {args.batch_size}, pos_weight {args.pos_weight}, thứ tự {args.thu_tu}, folds {args.folds}')}")
 
 
 if __name__ == "__main__":
