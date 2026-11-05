@@ -1,0 +1,9 @@
+{
+  "thoi_diem": "2026-11-05T18:15:39",
+  "script": "16_bieu_do_ibm.py",
+  "lenh": "scripts/16_bieu_do_ibm.py",
+  "commit": "828f899",
+  "co_thay_doi_chua_commit": true,
+  "thu_muc_luu_tru": "results/_luu_tru/2026-11-05_1815_bieu_do_ibm",
+  "ghi_chu": "Biểu đồ IBM cho bài báo (giai đoạn 23, 26–29)"
+}

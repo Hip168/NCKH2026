@@ -1,0 +1,9 @@
+{
+  "thoi_diem": "2026-11-05T18:06:59",
+  "script": "15_thong_ke.py",
+  "lenh": "scripts/15_thong_ke.py --nhom 42:results/ibm_fl_dp_CHINH_5fold_moc,results/ibm_fl_dp_CHINH_5fold_local,results/ibm_fl_dp_CHINH_5fold_100vong --out seed42",
+  "commit": "828f899",
+  "co_thay_doi_chua_commit": false,
+  "thu_muc_luu_tru": "results/_luu_tru/2026-11-05_1806_thong_ke_seed42",
+  "ghi_chu": "Kiểm định thống kê: 42:results/ibm_fl_dp_CHINH_5fold_moc,results/ibm_fl_dp_CHINH_5fold_local,results/ibm_fl_dp_CHINH_5fold_100vong"
+}
