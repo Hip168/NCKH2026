@@ -1,0 +1,7 @@
+chi_so,A,B,n_cap,TB_A,TB_B,chenh_TB,CI95_thap,CI95_cao,A_thang,p_wilcoxon,rank_biserial,p_holm,co_y_nghia_0.05
+macro_pr_auc,FL + DP ε=1,Tự học riêng,8,0.22216,0.12573,0.09643,0.08607,0.10455,8,0.00781,1.00000,0.02344,True
+macro_pr_auc,FedProx (TB đều),Tự học riêng,9,0.23744,0.12540,0.11204,0.09803,0.12420,9,0.00391,1.00000,0.02344,True
+macro_pr_auc,Gộp chung,FedProx (TB đều),9,0.34440,0.23744,0.10696,0.09622,0.11935,9,0.00391,1.00000,0.02344,True
+macro_pr_auc,FedProx (TB đều),FL + DP ε=2,8,0.23951,0.23036,0.00915,0.00251,0.01549,7,0.05469,0.77778,0.10938,False
+macro_pr_auc,FedProx (TB đều),FL + DP ε=1,8,0.23951,0.22216,0.01735,-0.00024,0.03210,6,0.19531,0.55556,0.19531,False
+macro_pr_auc,FedProx (TB đều),FedAvg thường,9,0.23744,0.20275,0.03469,0.02192,0.04544,9,0.00391,1.00000,0.02344,True

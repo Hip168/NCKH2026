@@ -625,3 +625,34 @@ Kết quả chạy **trước ngày 02/11** chưa có kho lưu trữ; bản gố
   3. Lý do: trung vị 2 ca rửa tiền/ngân hàng → tự học gần như không học được; hợp tác bù chỗ thiếu này.
   4. Khác với lần K = 28 (giai đoạn 13: tự học riêng hơn FedAvg) — khi đó MLP còn học thiếu, chưa có FedProx/100 vòng.
   5. Wilcoxon 5 cặp: p nhỏ nhất có thể là 0,0625 → cần thêm seed để có ý nghĩa thống kê.
+
+## Giai đoạn 30 — ε = 0,5; seed 7 (đang chạy) và kiểm định thống kê TẠM (05/11/2026, 22:00)
+
+> **Trạng thái:** đang chạy nền — seed 7 xong 3/5 fold phần FedProx + DP; seed 2027 chưa chạy (dự kiến xong ~02:45
+> 06/11). Số liệu dưới đây là TẠM; bản chính thức cập nhật khi đủ 3 seed.
+
+- **ε = 0,5** (100 vòng, 5 fold, seed 42; `results/ibm_fl_dp_CHINH_5fold_100vong_eps0.5`): PR-AUC 0,0209 = **22% gộp chung**
+  ❌, **59% FL không DP** ❌, theo ngân hàng **1,48× tự học riêng, thắng 5/5** ✅. Nhiễu/tham số 0,034.
+- **Đường đánh đổi đủ (100 vòng, % FL không DP):** ε = 0,5 → 59%; 1 → 78%; 2 → 88%; 4 → 93%; 8 → 95%. Gấp tự học riêng
+  (theo ngân hàng): 1,48× / 1,73× / 1,87× / 1,92× / 1,95× — mọi ε đều thắng tự học riêng.
+- **Seed 7 (đến 22:00):** gộp chung 0,0931 (seed 42: 0,0979); FedAvg 30 vòng 26% (24%); tự học riêng TB theo ngân hàng
+  0,121 (0,129). FedProx + DP fold 0–2: ε = 1 đạt 39%/25%/29% gộp chung, 126%/86%/104% FL không DP. Khớp seed 42.
+- **Biểu đồ** (`scripts/16_bieu_do_ibm.py` → `results/bieu_do_ibm/`): so sánh theo ngân hàng; đánh đổi riêng tư – hiệu năng;
+  hội tụ 200 vòng; chi phí DP theo số ngân hàng (5 → 4%, 28 → 2%, 802 → 78%).
+- **Kiểm định TẠM** (`scripts/15_thong_ke.py`, seed 42 + 7, ghép cặp theo (seed, fold), PR-AUC TB theo ngân hàng;
+  `results/thong_ke_tam_seed42_7/`):
+
+  | So sánh | n cặp | Chênh TB [CI 95%] | Thắng | p Holm |
+  |---|---|---|---|---|
+  | FL + DP ε = 1 > tự học riêng | 8 | +0,096 [+0,086; +0,105] | 8/8 | **0,023 ✅** |
+  | FedProx > tự học riêng | 9 | +0,112 [+0,098; +0,124] | 9/9 | **0,023 ✅** |
+  | Gộp chung > FedProx | 9 | +0,107 [+0,096; +0,119] | 9/9 | **0,023 ✅** |
+  | FedProx > FedAvg thường | 9 | +0,035 [+0,022; +0,045] | 9/9 | **0,023 ✅** |
+  | FedProx vs DP ε = 2 | 8 | +0,009 [+0,003; +0,016] | 7/8 | 0,109 |
+  | FedProx vs DP ε = 1 | 8 | +0,017 [−0,000; +0,032] | 6/8 | 0,195 |
+
+  → Đã có ý nghĩa thống kê (Holm, α = 0,05): FL + DP ε = 1 thắng tự học riêng; gộp chung thắng FL; FedProx thắng FedAvg.
+  Chi phí DP (ε = 1, 2) **chưa phát hiện được khác biệt có ý nghĩa** so với không DP — chi phí nhỏ so với dao động giữa
+  các fold (không có nghĩa là bằng 0).
+- **Ghi chú cho nhóm:** nhánh `dat/trong-so-bi-chan` chưa gộp với nhánh mới của Đạo (`2c74d3f`, gộp chung đủ dữ liệu 0,130,
+  đường học theo lượng dữ liệu) — sẽ gộp sau khi chạy nền xong để không đổi script giữa chừng.

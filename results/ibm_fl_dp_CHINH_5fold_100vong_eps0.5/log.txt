@@ -1,0 +1,23 @@
+HI-Small ngày 0–9: 4,557,222 gd, 4,021 ca; 22 đặc trưng (view bank); K = 802 client (ngân hàng >= 1000 giao dịch); 200 client/vòng; r = 0.1; 100 vòng × 5 epoch; lr 0.005; batch 512; pos_weight 1.0; ε [0.5]; seed 42; FedProx μ 0.1; server lr 1.0, momentum 0.0; C 0.35
+Ca rửa tiền: 4,021 trên 802 client; client không có ca nào: 94; nhiều nhất 633; trung vị 2
+
+=== Fold 0: fit (lấy mẫu) 293,983 | val 729,156 | test 911,445 ===
+  dp ε=0.5       PR-AUC 0.0197 | TB theo client 0.1844 | Recall@1% 0.2600 | VDR@1% 0.6518 | z=19.38, nhiễu/tham số=0.0339
+
+=== Fold 1: fit (lấy mẫu) 293,985 | val 729,156 | test 911,445 ===
+  dp ε=0.5       PR-AUC 0.0202 | TB theo client 0.1766 | Recall@1% 0.2400 | VDR@1% 0.1002 | z=19.38, nhiễu/tham số=0.0339
+
+=== Fold 2: fit (lấy mẫu) 293,995 | val 729,156 | test 911,444 ===
+  dp ε=0.5       PR-AUC 0.0188 | TB theo client 0.1941 | Recall@1% 0.2628 | VDR@1% 0.2209 | z=19.38, nhiễu/tham số=0.0339
+
+=== Fold 3: fit (lấy mẫu) 293,975 | val 729,156 | test 911,444 ===
+  dp ε=0.5       PR-AUC 0.0204 | TB theo client 0.2037 | Recall@1% 0.2720 | VDR@1% 0.0057 | z=19.38, nhiễu/tham số=0.0339
+
+=== Fold 4: fit (lấy mẫu) 293,982 | val 729,156 | test 911,444 ===
+  dp ε=0.5       PR-AUC 0.0253 | TB theo client 0.1948 | Recall@1% 0.2720 | VDR@1% 0.0866 | z=19.38, nhiễu/tham số=0.0339
+
+=== Trung bình qua các fold ===
+          pr_auc  macro_pr_auc  recall@1%  vdr@1%
+setting                                          
+dp ε=0.5  0.0209        0.1907     0.2614   0.213
+Đã lưu trữ: D:\0 Project\2026 NCKH 2027\project\results\_luu_tru\2026-11-05_1854_ibm_fl_dp_CHINH_5fold_100vong_eps0.5
