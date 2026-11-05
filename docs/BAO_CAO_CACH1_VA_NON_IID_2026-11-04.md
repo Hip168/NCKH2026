@@ -170,3 +170,40 @@ python scripts/09_ibm_fl_dp.py $B --settings fedavg_deu --tag THAT_5fold_deu
 python scripts/09_ibm_fl_dp.py ${B/--rounds 30/--rounds 100} --folds 0 --settings fedavg --tag THAT_100vong_f0
 ```
 Lệnh dùng `$B` phải chạy bằng bash (zsh không tách chuỗi `$B` thành nhiều tham số).
+
+## Bổ sung 05/11: lấy mẫu con + bù trọng số, đường học (tối đa 300 lượt)
+
+Cách làm: phần fit giữ hết 2.574 ca rửa tiền, bốc ngẫu nhiên ca bình thường theo từng ngân hàng cho đủ N dòng; có bù thì ca bình thường nhân trọng số = số gốc / số giữ (trung bình có trọng số trong loss). Validation và test giữ tỷ lệ thật. Lô 512, lr 0,001, tối đa 300 lượt, dừng sau 30 lượt không tăng, seed 42, 5 fold, 802 ngân hàng.
+
+| Phần fit | Có bù | Không bù | So với đủ dữ liệu 300 lượt |
+|---|---|---|---|
+| 25k | 0,0557 ± 0,0023 | 0,0519 ± 0,0050 | 43% |
+| 50k | 0,0680 ± 0,0085 | 0,0651 ± 0,0031 | 52% |
+| 100k | 0,0810 ± 0,0093 | 0,0788 ± 0,0060 | 62% |
+| 200k | 0,0989 ± 0,0133 | 0,0918 ± 0,0064 | 76% |
+| Đủ ~2,92 triệu | 0,1303 ± 0,0066 (không cần bù) | | 100% |
+
+- Đường học chưa đi ngang: mỗi lần gấp đôi dữ liệu PR-AUC vẫn tăng; 100k chưa đủ với HI-Small.
+- Bù trọng số hơn không bù ở cả 4 cỡ, nhưng chênh nhỏ (0,002–0,007).
+- Đủ dữ liệu với dừng sớm kiên nhẫn hơn (30 thay vì 3): 0,1303, hơn bản cũ tối đa 20 lượt (0,1125, cùng seed 42) ở 5/5 fold; lượt tốt nhất 28–117. Bản cũ dừng quá sớm.
+- Hạn chế: 1 seed; siêu tham số chọn với kiên nhẫn 3.
+
+Chạy lại: `scripts/12_ibm_cach1_lo_nho.py --folds 0 1 2 3 4 --batch-size 512 --lr 0.001 --max-epochs 300 --patience 30 --so-mau 100000 --bu-trong-so` (bỏ `--so-mau` = đủ dữ liệu).
+
+## Bổ sung 05/11 (2): thêm seed cho bản đủ dữ liệu 300 lượt, và phép thử ngân hàng ngẫu nhiên CÓ DP thật
+
+**Đủ dữ liệu, tối đa 300 lượt, kiên nhẫn 30, 3 seed × 5 fold:** 0,1300 ± 0,0109 (seed 42: 0,1303; 7: 0,1325; 2027: 0,1273); Recall@1% 0,527; macro 0,382; lượt tốt nhất trung bình 53, lâu nhất 117. Hơn bản tối đa 20 lượt (0,1118) ở 15/15 cặp cùng seed, cùng fold.
+
+**FL + DP (cấu hình chính của Đạt: lấy mẫu 10%, 200 ngân hàng/vòng, trung bình đều, FedProx 0,1, C = 0,35), 5 fold, % so với gộp chung cùng bộ dữ liệu (thật 0,0979; ngẫu nhiên 0,1025):**
+
+| | Thật 30 vòng | Ngẫu nhiên 30 vòng | Thật 100 vòng | Ngẫu nhiên 100 vòng |
+|---|---|---|---|---|
+| Trung bình đều + FedProx, không DP | 0,0291 (30%) | 0,0329 (32%) | 0,0356 (36%) | 0,0443 (43%) |
+| DP ε = 8 | 0,0260 (27%) | 0,0295 (29%) | 0,0340 (35%) | 0,0442 (43%) |
+| DP ε = 1 | 0,0246 (25%) | 0,0274 (27%) | 0,0275 (28%) | 0,0330 (32%) |
+
+- 100 vòng hơn 30 vòng ở 5/5 fold cho cả 3 dòng (ngân hàng thật).
+- Ở 30 vòng, ngân hàng khác nhau chỉ làm mất 2–3 điểm %. Ở 100 vòng khoảng cách lớn hơn (35% → 43% với ε = 8; 28% → 32% với ε = 1): khi học lâu hơn, khác biệt giữa ngân hàng bắt đầu có ảnh hưởng.
+- Nhưng kể cả ngân hàng giống hệt nhau và 100 vòng, FL + DP vẫn chỉ được 32–43% gộp chung. Nút thắt lớn nhất vẫn là cách học FL (trung bình đều, số vòng, mỗi vòng chỉ 200/802 ngân hàng), chưa phải tiền xử lý để ngân hàng giống nhau.
+- ε = 8 gần bằng không DP ở 100 vòng; ε = 1 mất thêm 7–11 điểm %: nhiễu DP chỉ là nguyên nhân phụ.
+- Hạn chế: phép thử ngân hàng ngẫu nhiên chỉ 1 cách xáo (seed 0); C = 0,35 chọn trên ngân hàng thật.
