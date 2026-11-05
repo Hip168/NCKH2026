@@ -656,3 +656,24 @@ Kết quả chạy **trước ngày 02/11** chưa có kho lưu trữ; bản gố
   các fold (không có nghĩa là bằng 0).
 - **Ghi chú cho nhóm:** nhánh `dat/trong-so-bi-chan` chưa gộp với nhánh mới của Đạo (`2c74d3f`, gộp chung đủ dữ liệu 0,130,
   đường học theo lượng dữ liệu) — sẽ gộp sau khi chạy nền xong để không đổi script giữa chừng.
+
+## Giai đoạn 31 — Seed 7 xong; kiểm định với 2 seed đầy đủ (05/11/2026, 23:26)
+
+> Seed 2027 đang chạy (dự kiến ~03:00 06/11); bảng chính thức 3 seed sẽ thay bảng này.
+
+- **Seed 7** (100 vòng, `results/ibm_fl_dp_CHINH_5fold_*_seed7`): DP ε = 1 so với FL không DP từng fold 126/86/104/96/112%;
+  gấp tự học riêng 1,84/1,81/1,89/1,81/1,78×.
+- **Trung bình 10 cặp (seed 42 + 7 × 5 fold):**
+
+  | Cách | % gộp chung (≥ 85%) | % FL không DP (2 tầng, ≥ 85%) | Gấp tự học riêng |
+  |---|---|---|---|
+  | FedProx | 33% | 100% | 1,89× |
+  | DP ε = 2 | 31% ❌ | **95% ✅** | 1,86× ✅ |
+  | DP ε = 1 | 30% ❌ | **91% ✅** | 1,78× ✅ |
+
+- **Kiểm định** (`results/thong_ke_seed42_7/`, PR-AUC TB theo ngân hàng, Holm): FL + DP ε = 1 > tự học riêng (+0,097
+  [+0,088; +0,103], 10/10, p_Holm = 0,012 ✅); FedProx > tự học riêng, gộp chung > FedProx, FedProx > FedAvg (đều 10/10,
+  p_Holm = 0,012 ✅). FedProx vs DP ε = 2: +0,003 [−0,007; +0,012], p = 0,557; vs DP ε = 1: +0,014 [−0,001; +0,027],
+  p = 0,465 → chi phí DP không có ý nghĩa thống kê (CI chứa 0).
+- **Rút ra:** với 2 seed, DP ε = 1 đạt tiêu chí 2 tầng (91%); seed 42 đơn lẻ (78%) là trường hợp kém. Chi phí DP dao
+  động mạnh theo cách chia dữ liệu → kết luận phải dựa trên nhiều seed.
