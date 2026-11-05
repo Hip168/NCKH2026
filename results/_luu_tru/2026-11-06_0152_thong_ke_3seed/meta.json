@@ -1,0 +1,9 @@
+{
+  "thoi_diem": "2026-11-06T01:52:06",
+  "script": "15_thong_ke.py",
+  "lenh": "scripts/15_thong_ke.py --nhom 42:results/ibm_fl_dp_CHINH_5fold_moc,results/ibm_fl_dp_CHINH_5fold_local,results/ibm_fl_dp_CHINH_5fold_100vong --nhom 7:results/ibm_fl_dp_CHINH_5fold_moc_seed7,results/ibm_fl_dp_CHINH_5fold_local_seed7,results/ibm_fl_dp_CHINH_5fold_100vong_seed7 --nhom 2027:results/ibm_fl_dp_CHINH_5fold_moc_seed2027,results/ibm_fl_dp_CHINH_5fold_local_seed2027,results/ibm_fl_dp_CHINH_5fold_100vong_seed2027 --out 3seed",
+  "commit": "0d5f46c",
+  "co_thay_doi_chua_commit": true,
+  "thu_muc_luu_tru": "results/_luu_tru/2026-11-06_0152_thong_ke_3seed",
+  "ghi_chu": "Kiểm định thống kê: 42:results/ibm_fl_dp_CHINH_5fold_moc,results/ibm_fl_dp_CHINH_5fold_local,results/ibm_fl_dp_CHINH_5fold_100vong | 7:results/ibm_fl_dp_CHINH_5fold_moc_seed7,results/ibm_fl_dp_CHINH_5fold_local_seed7,results/ibm_fl_dp_CHINH_5fold_100vong_seed7 | 2027:results/ibm_fl_dp_CHINH_5fold_moc_seed2027,results/ibm_fl_dp_CHINH_5fold_local_seed2027,results/ibm_fl_dp_CHINH_5fold_100vong_seed2027"
+}

@@ -677,3 +677,34 @@ Kết quả chạy **trước ngày 02/11** chưa có kho lưu trữ; bản gố
   p = 0,465 → chi phí DP không có ý nghĩa thống kê (CI chứa 0).
 - **Rút ra:** với 2 seed, DP ε = 1 đạt tiêu chí 2 tầng (91%); seed 42 đơn lẻ (78%) là trường hợp kém. Chi phí DP dao
   động mạnh theo cách chia dữ liệu → kết luận phải dựa trên nhiều seed.
+
+## Giai đoạn 32 — Seed 2027 xong; kiểm định CHÍNH THỨC 3 seed (06/11/2026, 01:55)
+
+> Thay bảng 2 seed của giai đoạn 31. Mục tiêu Slide 10: FL + DP ≥ 85% gộp chung, ε ≤ 1; tiêu chí 2 tầng: ≥ 85% FL
+> không DP và hơn tự học riêng.
+
+- **Seed 2027** (100 vòng, `results/ibm_fl_dp_CHINH_5fold_*_seed2027`): gộp chung PR-AUC 0,0876; FedProx 0,0374;
+  DP ε = 2 0,0338; DP ε = 1 0,0280 (TB 5 fold). DP ε = 1 giữ 75% FL không DP (seed 42: 78%, seed 7: 105%).
+- **Trung bình 15 cặp (3 seed × 5 fold), tính % theo từng fold rồi lấy TB:**
+
+  | Cách | PR-AUC | % gộp chung (≥ 85%) | % FL không DP (2 tầng, ≥ 85%) | Gấp tự học riêng (TB theo ngân hàng) |
+  |---|---|---|---|---|
+  | Gộp chung | 0,0929 | 100% | — | 2,77× |
+  | FedProx | 0,0333 | 36% ❌ | 100% | 1,96× ✅ |
+  | FedAvg thường | 0,0242 | 26% ❌ | 74% | 1,63× ✅ |
+  | DP ε = 2 | 0,0308 | 34% ❌ | **94% ✅** | 1,89× ✅ |
+  | DP ε = 1 | 0,0279 | 30% ❌ (đạt 36% mục tiêu) | **86% ✅ (sát ngưỡng)** | 1,77× ✅ |
+
+- **Kiểm định** (`results/thong_ke_3seed/`, Wilcoxon ghép cặp, Holm, n = 15, p nhỏ nhất có thể 0,0001):
+  - TB theo ngân hàng: FL + DP ε = 1 > tự học riêng +0,095 [+0,088; +0,101], 15/15, p_Holm = 0,0004 ✅;
+    FedProx > tự học riêng, gộp chung > FedProx, FedProx > FedAvg (đều 15/15, p_Holm = 0,0004 ✅).
+  - **Chi phí DP nay CÓ ý nghĩa** (khác giai đoạn 31): FedProx vs DP ε = 1 +0,023 [+0,010; +0,036], 12/15,
+    p_Holm = 0,025 ✅ (PR-AUC gộp: p_Holm = 0,009 ✅); vs DP ε = 2 +0,009 [+0,001; +0,016], p_Holm = 0,073 (macro) /
+    0,015 ✅ (PR-AUC gộp).
+- **Rút ra:**
+  1. Kết luận chính vững qua 3 seed: FL + DP ε = 1 luôn hơn tự học riêng (15/15) → tham gia liên kết có lợi kể cả khi có DP.
+  2. Mục tiêu gốc (≥ 85% gộp chung) **không đạt** (30%) — khoảng cách chủ yếu do FL (FedProx chỉ 36% gộp chung), DP chỉ
+     lấy thêm ~6 điểm %.
+  3. DP ε = 1 tốn ~14% so với FL không DP — nhỏ nhưng có thật (có ý nghĩa thống kê với 15 cặp); 2 seed trước chưa đủ để
+     thấy. Tiêu chí 2 tầng đạt sát ngưỡng (86%), dao động mạnh theo seed (75–105%) → khi báo cáo nên ghi cả khoảng.
+  4. Tự sửa: giai đoạn 31 ghi "chi phí DP không có ý nghĩa thống kê" — đó là do thiếu cặp, không phải chi phí bằng 0.
