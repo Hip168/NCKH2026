@@ -600,3 +600,28 @@ Kết quả chạy **trước ngày 02/11** chưa có kho lưu trữ; bản gố
   Val FedProx vòng 50/100/150/200: 0,032/0,033/0,018/0,016 — **tụt sau vòng 100**; DP: 0,021/0,022/0,018/0,017.
 - **Rút ra:** 100 vòng là điểm tốt nhất. Quá 100 vòng thì FedProx không tăng (thậm chí val tụt) và DP ε = 1 kém đi vì nhiễu
   tăng (0,018 → 0,025). → Giữ **100 vòng** (D24); không thử 300–500 vòng.
+
+## Giai đoạn 29 — Tự học riêng (E2, mốc dưới) trên IBM 802 ngân hàng (05/11/2026)
+
+- **Làm:** `09_ibm_fl_dp.py --settings local`, 5 fold, cùng cách chia, cùng dữ liệu train từng ngân hàng (r = 0,1), lô 512,
+  lr 5e-3, pos_weight 1; mỗi ngân hàng một MLP, dừng sớm theo val của chính nó. Sửa `train_full_batch`: ngân hàng có val
+  không có ca dương học cố định `patience` epoch. Lưu ở `results/_luu_tru/2026-11-05_1802_ibm_fl_dp_CHINH_5fold_local`.
+- **Chỉ số so sánh: PR-AUC trung bình theo ngân hàng** (tự học riêng có 802 mô hình, thang điểm khác nhau → PR-AUC tổng
+  không công bằng, lỗi #33).
+
+  | Cách | PR-AUC TB theo NH | Gấp tự học | Thắng tự học | Lấp khoảng cách tự học → gộp chung | PR-AUC tổng |
+  |---|---|---|---|---|---|
+  | Gộp chung (mốc trên) | 0,347 ± 0,015 | 2,70× | 5/5 | 100% | 0,0979 |
+  | **Tự học riêng (mốc dưới)** | **0,129 ± 0,009** | 1,00× | | 0% | 0,0211 |
+  | FedProx 100 vòng | 0,251 ± 0,007 | 1,95× | 5/5 | 56% | 0,0356 |
+  | DP ε = 8 | 0,251 ± 0,004 | 1,95× | 5/5 | 56% | 0,0340 |
+  | DP ε = 4 | 0,247 ± 0,006 | 1,92× | 5/5 | 54% | 0,0330 |
+  | DP ε = 2 | 0,240 ± 0,008 | 1,87× | 5/5 | 51% | 0,0313 |
+  | **DP ε = 1** | **0,223 ± 0,016** | **1,73×** | **5/5** | **43%** | 0,0275 |
+
+- **Rút ra (RQ1):**
+  1. **Mọi mức FL + DP thắng tự học riêng ở 5/5 fold**, gấp 1,7–2,0 lần → ngân hàng có lợi rõ khi tham gia, kể cả ở ε = 1.
+  2. Theo từng ngân hàng, FL + DP ε = 1 lấp được ~43% khoảng cách giữa tự học riêng và gộp chung (FL không DP: 56%).
+  3. Lý do: trung vị 2 ca rửa tiền/ngân hàng → tự học gần như không học được; hợp tác bù chỗ thiếu này.
+  4. Khác với lần K = 28 (giai đoạn 13: tự học riêng hơn FedAvg) — khi đó MLP còn học thiếu, chưa có FedProx/100 vòng.
+  5. Wilcoxon 5 cặp: p nhỏ nhất có thể là 0,0625 → cần thêm seed để có ý nghĩa thống kê.
