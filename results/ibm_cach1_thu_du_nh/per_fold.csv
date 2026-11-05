@@ -1,0 +1,2 @@
+fold,setting,rate,thu_tu,khoi,batch,pos_weight,lr,pr_auc,macro_pr_auc,recall@1%,vdr@1%,val_pr_auc,luot_tot,so_luot,n_fit,ca_fit,giay,ram_dinh_mb,so_nh,so_nh_co_ca_test,pr_auc_nh_lon,ca_test_nh_lon,pr_auc_nh_nho,ca_test_nh_nho
+0,cach1,1.00000,xao,100000,512,1.00000,0.00100,0.04754,0.30658,0.38453,0.00231,0.05004,1,1,3249431,2891,6,2555,30470,451,0.04885,811,0.04360,94

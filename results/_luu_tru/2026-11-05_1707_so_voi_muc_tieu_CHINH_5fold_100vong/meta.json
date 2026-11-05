@@ -1,0 +1,9 @@
+{
+  "thoi_diem": "2026-11-05T17:07:53",
+  "script": "11_so_voi_muc_tieu.py",
+  "lenh": "scripts/11_so_voi_muc_tieu.py results/ibm_fl_dp_CHINH_5fold_moc results/ibm_fl_dp_CHINH_5fold_100vong --out CHINH_5fold_100vong",
+  "commit": "5aa8053",
+  "co_thay_doi_chua_commit": true,
+  "thu_muc_luu_tru": "results/_luu_tru/2026-11-05_1707_so_voi_muc_tieu_CHINH_5fold_100vong",
+  "ghi_chu": "Bảng so với mục tiêu: ibm_fl_dp_CHINH_5fold_moc, ibm_fl_dp_CHINH_5fold_100vong"
+}

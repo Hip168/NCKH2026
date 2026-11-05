@@ -1,0 +1,22 @@
+HI-Small ngày 0–9: 4,557,222 gd, 4,021 ca; 22 đặc trưng (view bank); K = 802 client (ngân hàng >= 1000 giao dịch); 200 client/vòng; r = 0.1; 30 vòng × 5 epoch; lr 0.005; batch 512; pos_weight 1.0; ε [8.0, 4.0, 2.0, 1.0]; seed 42; FedProx μ 0.0; server lr 1.0, momentum 0.0; C 1.0
+Ca rửa tiền: 4,021 trên 802 client; client không có ca nào: 94; nhiều nhất 633; trung vị 2
+
+=== Fold 0: fit (lấy mẫu) 293,983 | val 729,156 | test 911,445 ===
+  fedavg_deu     PR-AUC 0.0178 | TB theo client 0.1929 | Recall@1% 0.2550 | VDR@1% 0.0011
+
+=== Fold 1: fit (lấy mẫu) 293,985 | val 729,156 | test 911,445 ===
+  fedavg_deu     PR-AUC 0.0204 | TB theo client 0.1771 | Recall@1% 0.2811 | VDR@1% 0.0061
+
+=== Fold 2: fit (lấy mẫu) 293,995 | val 729,156 | test 911,444 ===
+  fedavg_deu     PR-AUC 0.0202 | TB theo client 0.1758 | Recall@1% 0.2677 | VDR@1% 0.0029
+
+=== Fold 3: fit (lấy mẫu) 293,975 | val 729,156 | test 911,444 ===
+  fedavg_deu     PR-AUC 0.0227 | TB theo client 0.2063 | Recall@1% 0.2720 | VDR@1% 0.0044
+
+=== Fold 4: fit (lấy mẫu) 293,982 | val 729,156 | test 911,444 ===
+  fedavg_deu     PR-AUC 0.0201 | TB theo client 0.1858 | Recall@1% 0.2534 | VDR@1% 0.0067
+
+=== Trung bình qua các fold ===
+            pr_auc  macro_pr_auc  recall@1%  vdr@1%
+setting                                            
+fedavg_deu  0.0202        0.1876     0.2659  0.0042

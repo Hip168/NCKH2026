@@ -1,0 +1,9 @@
+{
+  "thoi_diem": "2026-11-04T01:02:44",
+  "script": "06_ibm_features.py",
+  "lenh": "scripts/06_ibm_features.py --input /Users/leminhdao168/Documents/NCKH/AI/aml_fraud_detection/archive/HI-Small_Trans.csv --view bank",
+  "commit": "aca50dd",
+  "co_thay_doi_chua_commit": true,
+  "thu_muc_luu_tru": "results/_luu_tru/2026-11-04_0102_ibm_features_bank",
+  "ghi_chu": "Đặc trưng IBM HI-Small, view=bank, 22 đặc trưng"
+}

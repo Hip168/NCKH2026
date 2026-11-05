@@ -1,0 +1,27 @@
+Cách 1 | HI-Small ngày 0–9 | ngân hàng >= 1000 gd | rate 1 | khối 100,000 | lô 4096 | lr 0.005 | pos_weight 1.0 | tối đa 20 lượt, dừng sau 3 lượt không tăng | thứ tự xao | seed 42 | 4 luồng
+
+=== Fold 0 ===
+    lượt  1  loss 0.0114  val PR-AUC 0.0366  730 bước  1s học  RAM đỉnh 861 MB
+    lượt  2  loss 0.0049  val PR-AUC 0.0427  730 bước  1s học  RAM đỉnh 903 MB
+    lượt  3  loss 0.0049  val PR-AUC 0.0493  730 bước  1s học  RAM đỉnh 904 MB
+    lượt  4  loss 0.0048  val PR-AUC 0.0505  730 bước  1s học  RAM đỉnh 908 MB
+    lượt  5  loss 0.0049  val PR-AUC 0.0514  730 bước  1s học  RAM đỉnh 947 MB
+    lượt  6  loss 0.0048  val PR-AUC 0.0614  730 bước  1s học  RAM đỉnh 947 MB
+    lượt  7  loss 0.0048  val PR-AUC 0.0593  730 bước  1s học  RAM đỉnh 947 MB
+    lượt  8  loss 0.0048  val PR-AUC 0.0515  730 bước  1s học  RAM đỉnh 947 MB
+    lượt  9  loss 0.0048  val PR-AUC 0.0637  730 bước  1s học  RAM đỉnh 947 MB
+    lượt 10  loss 0.0047  val PR-AUC 0.0723  730 bước  1s học  RAM đỉnh 947 MB
+    lượt 11  loss 0.0046  val PR-AUC 0.0789  730 bước  1s học  RAM đỉnh 947 MB
+    lượt 12  loss 0.0046  val PR-AUC 0.0868  730 bước  1s học  RAM đỉnh 947 MB
+    lượt 13  loss 0.0045  val PR-AUC 0.0895  730 bước  1s học  RAM đỉnh 947 MB
+    lượt 14  loss 0.0045  val PR-AUC 0.0899  730 bước  1s học  RAM đỉnh 947 MB
+    lượt 15  loss 0.0045  val PR-AUC 0.1041  730 bước  1s học  RAM đỉnh 947 MB
+    lượt 16  loss 0.0045  val PR-AUC 0.1024  730 bước  2s học  RAM đỉnh 947 MB
+    lượt 17  loss 0.0044  val PR-AUC 0.1018  730 bước  2s học  RAM đỉnh 947 MB
+    lượt 18  loss 0.0044  val PR-AUC 0.1025  730 bước  1s học  RAM đỉnh 947 MB
+  TEST  PR-AUC 0.1085 | TB theo ngân hàng 0.3719 | Recall@1% 0.5236 | VDR@1% 0.8687 | tốt nhất ở lượt 15/18 | 29s | gộp chung lấy mẫu 0.1006 → 108%
+
+=== Trung bình qua các fold ===
+      pr_auc  macro_pr_auc  recall@1%  vdr@1%  central_lay_mau  pct_so_voi_lay_mau  luot_tot  giay
+mean  0.1085        0.3719     0.5236  0.8687           0.1006            107.8178      15.0  29.0
+std      NaN           NaN        NaN     NaN              NaN                 NaN       NaN   NaN

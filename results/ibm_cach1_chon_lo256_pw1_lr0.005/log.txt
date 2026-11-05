@@ -1,0 +1,28 @@
+Cách 1 | HI-Small ngày 0–9 | ngân hàng >= 1000 gd | rate 1 | khối 100,000 | lô 256 | lr 0.005 | pos_weight 1.0 | tối đa 20 lượt, dừng sau 3 lượt không tăng | thứ tự xao | seed 42 | 4 luồng
+
+=== Fold 0 ===
+    lượt  1  loss 0.0057  val PR-AUC 0.0349  11404 bước  3s học  RAM đỉnh 872 MB
+    lượt  2  loss 0.0050  val PR-AUC 0.0467  11404 bước  3s học  RAM đỉnh 900 MB
+    lượt  3  loss 0.0049  val PR-AUC 0.0553  11404 bước  3s học  RAM đỉnh 907 MB
+    lượt  4  loss 0.0048  val PR-AUC 0.0354  11404 bước  3s học  RAM đỉnh 908 MB
+    lượt  5  loss 0.0048  val PR-AUC 0.0527  11404 bước  4s học  RAM đỉnh 908 MB
+    lượt  6  loss 0.0048  val PR-AUC 0.0580  11404 bước  4s học  RAM đỉnh 908 MB
+    lượt  7  loss 0.0048  val PR-AUC 0.0576  11404 bước  4s học  RAM đỉnh 908 MB
+    lượt  8  loss 0.0049  val PR-AUC 0.0481  11404 bước  5s học  RAM đỉnh 908 MB
+    lượt  9  loss 0.0047  val PR-AUC 0.0585  11404 bước  4s học  RAM đỉnh 908 MB
+    lượt 10  loss 0.0048  val PR-AUC 0.0660  11404 bước  4s học  RAM đỉnh 908 MB
+    lượt 11  loss 0.0048  val PR-AUC 0.0667  11404 bước  4s học  RAM đỉnh 908 MB
+    lượt 12  loss 0.0050  val PR-AUC 0.0826  11404 bước  3s học  RAM đỉnh 908 MB
+    lượt 13  loss 0.0050  val PR-AUC 0.0807  11404 bước  4s học  RAM đỉnh 908 MB
+    lượt 14  loss 0.0056  val PR-AUC 0.0643  11404 bước  4s học  RAM đỉnh 908 MB
+    lượt 15  loss 0.0050  val PR-AUC 0.0829  11404 bước  4s học  RAM đỉnh 908 MB
+    lượt 16  loss 0.0047  val PR-AUC 0.0750  11404 bước  4s học  RAM đỉnh 908 MB
+    lượt 17  loss 0.0051  val PR-AUC 0.0694  11404 bước  4s học  RAM đỉnh 908 MB
+    lượt 18  loss 0.0047  val PR-AUC 0.0611  11404 bước  4s học  RAM đỉnh 908 MB
+  TEST  PR-AUC 0.0854 | TB theo ngân hàng 0.3581 | Recall@1% 0.5037 | VDR@1% 0.3068 | tốt nhất ở lượt 15/18 | 74s | gộp chung lấy mẫu 0.1006 → 85%
+
+=== Trung bình qua các fold ===
+      pr_auc  macro_pr_auc  recall@1%  vdr@1%  central_lay_mau  pct_so_voi_lay_mau  luot_tot  giay
+mean  0.0854        0.3581     0.5037  0.3068           0.1006             84.9174      15.0  74.0
+std      NaN           NaN        NaN     NaN              NaN                 NaN       NaN   NaN
+Đã lưu trữ: /Users/leminhdao168/Documents/NCKH/dat-ai/results/_luu_tru/2026-11-04_0107_ibm_cach1_chon_lo256_pw1_lr0.005

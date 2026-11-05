@@ -1,0 +1,9 @@
+{
+  "thoi_diem": "2026-11-04T01:54:22",
+  "script": "09_ibm_fl_dp.py",
+  "lenh": "scripts/09_ibm_fl_dp.py --min-tx 1000 --clients-per-round 200 --rate 0.1 --rounds 30 --batch-size 512 --lr 5e-3 --local-epochs 5 --pos-weight 1 --folds 0 1 2 3 4 --stem HI-Small-IID --settings fedavg_deu --prox-mu 0.1 --tag IID_5fold_fedprox",
+  "commit": "aca50dd",
+  "co_thay_doi_chua_commit": true,
+  "thu_muc_luu_tru": "results/_luu_tru/2026-11-04_0154_ibm_fl_dp_IID_5fold_fedprox",
+  "ghi_chu": "FL+DP mức client IBM HI-Small-IID, K=802, C=1.0, folds [0, 1, 2, 3, 4], ε [8.0, 4.0, 2.0, 1.0], 30 vòng"
+}

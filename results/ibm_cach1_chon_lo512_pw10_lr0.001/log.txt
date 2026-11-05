@@ -1,0 +1,23 @@
+Cách 1 | HI-Small ngày 0–9 | ngân hàng >= 1000 gd | rate 1 | khối 100,000 | lô 512 | lr 0.001 | pos_weight 10.0 | tối đa 20 lượt, dừng sau 3 lượt không tăng | thứ tự xao | seed 42 | 4 luồng
+
+=== Fold 0 ===
+    lượt  1  loss 0.0341  val PR-AUC 0.0432  5717 bước  2s học  RAM đỉnh 873 MB
+    lượt  2  loss 0.0284  val PR-AUC 0.0677  5717 bước  2s học  RAM đỉnh 932 MB
+    lượt  3  loss 0.0277  val PR-AUC 0.0868  5717 bước  2s học  RAM đỉnh 942 MB
+    lượt  4  loss 0.0271  val PR-AUC 0.0810  5717 bước  3s học  RAM đỉnh 943 MB
+    lượt  5  loss 0.0267  val PR-AUC 0.0885  5717 bước  3s học  RAM đỉnh 943 MB
+    lượt  6  loss 0.0265  val PR-AUC 0.0918  5717 bước  2s học  RAM đỉnh 943 MB
+    lượt  7  loss 0.0262  val PR-AUC 0.0904  5717 bước  3s học  RAM đỉnh 943 MB
+    lượt  8  loss 0.0259  val PR-AUC 0.0877  5717 bước  3s học  RAM đỉnh 943 MB
+    lượt  9  loss 0.0256  val PR-AUC 0.0976  5717 bước  2s học  RAM đỉnh 943 MB
+    lượt 10  loss 0.0256  val PR-AUC 0.1014  5717 bước  3s học  RAM đỉnh 943 MB
+    lượt 11  loss 0.0254  val PR-AUC 0.0859  5717 bước  2s học  RAM đỉnh 943 MB
+    lượt 12  loss 0.0253  val PR-AUC 0.0928  5717 bước  3s học  RAM đỉnh 943 MB
+    lượt 13  loss 0.0252  val PR-AUC 0.1004  5717 bước  2s học  RAM đỉnh 943 MB
+  TEST  PR-AUC 0.0973 | TB theo ngân hàng 0.3551 | Recall@1% 0.5211 | VDR@1% 0.9176 | tốt nhất ở lượt 10/13 | 39s | gộp chung lấy mẫu 0.1006 → 97%
+
+=== Trung bình qua các fold ===
+      pr_auc  macro_pr_auc  recall@1%  vdr@1%  central_lay_mau  pct_so_voi_lay_mau  luot_tot  giay
+mean  0.0973        0.3551     0.5211  0.9176           0.1006             96.7049      10.0  39.0
+std      NaN           NaN        NaN     NaN              NaN                 NaN       NaN   NaN
+Đã lưu trữ: /Users/leminhdao168/Documents/NCKH/dat-ai/results/_luu_tru/2026-11-04_0110_ibm_cach1_chon_lo512_pw10_lr0.001
