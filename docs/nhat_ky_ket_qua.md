@@ -586,3 +586,17 @@ Kết quả chạy **trước ngày 02/11** chưa có kho lưu trữ; bản gố
      giữa các fold. Ở 100 vòng, nhiễu ε = 1 (0,018/tham số) bắt đầu tốn; ε = 1 lại tốt hơn chút ở 30 vòng tương đối
      (85% so với FedProx 30 vòng). → ε = 2 là điểm cân bằng ở 100 vòng; nếu giữ ε = 1 nên thử ~50 vòng.
   4. Còn thiếu: tự học riêng (đang chạy sau 200 vòng), 3 seed, ε = 0,5, E9/E10.
+
+## Giai đoạn 28 — Thử 200 vòng (05/11/2026)
+
+- **Làm:** fold 0, cấu hình như giai đoạn 27 nhưng 200 vòng. Lưu ở
+  `results/_luu_tru/2026-11-05_1745_ibm_fl_dp_K802_200vong_prox_dp1`.
+
+  | Cách (fold 0, gộp chung 0,1006) | 30 vòng | 100 vòng | 200 vòng |
+  |---|---|---|---|
+  | FedProx không DP | 0,0282 (28%) | 0,0340 (34%) | 0,0340 (34%) — vòng tốt nhất 83 |
+  | DP ε = 1 | 0,0233 (23%) | **0,0304 (30%)** | 0,0251 (25%) — vòng tốt nhất 108, nhiễu 0,025/tham số |
+
+  Val FedProx vòng 50/100/150/200: 0,032/0,033/0,018/0,016 — **tụt sau vòng 100**; DP: 0,021/0,022/0,018/0,017.
+- **Rút ra:** 100 vòng là điểm tốt nhất. Quá 100 vòng thì FedProx không tăng (thậm chí val tụt) và DP ε = 1 kém đi vì nhiễu
+  tăng (0,018 → 0,025). → Giữ **100 vòng** (D24); không thử 300–500 vòng.
