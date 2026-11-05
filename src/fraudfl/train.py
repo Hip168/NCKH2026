@@ -96,7 +96,8 @@ def fedavg(model: nn.Module, clients: list[GraphData], lr: float, rounds: int, l
            pos_weight: float | None = None, clients_per_round: int | None = None,
            sample_gen: torch.Generator | None = None,
            update_norms: list | None = None, prox_mu: float = 0.0, server_lr: float = 1.0,
-           server_momentum: float = 0.0) -> tuple[nn.Module, list[dict]]:
+           server_momentum: float = 0.0, client_weights: list | None = None,
+           fixed_denom: float | None = None) -> tuple[nn.Module, list[dict]]:
     """FedAvg (McMahan et al., 2017): trung bình trọng số theo số mẫu fit của từng client.
 
     Mỗi vòng: client nhận mô hình chung → train `local_epochs` epoch trên dữ liệu riêng (Adam mới mỗi vòng)
@@ -111,6 +112,9 @@ def fedavg(model: nn.Module, clients: list[GraphData], lr: float, rounds: int, l
     `prox_mu`: FedProx (E6). `server_lr`, `server_momentum`: FedAvgM (Hsu et al., 2019) — server cập nhật
     v ← β·v + Δ_tb, w ← w + η·v với Δ_tb = (trung bình [đã thêm nhiễu]) − w; là hậu xử lý nên không tốn thêm ε.
     Mặc định (0, 1, 0) = FedAvg gốc.
+    `client_weights` + `fixed_denom`: trọng số bị chặn (McMahan et al., 2018) — w_k ∈ [0, 1] cho từng client,
+    w ← w_global + Σ_{k chọn} w_k·Δ_k / fixed_denom với fixed_denom = q·W (W = Σ w_k mọi client, q = m/K). Mẫu số
+    cố định nên độ nhạy ≤ C/fixed_denom → nhiễu server std = z·C/fixed_denom. w_k = 1 mọi client, m = K ≡ trung bình đều.
     Trả về (mô hình tốt nhất, lịch sử từng vòng).
     """
     pos_weight = _pos_weight(clients) if pos_weight is None else torch.tensor(pos_weight)   # vô hướng
@@ -119,9 +123,10 @@ def fedavg(model: nn.Module, clients: list[GraphData], lr: float, rounds: int, l
     for r in range(1, rounds + 1):
         global_state = copy.deepcopy(model.state_dict())
         if clients_per_round and clients_per_round < len(clients):
-            chosen = [clients[i] for i in torch.randperm(len(clients), generator=sample_gen)[:clients_per_round].tolist()]
+            chosen_idx = torch.randperm(len(clients), generator=sample_gen)[:clients_per_round].tolist()
         else:
-            chosen = clients
+            chosen_idx = list(range(len(clients)))
+        chosen = [clients[i] for i in chosen_idx]
         weights = np.array([1.0 if uniform_weights else c.n_fit for c in chosen], dtype=np.float64)
         weights /= weights.sum()
         states = []
@@ -139,7 +144,12 @@ def fedavg(model: nn.Module, clients: list[GraphData], lr: float, rounds: int, l
                 update_norms.append({"round": r, "norm": float(torch.cat([(state[k] - global_state[k]).flatten().float()
                                                                        for k in global_state]).norm())})
             states.append(privatize(state, global_state) if privatize else state)
-        avg = {k: sum(w * s[k] for w, s in zip(weights, states)) for k in global_state}
+        if client_weights is not None:      # trọng số bị chặn, mẫu số cố định
+            bw = [client_weights[i] for i in chosen_idx]
+            avg = {k: global_state[k] + sum(w * (s[k] - global_state[k]) for w, s in zip(bw, states)) / fixed_denom
+                   for k in global_state}
+        else:
+            avg = {k: sum(w * s[k] for w, s in zip(weights, states)) for k in global_state}
         new = server_privatize(avg, global_state) if server_privatize else avg
         if server_lr != 1.0 or server_momentum > 0:
             delta = {k: new[k] - global_state[k] for k in global_state}
