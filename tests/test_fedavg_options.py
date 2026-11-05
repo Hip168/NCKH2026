@@ -49,3 +49,12 @@ def test_bounded_weights_zero_weight_client_is_ignored():
     torch.manual_seed(0); a = _run(client_weights=[1.0, 1.0, 0.0], fixed_denom=2.0)
     torch.manual_seed(0); b = _run(client_weights=[1.0, 1.0, 1e-12], fixed_denom=2.0)
     torch.testing.assert_close(a, b, atol=1e-6, rtol=1e-5)
+
+
+def test_train_full_batch_without_val_positives_does_not_crash():
+    from fraudfl.train import train_full_batch
+    d = _clients(n_clients=1)[0]
+    d.y[d.val] = 0.0                                   # validation không có ca dương
+    torch.manual_seed(0)
+    m = train_full_batch(TabMLP(5), d, lr=1e-2, max_epochs=20, patience=5, batch_size=32, pos_weight=1.0)
+    assert all(torch.isfinite(p).all() for p in m.parameters())

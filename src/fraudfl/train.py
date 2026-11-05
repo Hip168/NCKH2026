@@ -74,6 +74,11 @@ def train_full_batch(model: nn.Module, d: GraphData, lr: float, max_epochs: int,
     opt = torch.optim.Adam(model.parameters(), lr=lr)
     pw = _pos_weight([d]) if pos_weight is None else torch.tensor(pos_weight)
     loss_fn = nn.BCEWithLogitsLoss(pos_weight=pw)
+    if float(d.y[d.val].sum()) == 0:
+        # Validation không có ca dương (vd ngân hàng nhỏ khi tự học riêng): PR-AUC không xác định → không dừng sớm được.
+        # Học cố định `patience` epoch rồi giữ mô hình cuối.
+        _local_epochs(model, d, opt, loss_fn, patience, batch_size)
+        return model
     best, best_state, bad = -1.0, None, 0
     for epoch in range(eval_every, max_epochs + 1, eval_every):
         _local_epochs(model, d, opt, loss_fn, eval_every, batch_size)
