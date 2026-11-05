@@ -1,0 +1,46 @@
+HI-Small ngày 0–9: 4,557,222 gd, 4,021 ca; 22 đặc trưng (view bank); K = 802 client (ngân hàng >= 1000 giao dịch); 200 client/vòng; r = 0.1; 100 vòng × 5 epoch; lr 0.005; batch 512; pos_weight 1.0; ε [8.0, 4.0, 2.0, 1.0]; seed 42; FedProx μ 0.1; server lr 1.0, momentum 0.0; C 0.35
+Ca rửa tiền: 4,021 trên 802 client; client không có ca nào: 94; nhiều nhất 633; trung vị 2
+
+=== Fold 0: fit (lấy mẫu) 293,983 | val 729,156 | test 911,445 ===
+  fedavg_deu     PR-AUC 0.0340 | TB theo client 0.2579 | Recall@1% 0.3520 | VDR@1% 0.5410
+  dp ε=8         PR-AUC 0.0331 | TB theo client 0.2476 | Recall@1% 0.3483 | VDR@1% 0.5410 | z=1.82, nhiễu/tham số=0.0032
+  dp ε=4         PR-AUC 0.0323 | TB theo client 0.2505 | Recall@1% 0.3458 | VDR@1% 0.5410 | z=3.10, nhiễu/tham số=0.0054
+  dp ε=2         PR-AUC 0.0317 | TB theo client 0.2440 | Recall@1% 0.3396 | VDR@1% 0.5484 | z=5.55, nhiễu/tham số=0.0097
+  dp ε=1         PR-AUC 0.0304 | TB theo client 0.2283 | Recall@1% 0.3246 | VDR@1% 0.5409 | z=10.31, nhiễu/tham số=0.0180
+
+=== Fold 1: fit (lấy mẫu) 293,985 | val 729,156 | test 911,445 ===
+  fedavg_deu     PR-AUC 0.0387 | TB theo client 0.2574 | Recall@1% 0.3694 | VDR@1% 0.1787
+  dp ε=8         PR-AUC 0.0357 | TB theo client 0.2564 | Recall@1% 0.3570 | VDR@1% 0.1784 | z=1.82, nhiễu/tham số=0.0032
+  dp ε=4         PR-AUC 0.0343 | TB theo client 0.2518 | Recall@1% 0.3483 | VDR@1% 0.1784 | z=3.10, nhiễu/tham số=0.0054
+  dp ε=2         PR-AUC 0.0307 | TB theo client 0.2500 | Recall@1% 0.3371 | VDR@1% 0.1782 | z=5.55, nhiễu/tham số=0.0097
+  dp ε=1         PR-AUC 0.0268 | TB theo client 0.2288 | Recall@1% 0.3134 | VDR@1% 0.2865 | z=10.31, nhiễu/tham số=0.0180
+
+=== Fold 2: fit (lấy mẫu) 293,995 | val 729,156 | test 911,444 ===
+  fedavg_deu     PR-AUC 0.0332 | TB theo client 0.2423 | Recall@1% 0.3487 | VDR@1% 0.2240
+  dp ε=8         PR-AUC 0.0332 | TB theo client 0.2515 | Recall@1% 0.3499 | VDR@1% 0.2241 | z=1.82, nhiễu/tham số=0.0032
+  dp ε=4         PR-AUC 0.0331 | TB theo client 0.2484 | Recall@1% 0.3450 | VDR@1% 0.2241 | z=3.10, nhiễu/tham số=0.0054
+  dp ε=2         PR-AUC 0.0339 | TB theo client 0.2414 | Recall@1% 0.3362 | VDR@1% 0.2240 | z=5.55, nhiễu/tham số=0.0097
+  dp ε=1         PR-AUC 0.0291 | TB theo client 0.2420 | Recall@1% 0.3138 | VDR@1% 0.2572 | z=10.31, nhiễu/tham số=0.0180
+
+=== Fold 3: fit (lấy mẫu) 293,975 | val 729,156 | test 911,444 ===
+  fedavg_deu     PR-AUC 0.0368 | TB theo client 0.2545 | Recall@1% 0.3540 | VDR@1% 0.0051
+  dp ε=8         PR-AUC 0.0352 | TB theo client 0.2504 | Recall@1% 0.3640 | VDR@1% 0.9764 | z=1.82, nhiễu/tham số=0.0032
+  dp ε=4         PR-AUC 0.0346 | TB theo client 0.2450 | Recall@1% 0.3590 | VDR@1% 0.0051 | z=3.10, nhiễu/tham số=0.0054
+  dp ε=2         PR-AUC 0.0323 | TB theo client 0.2372 | Recall@1% 0.3292 | VDR@1% 0.0051 | z=5.55, nhiễu/tham số=0.0097
+  dp ε=1         PR-AUC 0.0275 | TB theo client 0.2154 | Recall@1% 0.2745 | VDR@1% 0.0058 | z=10.31, nhiễu/tham số=0.0180
+
+=== Fold 4: fit (lấy mẫu) 293,982 | val 729,156 | test 911,444 ===
+  fedavg_deu     PR-AUC 0.0354 | TB theo client 0.2444 | Recall@1% 0.3540 | VDR@1% 0.0209
+  dp ε=8         PR-AUC 0.0327 | TB theo client 0.2482 | Recall@1% 0.3441 | VDR@1% 0.0209 | z=1.82, nhiễu/tham số=0.0032
+  dp ε=4         PR-AUC 0.0306 | TB theo client 0.2380 | Recall@1% 0.3466 | VDR@1% 0.0208 | z=3.10, nhiễu/tham số=0.0054
+  dp ε=2         PR-AUC 0.0282 | TB theo client 0.2296 | Recall@1% 0.3379 | VDR@1% 0.0238 | z=5.55, nhiễu/tham số=0.0097
+  dp ε=1         PR-AUC 0.0238 | TB theo client 0.1997 | Recall@1% 0.2994 | VDR@1% 0.0837 | z=10.31, nhiễu/tham số=0.0180
+
+=== Trung bình qua các fold ===
+            pr_auc  macro_pr_auc  recall@1%  vdr@1%
+setting                                            
+fedavg_deu  0.0356        0.2513     0.3556  0.1940
+dp ε=8      0.0340        0.2508     0.3526  0.3881
+dp ε=4      0.0330        0.2467     0.3489  0.1939
+dp ε=2      0.0313        0.2404     0.3360  0.1959
+dp ε=1      0.0275        0.2228     0.3052  0.2348

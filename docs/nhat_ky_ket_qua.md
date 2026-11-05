@@ -559,3 +559,30 @@ Kết quả chạy **trước ngày 02/11** chưa có kho lưu trữ; bản gố
   3. Tính toán nhiễu theo số vòng (ε = 1, q = 0,25, C = 0,35): 30 → 0,010; 100 → 0,018; 200 → 0,025; 300 → 0,031;
      500 → 0,040.
 - **Kế tiếp:** chạy 5 fold với 100 vòng (FedProx + DP ε ∈ {8, 4, 2, 1}); tùy chọn thử 200 vòng trên fold 0.
+
+## Giai đoạn 27 — KẾT QUẢ CHÍNH 5 fold với 100 vòng (05/11/2026)
+
+- **Cấu hình:** như giai đoạn 23 nhưng **100 vòng** (D24); FedProx μ = 0,1, trung bình đều, C = 0,35, K = 802, 1 seed.
+  Mốc gộp chung lấy từ `CHINH_5fold_moc` (giai đoạn 23). Lưu ở `results/_luu_tru/2026-11-05_1707_ibm_fl_dp_CHINH_5fold_100vong`,
+  bảng `results/so_voi_muc_tieu_CHINH_5fold_100vong/`.
+- **Gián đoạn:** máy vào Modern Standby / sleep nhiều lần từ 15:27 đến 16:56 (có lúc chạy bằng pin) → tiến trình bị tạm dừng
+  ~80 phút rồi chạy tiếp, không mất kết quả (Windows Event Log, Kernel-Power).
+- **Kết quả** (PR-AUC trung bình ± độ lệch 5 fold):
+
+  | Cách | PR-AUC | % gộp chung (mục tiêu ≥ 85%) | % FedProx không DP (tiêu chí 2 tầng ≥ 85%) | 30 vòng (giai đoạn 23) |
+  |---|---|---|---|---|
+  | Gộp chung | 0,0979 ± 0,0089 | 100% | | |
+  | FedProx 100 vòng | 0,0356 ± 0,0022 | 37% ± 3 | 100% | 0,0291 (30%) |
+  | DP ε = 8 | 0,0340 ± 0,0014 | 35% ± 3 ❌ | **95% ± 3 ✅** | 0,0260 (27%) |
+  | DP ε = 4 | 0,0330 ± 0,0016 | 34% ± 4 ❌ | **93% ± 5 ✅** | 0,0256 (26%) |
+  | DP ε = 2 | 0,0313 ± 0,0021 | 32% ± 5 ❌ | **88% ± 10 ✅** | 0,0255 (26%) |
+  | **DP ε = 1** | **0,0275 ± 0,0025** | **28% ± 5 ❌** | **78% ± 10 ⚠️** | 0,0246 (25%) |
+
+  % FedProx từng fold ở ε = 1: 89, 69, 87, 75, 67.
+- **Rút ra:**
+  1. 100 vòng nâng mọi cách thêm 12–31% so với 30 vòng; FedProx 30% → 37% gộp chung.
+  2. Mục tiêu Slide 10 (≥ 85% gộp chung) chưa đạt ở mọi ε: 28–35%.
+  3. Tiêu chí 2 tầng (chi phí DP ≥ 85%): **đạt ở ε = 8, 4, 2** (88–95%); **ε = 1 chưa đạt (78% ± 10)**, dao động mạnh
+     giữa các fold. Ở 100 vòng, nhiễu ε = 1 (0,018/tham số) bắt đầu tốn; ε = 1 lại tốt hơn chút ở 30 vòng tương đối
+     (85% so với FedProx 30 vòng). → ε = 2 là điểm cân bằng ở 100 vòng; nếu giữ ε = 1 nên thử ~50 vòng.
+  4. Còn thiếu: tự học riêng (đang chạy sau 200 vòng), 3 seed, ε = 0,5, E9/E10.

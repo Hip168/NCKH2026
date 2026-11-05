@@ -1,0 +1,12 @@
+| Cách | Số fold | PR-AUC | % gộp chung (mục tiêu ≥ 85%) | ε (mục tiêu ≤ 1) | Đạt mục tiêu chính? | VDR@1% (phụ, mục tiêu ≥ 0,80) |
+|---|---|---|---|---|---|---|
+| central | 5 | 0.0979 ± 0.0089 | 100% ± 0 | — | mốc | 0.48 ❌ |
+| fedavg | 5 | 0.0236 ± 0.0022 | 24% ± 4 | — | mốc | 0.00 ❌ |
+| fedavg_deu | 5 | 0.0356 ± 0.0022 | 37% ± 3 | — | mốc | 0.19 ❌ |
+| dp ε=8 | 5 | 0.0340 ± 0.0014 | 35% ± 3 | 8 | ❌ thiếu 50 điểm % | 0.39 ❌ |
+| dp ε=4 | 5 | 0.0330 ± 0.0016 | 34% ± 4 | 4 | ❌ thiếu 51 điểm % | 0.19 ❌ |
+| dp ε=2 | 5 | 0.0313 ± 0.0021 | 32% ± 5 | 2 | ❌ thiếu 53 điểm % | 0.20 ❌ |
+| dp ε=1 | 5 | 0.0275 ± 0.0025 | 28% ± 5 | 1 | ❌ thiếu 57 điểm % | 0.23 ❌ |
+
+Mốc gộp chung theo fold: fold 0: 0.1006, fold 1: 0.1050, fold 2: 0.0825, fold 3: 0.0985, fold 4: 0.1028
+Nguồn: results\ibm_fl_dp_CHINH_5fold_moc, results\ibm_fl_dp_CHINH_5fold_100vong
