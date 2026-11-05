@@ -537,3 +537,25 @@ Kết quả chạy **trước ngày 02/11** chưa có kho lưu trữ; bản gố
   3. → Cách lấy trung bình không còn là nút thắt. Ứng viên còn lại: **số vòng học** (giai đoạn 24: FedAvg chưa học xong
      ở vòng 30). Giữ trung bình đều cho DP.
 - **Kế tiếp:** FedProx + DP ε = 1 với 100 vòng (fold 0 trước).
+
+## Giai đoạn 26 — 100 vòng cho FedProx và DP (05/11/2026)
+
+- **Làm:** fold 0, K = 802, FedProx μ = 0,1, trung bình đều, C = 0,35, **100 vòng** (thay vì 30). Lưu ở
+  `results/_luu_tru/2026-11-05_1213_ibm_fl_dp_K802_100vong_prox_dp1`.
+
+  | Cách | 30 vòng | 100 vòng | Thay đổi | 100 vòng: % gộp chung (0,1006) |
+  |---|---|---|---|---|
+  | FedProx không DP | 0,0282 | **0,0340** | +21% | 34% |
+  | **DP ε = 1** | 0,0233 | **0,0304** | **+30%** | **30%** ❌ (mục tiêu ≥ 85%) |
+  | DP / FedProx | 83% | **89%** | | |
+
+  Nhiễu/tham số: 0,010 (30 vòng) → 0,018 (100 vòng). Val PR-AUC vòng 10/30/50/70/90/100: FedProx 0,016/0,028/0,032/
+  0,033/0,033/0,033 (vòng tốt nhất 83, gần bão hòa); DP 0,011/0,022/0,026/0,027/0,029/0,029 (vòng tốt nhất 88).
+- **Rút ra:**
+  1. **Số vòng là nút thắt thật**: thêm vòng giúp cả FedProx (+21%) và DP (+30%), dù nhiễu tăng 1,8 lần. DP ε = 1 tốt
+     nhất từ trước tới nay: 0,0304 = 30% gộp chung, 89% FedProx không DP.
+  2. FedProx gần bão hòa từ vòng ~70; DP còn tăng nhẹ tới vòng 90–100. Thử 200 vòng có thể còn lợi cho DP nhưng nhiễu sẽ
+     là 0,025/tham số (vùng bắt đầu tụt ở giai đoạn 25); 500 vòng → 0,040, không nên.
+  3. Tính toán nhiễu theo số vòng (ε = 1, q = 0,25, C = 0,35): 30 → 0,010; 100 → 0,018; 200 → 0,025; 300 → 0,031;
+     500 → 0,040.
+- **Kế tiếp:** chạy 5 fold với 100 vòng (FedProx + DP ε ∈ {8, 4, 2, 1}); tùy chọn thử 200 vòng trên fold 0.

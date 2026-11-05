@@ -1,0 +1,3 @@
+fold,setting,pr_auc,macro_pr_auc,recall@1%,vdr@1%,seconds,epsilon,z,q,noise_std
+0,fedavg_deu,0.03401,0.25794,0.35199,0.54103,430,,,,
+0,dp ε=1,0.03037,0.22826,0.32463,0.54088,520,1.00000,10.31250,0.24938,0.01805
