@@ -1,0 +1,9 @@
+{
+  "thoi_diem": "2026-11-05T14:49:44",
+  "script": "12_ibm_cach1_lo_nho.py",
+  "lenh": "scripts/12_ibm_cach1_lo_nho.py --folds 0 1 2 3 4 --batch-size 512 --lr 0.001 --max-epochs 300 --patience 30 --so-mau 100000 --tag somau_100000_khongbu",
+  "commit": "691e797",
+  "co_thay_doi_chua_commit": true,
+  "thu_muc_luu_tru": "results/_luu_tru/2026-11-05_1449_ibm_cach1_somau_100000_khongbu",
+  "ghi_chu": "Cách 1 lô nhỏ, rate 1, số mẫu 100000, bù trọng số False, khối 100000, lô 512, pos_weight 1.0, thứ tự xao, folds [0, 1, 2, 3, 4]"
+}
