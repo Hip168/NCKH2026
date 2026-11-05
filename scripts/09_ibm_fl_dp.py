@@ -69,6 +69,9 @@ def main():
     ap.add_argument("--prox-mu", type=float, default=0.0, help="FedProx μ (0 = tắt)")
     ap.add_argument("--server-lr", type=float, default=1.0, help="learning rate ở server (FedAvgM)")
     ap.add_argument("--server-momentum", type=float, default=0.0, help="momentum ở server β (0 = tắt)")
+    ap.add_argument("--bounded-cap-q", type=float, default=None,
+                    help="trọng số bị chặn (McMahan 2018): mức chặn ŵ = phân vị q của n_fit; w_k = min(n_k/ŵ, 1). "
+                         "Áp cho setting fedavg_chan và dp")
     args = ap.parse_args()
     out = RESULTS / ("ibm_fl_dp" + (f"_{args.tag}" if args.tag else ""))
     out.mkdir(parents=True, exist_ok=True)
@@ -142,6 +145,14 @@ def main():
             return GraphData(torch.from_numpy(Xs[nodes]), None, torch.from_numpy(y[nodes].astype(np.float32)),
                              mask(0, nf), mask(nf, nf + nv), mask(nf + nv, len(nodes)), nodes)
         clients = [client_data(i) for i in range(K)]
+        bw = denom = None
+        if args.bounded_cap_q is not None:   # trọng số bị chặn theo kích cỡ phần fit của từng ngân hàng
+            n_fit = np.array([c.n_fit for c in clients], dtype=float)
+            cap = float(np.quantile(n_fit, args.bounded_cap_q))
+            bw = list(np.minimum(n_fit / cap, 1.0))
+            denom = (m_round / K) * float(np.sum(bw))
+            log(f"  Trọng số bị chặn: ŵ = phân vị {args.bounded_cap_q} của n_fit = {cap:.0f}; W = Σw = {np.sum(bw):.1f}/{K}; "
+                f"mẫu số q·W = {denom:.1f} (trung bình đều: {m_round}); {int(np.sum(np.array(bw) >= 1))} ngân hàng có w = 1")
 
         def report(setting, score, extra=None):
             r = evaluate(y[te], score[te], amt[te], day[te])
@@ -216,6 +227,19 @@ def main():
             history += [{"fold": k, "setting": "fedavg_deu", **h} for h in hist]
             report("fedavg_deu", full_score(m, clients), {"seconds": round(time.time() - t0)})
 
+        if "fedavg_chan" in args.settings:   # trọng số bị chặn, không cắt, không nhiễu
+            if bw is None:
+                raise SystemExit("fedavg_chan cần --bounded-cap-q")
+            t0 = time.time()
+            torch.manual_seed(args.seed)
+            m, hist = fedavg(TabMLP(len(fc)), clients, args.lr, args.rounds, args.local_epochs,
+                             batch_size=args.batch_size, pos_weight=args.pos_weight, prox_mu=args.prox_mu,
+                             server_lr=args.server_lr, server_momentum=args.server_momentum, clients_per_round=m_round,
+                             sample_gen=torch.Generator().manual_seed(args.seed + 1000 + k),
+                             client_weights=bw, fixed_denom=denom)
+            history += [{"fold": k, "setting": "fedavg_chan", **h} for h in hist]
+            report("fedavg_chan", full_score(m, clients), {"seconds": round(time.time() - t0)})
+
         if "dp" in args.settings:
             for eps in args.eps:
                 t0 = time.time()
@@ -223,7 +247,7 @@ def main():
                 # m client/vòng chọn ngẫu nhiên trong K → lấy mẫu con q = m/K; trung bình đều trên m → std = zC/m
                 q = m_round / K
                 z = noise_multiplier(eps, sample_rate=q, steps=args.rounds)
-                std = z * args.clip / m_round
+                std = z * args.clip / (denom if bw is not None else m_round)   # độ nhạy C/mẫu số
                 torch.manual_seed(args.seed)
                 m, hist = fedavg(TabMLP(len(fc)), clients, args.lr, args.rounds, args.local_epochs,
                                  batch_size=args.batch_size, pos_weight=args.pos_weight, prox_mu=args.prox_mu,
@@ -231,7 +255,8 @@ def main():
                                  privatize=lambda loc, glo: privatize_update(loc, glo, args.clip, 0.0, gen),
                                  server_privatize=lambda avg, glo: add_server_noise(avg, glo, std, gen),
                                  uniform_weights=True, clients_per_round=m_round,
-                                 sample_gen=torch.Generator().manual_seed(args.seed + 1000 + k))
+                                 sample_gen=torch.Generator().manual_seed(args.seed + 1000 + k),
+                                 client_weights=bw, fixed_denom=denom)
                 history += [{"fold": k, "setting": f"dp_eps{eps:g}", **h} for h in hist]
                 report(f"dp ε={eps:g}", full_score(m, clients),
                        {"epsilon": eps, "z": z, "q": q, "noise_std": std, "seconds": round(time.time() - t0)})
@@ -240,7 +265,7 @@ def main():
     df = pd.DataFrame(rows)
     log("\n=== Trung bình qua các fold ===")
     log(df.groupby("setting", sort=False)[["pr_auc", "macro_pr_auc", "recall@1%", "vdr@1%"]].mean().round(4).to_string())
-    log(f"Đã lưu trữ: {archive_run(out, note=f'FL+DP mức client IBM {args.stem}, K={K}, C={args.clip}, folds {args.folds}, ε {args.eps}, {args.rounds} vòng')}")
+    log(f"Đã lưu trữ: {archive_run(out, note=f'FL+DP mức client IBM {args.stem}, K={K}, C={args.clip}, chặn q={args.bounded_cap_q}, folds {args.folds}, ε {args.eps}, {args.rounds} vòng')}")
 
 
 if __name__ == "__main__":

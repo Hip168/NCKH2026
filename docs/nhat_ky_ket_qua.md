@@ -512,3 +512,116 @@ Kết quả chạy **trước ngày 02/11** chưa có kho lưu trữ; bản gố
   đều), khác biệt giữa ngân hàng KHÔNG phải nút thắt chính. FedAvg 100 vòng (fold 0): 0,0248 → 0,0318, vẫn đang tăng.
 - **Đính chính** câu "FL chỉ 24–30% gộp chung vì 802 ngân hàng non-IID" ở giai đoạn 17, 19, 23: chỉ đúng một phần
   cho FedAvg thường, không đúng cho trung bình đều / DP.
+
+## Giai đoạn 25 — Trọng số bị chặn tương thích DP (05/11/2026, Đạt)
+
+- **Làm:** thêm trọng số bị chặn (McMahan et al., 2018) vào `train.fedavg` (`client_weights`, `fixed_denom`; test mới) và
+  `09_ibm_fl_dp.py` (`--bounded-cap-q`, setting `fedavg_chan`). w_k = min(n_fit,k / ŵ, 1), ŵ = phân vị q của n_fit;
+  server cộng Σ w_k·Δ_k / (q_chọn·W); nhiễu std = z·C/(q_chọn·W). Fold 0, K = 802, FedProx μ = 0,1, C = 0,35, 30 vòng.
+  Nhánh `dat/trong-so-bi-chan` (tách từ nhánh của Đạo). Lưu ở `results/_luu_tru/2026-11-05_*_ibm_fl_dp_K802_chan_q*`.
+- **Kết quả** (mốc gộp chung fold 0 = 0,1006; mục tiêu FL + DP ≥ 85%):
+
+  | Cách | Mẫu số q·W | PR-AUC không DP | DP ε = 1 | DP: % gộp chung | Nhiễu/tham số |
+  |---|---|---|---|---|---|
+  | Trung bình đều (giai đoạn 22) | 200 | 0,0282 | 0,0233 | 23% ❌ | 0,010 |
+  | Bị chặn ŵ = p50 (184) | 162 | 0,0281 | 0,0230 | 23% ❌ | 0,013 |
+  | Bị chặn ŵ = p90 (688) | 78 | 0,0275 | 0,0179 | 18% ❌ | 0,026 |
+  | Bị chặn ŵ = p99 (1.992) | 32 | 0,0278 | 0,0144 | 14% ❌ | 0,064 |
+  | (Trung bình theo kích cỡ, không DP, giai đoạn 21) | | 0,0265 | — | | |
+
+- **Rút ra:**
+  1. **Trọng số bị chặn không giúp**: không DP gần như không đổi (0,0275–0,0281 so với 0,0282); có DP còn kém hơn vì
+     mẫu số nhỏ đi làm nhiễu tăng (đến 6 lần ở p99).
+  2. Khi đã có FedProx, **trung bình đều tốt hơn trung bình theo kích cỡ** (0,0282 so với 0,0265). Nhận định "trung bình
+     đều là nút thắt" (giai đoạn 24) đúng cho FedAvg thường, nhưng **không đúng cho cấu hình chính (FedProx)**.
+  3. → Cách lấy trung bình không còn là nút thắt. Ứng viên còn lại: **số vòng học** (giai đoạn 24: FedAvg chưa học xong
+     ở vòng 30). Giữ trung bình đều cho DP.
+- **Kế tiếp:** FedProx + DP ε = 1 với 100 vòng (fold 0 trước).
+
+## Giai đoạn 26 — 100 vòng cho FedProx và DP (05/11/2026)
+
+- **Làm:** fold 0, K = 802, FedProx μ = 0,1, trung bình đều, C = 0,35, **100 vòng** (thay vì 30). Lưu ở
+  `results/_luu_tru/2026-11-05_1213_ibm_fl_dp_K802_100vong_prox_dp1`.
+
+  | Cách | 30 vòng | 100 vòng | Thay đổi | 100 vòng: % gộp chung (0,1006) |
+  |---|---|---|---|---|
+  | FedProx không DP | 0,0282 | **0,0340** | +21% | 34% |
+  | **DP ε = 1** | 0,0233 | **0,0304** | **+30%** | **30%** ❌ (mục tiêu ≥ 85%) |
+  | DP / FedProx | 83% | **89%** | | |
+
+  Nhiễu/tham số: 0,010 (30 vòng) → 0,018 (100 vòng). Val PR-AUC vòng 10/30/50/70/90/100: FedProx 0,016/0,028/0,032/
+  0,033/0,033/0,033 (vòng tốt nhất 83, gần bão hòa); DP 0,011/0,022/0,026/0,027/0,029/0,029 (vòng tốt nhất 88).
+- **Rút ra:**
+  1. **Số vòng là nút thắt thật**: thêm vòng giúp cả FedProx (+21%) và DP (+30%), dù nhiễu tăng 1,8 lần. DP ε = 1 tốt
+     nhất từ trước tới nay: 0,0304 = 30% gộp chung, 89% FedProx không DP.
+  2. FedProx gần bão hòa từ vòng ~70; DP còn tăng nhẹ tới vòng 90–100. Thử 200 vòng có thể còn lợi cho DP nhưng nhiễu sẽ
+     là 0,025/tham số (vùng bắt đầu tụt ở giai đoạn 25); 500 vòng → 0,040, không nên.
+  3. Tính toán nhiễu theo số vòng (ε = 1, q = 0,25, C = 0,35): 30 → 0,010; 100 → 0,018; 200 → 0,025; 300 → 0,031;
+     500 → 0,040.
+- **Kế tiếp:** chạy 5 fold với 100 vòng (FedProx + DP ε ∈ {8, 4, 2, 1}); tùy chọn thử 200 vòng trên fold 0.
+
+## Giai đoạn 27 — KẾT QUẢ CHÍNH 5 fold với 100 vòng (05/11/2026)
+
+- **Cấu hình:** như giai đoạn 23 nhưng **100 vòng** (D24); FedProx μ = 0,1, trung bình đều, C = 0,35, K = 802, 1 seed.
+  Mốc gộp chung lấy từ `CHINH_5fold_moc` (giai đoạn 23). Lưu ở `results/_luu_tru/2026-11-05_1707_ibm_fl_dp_CHINH_5fold_100vong`,
+  bảng `results/so_voi_muc_tieu_CHINH_5fold_100vong/`.
+- **Gián đoạn:** máy vào Modern Standby / sleep nhiều lần từ 15:27 đến 16:56 (có lúc chạy bằng pin) → tiến trình bị tạm dừng
+  ~80 phút rồi chạy tiếp, không mất kết quả (Windows Event Log, Kernel-Power).
+- **Kết quả** (PR-AUC trung bình ± độ lệch 5 fold):
+
+  | Cách | PR-AUC | % gộp chung (mục tiêu ≥ 85%) | % FedProx không DP (tiêu chí 2 tầng ≥ 85%) | 30 vòng (giai đoạn 23) |
+  |---|---|---|---|---|
+  | Gộp chung | 0,0979 ± 0,0089 | 100% | | |
+  | FedProx 100 vòng | 0,0356 ± 0,0022 | 37% ± 3 | 100% | 0,0291 (30%) |
+  | DP ε = 8 | 0,0340 ± 0,0014 | 35% ± 3 ❌ | **95% ± 3 ✅** | 0,0260 (27%) |
+  | DP ε = 4 | 0,0330 ± 0,0016 | 34% ± 4 ❌ | **93% ± 5 ✅** | 0,0256 (26%) |
+  | DP ε = 2 | 0,0313 ± 0,0021 | 32% ± 5 ❌ | **88% ± 10 ✅** | 0,0255 (26%) |
+  | **DP ε = 1** | **0,0275 ± 0,0025** | **28% ± 5 ❌** | **78% ± 10 ⚠️** | 0,0246 (25%) |
+
+  % FedProx từng fold ở ε = 1: 89, 69, 87, 75, 67.
+- **Rút ra:**
+  1. 100 vòng nâng mọi cách thêm 12–31% so với 30 vòng; FedProx 30% → 37% gộp chung.
+  2. Mục tiêu Slide 10 (≥ 85% gộp chung) chưa đạt ở mọi ε: 28–35%.
+  3. Tiêu chí 2 tầng (chi phí DP ≥ 85%): **đạt ở ε = 8, 4, 2** (88–95%); **ε = 1 chưa đạt (78% ± 10)**, dao động mạnh
+     giữa các fold. Ở 100 vòng, nhiễu ε = 1 (0,018/tham số) bắt đầu tốn; ε = 1 lại tốt hơn chút ở 30 vòng tương đối
+     (85% so với FedProx 30 vòng). → ε = 2 là điểm cân bằng ở 100 vòng; nếu giữ ε = 1 nên thử ~50 vòng.
+  4. Còn thiếu: tự học riêng (đang chạy sau 200 vòng), 3 seed, ε = 0,5, E9/E10.
+
+## Giai đoạn 28 — Thử 200 vòng (05/11/2026)
+
+- **Làm:** fold 0, cấu hình như giai đoạn 27 nhưng 200 vòng. Lưu ở
+  `results/_luu_tru/2026-11-05_1745_ibm_fl_dp_K802_200vong_prox_dp1`.
+
+  | Cách (fold 0, gộp chung 0,1006) | 30 vòng | 100 vòng | 200 vòng |
+  |---|---|---|---|
+  | FedProx không DP | 0,0282 (28%) | 0,0340 (34%) | 0,0340 (34%) — vòng tốt nhất 83 |
+  | DP ε = 1 | 0,0233 (23%) | **0,0304 (30%)** | 0,0251 (25%) — vòng tốt nhất 108, nhiễu 0,025/tham số |
+
+  Val FedProx vòng 50/100/150/200: 0,032/0,033/0,018/0,016 — **tụt sau vòng 100**; DP: 0,021/0,022/0,018/0,017.
+- **Rút ra:** 100 vòng là điểm tốt nhất. Quá 100 vòng thì FedProx không tăng (thậm chí val tụt) và DP ε = 1 kém đi vì nhiễu
+  tăng (0,018 → 0,025). → Giữ **100 vòng** (D24); không thử 300–500 vòng.
+
+## Giai đoạn 29 — Tự học riêng (E2, mốc dưới) trên IBM 802 ngân hàng (05/11/2026)
+
+- **Làm:** `09_ibm_fl_dp.py --settings local`, 5 fold, cùng cách chia, cùng dữ liệu train từng ngân hàng (r = 0,1), lô 512,
+  lr 5e-3, pos_weight 1; mỗi ngân hàng một MLP, dừng sớm theo val của chính nó. Sửa `train_full_batch`: ngân hàng có val
+  không có ca dương học cố định `patience` epoch. Lưu ở `results/_luu_tru/2026-11-05_1802_ibm_fl_dp_CHINH_5fold_local`.
+- **Chỉ số so sánh: PR-AUC trung bình theo ngân hàng** (tự học riêng có 802 mô hình, thang điểm khác nhau → PR-AUC tổng
+  không công bằng, lỗi #33).
+
+  | Cách | PR-AUC TB theo NH | Gấp tự học | Thắng tự học | Lấp khoảng cách tự học → gộp chung | PR-AUC tổng |
+  |---|---|---|---|---|---|
+  | Gộp chung (mốc trên) | 0,347 ± 0,015 | 2,70× | 5/5 | 100% | 0,0979 |
+  | **Tự học riêng (mốc dưới)** | **0,129 ± 0,009** | 1,00× | | 0% | 0,0211 |
+  | FedProx 100 vòng | 0,251 ± 0,007 | 1,95× | 5/5 | 56% | 0,0356 |
+  | DP ε = 8 | 0,251 ± 0,004 | 1,95× | 5/5 | 56% | 0,0340 |
+  | DP ε = 4 | 0,247 ± 0,006 | 1,92× | 5/5 | 54% | 0,0330 |
+  | DP ε = 2 | 0,240 ± 0,008 | 1,87× | 5/5 | 51% | 0,0313 |
+  | **DP ε = 1** | **0,223 ± 0,016** | **1,73×** | **5/5** | **43%** | 0,0275 |
+
+- **Rút ra (RQ1):**
+  1. **Mọi mức FL + DP thắng tự học riêng ở 5/5 fold**, gấp 1,7–2,0 lần → ngân hàng có lợi rõ khi tham gia, kể cả ở ε = 1.
+  2. Theo từng ngân hàng, FL + DP ε = 1 lấp được ~43% khoảng cách giữa tự học riêng và gộp chung (FL không DP: 56%).
+  3. Lý do: trung vị 2 ca rửa tiền/ngân hàng → tự học gần như không học được; hợp tác bù chỗ thiếu này.
+  4. Khác với lần K = 28 (giai đoạn 13: tự học riêng hơn FedAvg) — khi đó MLP còn học thiếu, chưa có FedProx/100 vòng.
+  5. Wilcoxon 5 cặp: p nhỏ nhất có thể là 0,0625 → cần thêm seed để có ý nghĩa thống kê.
