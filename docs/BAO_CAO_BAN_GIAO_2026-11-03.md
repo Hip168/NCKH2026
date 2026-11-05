@@ -1,5 +1,7 @@
 # Báo cáo bàn giao — cập nhật 03/11/2026
 
+> ⚠️ **Đã cũ — xem [BAO_CAO_TONG_KET_2026-11-06.md](BAO_CAO_TONG_KET_2026-11-06.md)** (mốc gộp chung và kết quả 3 seed mới).
+
 Dành cho cả nhóm sau khi pull về. Đọc khoảng 20 phút. Sau khi đọc, mỗi người biết: đề tài đang hướng tới gì, đã làm
 được gì, kết quả so với mục tiêu ra sao, cách chạy lại, và **việc tiếp theo của mình**.
 
