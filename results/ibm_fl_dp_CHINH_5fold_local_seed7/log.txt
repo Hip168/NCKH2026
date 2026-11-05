@@ -1,0 +1,23 @@
+HI-Small ngày 0–9: 4,557,222 gd, 4,021 ca; 22 đặc trưng (view bank); K = 802 client (ngân hàng >= 1000 giao dịch); 200 client/vòng; r = 0.1; 30 vòng × 3 epoch; lr 0.005; batch 512; pos_weight 1.0; ε [8.0, 4.0, 2.0, 1.0]; seed 7; FedProx μ 0.0; server lr 1.0, momentum 0.0; C 1.0
+Ca rửa tiền: 4,021 trên 802 client; client không có ca nào: 94; nhiều nhất 633; trung vị 2
+
+=== Fold 0: fit (lấy mẫu) 293,983 | val 729,156 | test 911,445 ===
+  local          PR-AUC 0.0184 | TB theo client 0.1267 | Recall@1% 0.2624 | VDR@1% 0.0008
+
+=== Fold 1: fit (lấy mẫu) 293,983 | val 729,156 | test 911,445 ===
+  local          PR-AUC 0.0114 | TB theo client 0.1172 | Recall@1% 0.1878 | VDR@1% 0.2936
+
+=== Fold 2: fit (lấy mẫu) 293,986 | val 729,156 | test 911,444 ===
+  local          PR-AUC 0.0170 | TB theo client 0.1158 | Recall@1% 0.1756 | VDR@1% 0.0495
+
+=== Fold 3: fit (lấy mẫu) 293,970 | val 729,156 | test 911,444 ===
+  local          PR-AUC 0.0107 | TB theo client 0.1228 | Recall@1% 0.1801 | VDR@1% 0.0078
+
+=== Fold 4: fit (lấy mẫu) 293,976 | val 729,156 | test 911,444 ===
+  local          PR-AUC 0.0130 | TB theo client 0.1231 | Recall@1% 0.2000 | VDR@1% 0.0207
+
+=== Trung bình qua các fold ===
+         pr_auc  macro_pr_auc  recall@1%  vdr@1%
+setting                                         
+local    0.0141        0.1211     0.2012  0.0745
+Đã lưu trữ: D:\0 Project\2026 NCKH 2027\project\results\_luu_tru\2026-11-05_1933_ibm_fl_dp_CHINH_5fold_local_seed7

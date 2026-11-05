@@ -625,3 +625,86 @@ Kết quả chạy **trước ngày 02/11** chưa có kho lưu trữ; bản gố
   3. Lý do: trung vị 2 ca rửa tiền/ngân hàng → tự học gần như không học được; hợp tác bù chỗ thiếu này.
   4. Khác với lần K = 28 (giai đoạn 13: tự học riêng hơn FedAvg) — khi đó MLP còn học thiếu, chưa có FedProx/100 vòng.
   5. Wilcoxon 5 cặp: p nhỏ nhất có thể là 0,0625 → cần thêm seed để có ý nghĩa thống kê.
+
+## Giai đoạn 30 — ε = 0,5; seed 7 (đang chạy) và kiểm định thống kê TẠM (05/11/2026, 22:00)
+
+> **Trạng thái:** đang chạy nền — seed 7 xong 3/5 fold phần FedProx + DP; seed 2027 chưa chạy (dự kiến xong ~02:45
+> 06/11). Số liệu dưới đây là TẠM; bản chính thức cập nhật khi đủ 3 seed.
+
+- **ε = 0,5** (100 vòng, 5 fold, seed 42; `results/ibm_fl_dp_CHINH_5fold_100vong_eps0.5`): PR-AUC 0,0209 = **22% gộp chung**
+  ❌, **59% FL không DP** ❌, theo ngân hàng **1,48× tự học riêng, thắng 5/5** ✅. Nhiễu/tham số 0,034.
+- **Đường đánh đổi đủ (100 vòng, % FL không DP):** ε = 0,5 → 59%; 1 → 78%; 2 → 88%; 4 → 93%; 8 → 95%. Gấp tự học riêng
+  (theo ngân hàng): 1,48× / 1,73× / 1,87× / 1,92× / 1,95× — mọi ε đều thắng tự học riêng.
+- **Seed 7 (đến 22:00):** gộp chung 0,0931 (seed 42: 0,0979); FedAvg 30 vòng 26% (24%); tự học riêng TB theo ngân hàng
+  0,121 (0,129). FedProx + DP fold 0–2: ε = 1 đạt 39%/25%/29% gộp chung, 126%/86%/104% FL không DP. Khớp seed 42.
+- **Biểu đồ** (`scripts/16_bieu_do_ibm.py` → `results/bieu_do_ibm/`): so sánh theo ngân hàng; đánh đổi riêng tư – hiệu năng;
+  hội tụ 200 vòng; chi phí DP theo số ngân hàng (5 → 4%, 28 → 2%, 802 → 78%).
+- **Kiểm định TẠM** (`scripts/15_thong_ke.py`, seed 42 + 7, ghép cặp theo (seed, fold), PR-AUC TB theo ngân hàng;
+  `results/thong_ke_tam_seed42_7/`):
+
+  | So sánh | n cặp | Chênh TB [CI 95%] | Thắng | p Holm |
+  |---|---|---|---|---|
+  | FL + DP ε = 1 > tự học riêng | 8 | +0,096 [+0,086; +0,105] | 8/8 | **0,023 ✅** |
+  | FedProx > tự học riêng | 9 | +0,112 [+0,098; +0,124] | 9/9 | **0,023 ✅** |
+  | Gộp chung > FedProx | 9 | +0,107 [+0,096; +0,119] | 9/9 | **0,023 ✅** |
+  | FedProx > FedAvg thường | 9 | +0,035 [+0,022; +0,045] | 9/9 | **0,023 ✅** |
+  | FedProx vs DP ε = 2 | 8 | +0,009 [+0,003; +0,016] | 7/8 | 0,109 |
+  | FedProx vs DP ε = 1 | 8 | +0,017 [−0,000; +0,032] | 6/8 | 0,195 |
+
+  → Đã có ý nghĩa thống kê (Holm, α = 0,05): FL + DP ε = 1 thắng tự học riêng; gộp chung thắng FL; FedProx thắng FedAvg.
+  Chi phí DP (ε = 1, 2) **chưa phát hiện được khác biệt có ý nghĩa** so với không DP — chi phí nhỏ so với dao động giữa
+  các fold (không có nghĩa là bằng 0).
+- **Ghi chú cho nhóm:** nhánh `dat/trong-so-bi-chan` chưa gộp với nhánh mới của Đạo (`2c74d3f`, gộp chung đủ dữ liệu 0,130,
+  đường học theo lượng dữ liệu) — sẽ gộp sau khi chạy nền xong để không đổi script giữa chừng.
+
+## Giai đoạn 31 — Seed 7 xong; kiểm định với 2 seed đầy đủ (05/11/2026, 23:26)
+
+> Seed 2027 đang chạy (dự kiến ~03:00 06/11); bảng chính thức 3 seed sẽ thay bảng này.
+
+- **Seed 7** (100 vòng, `results/ibm_fl_dp_CHINH_5fold_*_seed7`): DP ε = 1 so với FL không DP từng fold 126/86/104/96/112%;
+  gấp tự học riêng 1,84/1,81/1,89/1,81/1,78×.
+- **Trung bình 10 cặp (seed 42 + 7 × 5 fold):**
+
+  | Cách | % gộp chung (≥ 85%) | % FL không DP (2 tầng, ≥ 85%) | Gấp tự học riêng |
+  |---|---|---|---|
+  | FedProx | 33% | 100% | 1,89× |
+  | DP ε = 2 | 31% ❌ | **95% ✅** | 1,86× ✅ |
+  | DP ε = 1 | 30% ❌ | **91% ✅** | 1,78× ✅ |
+
+- **Kiểm định** (`results/thong_ke_seed42_7/`, PR-AUC TB theo ngân hàng, Holm): FL + DP ε = 1 > tự học riêng (+0,097
+  [+0,088; +0,103], 10/10, p_Holm = 0,012 ✅); FedProx > tự học riêng, gộp chung > FedProx, FedProx > FedAvg (đều 10/10,
+  p_Holm = 0,012 ✅). FedProx vs DP ε = 2: +0,003 [−0,007; +0,012], p = 0,557; vs DP ε = 1: +0,014 [−0,001; +0,027],
+  p = 0,465 → chi phí DP không có ý nghĩa thống kê (CI chứa 0).
+- **Rút ra:** với 2 seed, DP ε = 1 đạt tiêu chí 2 tầng (91%); seed 42 đơn lẻ (78%) là trường hợp kém. Chi phí DP dao
+  động mạnh theo cách chia dữ liệu → kết luận phải dựa trên nhiều seed.
+
+## Giai đoạn 32 — Seed 2027 xong; kiểm định CHÍNH THỨC 3 seed (06/11/2026, 01:55)
+
+> Thay bảng 2 seed của giai đoạn 31. Mục tiêu Slide 10: FL + DP ≥ 85% gộp chung, ε ≤ 1; tiêu chí 2 tầng: ≥ 85% FL
+> không DP và hơn tự học riêng.
+
+- **Seed 2027** (100 vòng, `results/ibm_fl_dp_CHINH_5fold_*_seed2027`): gộp chung PR-AUC 0,0876; FedProx 0,0374;
+  DP ε = 2 0,0338; DP ε = 1 0,0280 (TB 5 fold). DP ε = 1 giữ 75% FL không DP (seed 42: 78%, seed 7: 105%).
+- **Trung bình 15 cặp (3 seed × 5 fold), tính % theo từng fold rồi lấy TB:**
+
+  | Cách | PR-AUC | % gộp chung (≥ 85%) | % FL không DP (2 tầng, ≥ 85%) | Gấp tự học riêng (TB theo ngân hàng) |
+  |---|---|---|---|---|
+  | Gộp chung | 0,0929 | 100% | — | 2,77× |
+  | FedProx | 0,0333 | 36% ❌ | 100% | 1,96× ✅ |
+  | FedAvg thường | 0,0242 | 26% ❌ | 74% | 1,63× ✅ |
+  | DP ε = 2 | 0,0308 | 34% ❌ | **94% ✅** | 1,89× ✅ |
+  | DP ε = 1 | 0,0279 | 30% ❌ (đạt 36% mục tiêu) | **86% ✅ (sát ngưỡng)** | 1,77× ✅ |
+
+- **Kiểm định** (`results/thong_ke_3seed/`, Wilcoxon ghép cặp, Holm, n = 15, p nhỏ nhất có thể 0,0001):
+  - TB theo ngân hàng: FL + DP ε = 1 > tự học riêng +0,095 [+0,088; +0,101], 15/15, p_Holm = 0,0004 ✅;
+    FedProx > tự học riêng, gộp chung > FedProx, FedProx > FedAvg (đều 15/15, p_Holm = 0,0004 ✅).
+  - **Chi phí DP nay CÓ ý nghĩa** (khác giai đoạn 31): FedProx vs DP ε = 1 +0,023 [+0,010; +0,036], 12/15,
+    p_Holm = 0,025 ✅ (PR-AUC gộp: p_Holm = 0,009 ✅); vs DP ε = 2 +0,009 [+0,001; +0,016], p_Holm = 0,073 (macro) /
+    0,015 ✅ (PR-AUC gộp).
+- **Rút ra:**
+  1. Kết luận chính vững qua 3 seed: FL + DP ε = 1 luôn hơn tự học riêng (15/15) → tham gia liên kết có lợi kể cả khi có DP.
+  2. Mục tiêu gốc (≥ 85% gộp chung) **không đạt** (30%) — khoảng cách chủ yếu do FL (FedProx chỉ 36% gộp chung), DP chỉ
+     lấy thêm ~6 điểm %.
+  3. DP ε = 1 tốn ~14% so với FL không DP — nhỏ nhưng có thật (có ý nghĩa thống kê với 15 cặp); 2 seed trước chưa đủ để
+     thấy. Tiêu chí 2 tầng đạt sát ngưỡng (86%), dao động mạnh theo seed (75–105%) → khi báo cáo nên ghi cả khoảng.
+  4. Tự sửa: giai đoạn 31 ghi "chi phí DP không có ý nghĩa thống kê" — đó là do thiếu cặp, không phải chi phí bằng 0.
