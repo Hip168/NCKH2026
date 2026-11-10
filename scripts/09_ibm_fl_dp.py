@@ -33,12 +33,13 @@ import torch
 from sklearn.metrics import average_precision_score
 from sklearn.model_selection import StratifiedKFold, train_test_split
 
-from fraudfl.config import DATA_PROCESSED, IBM_MAX_DAY, RESULTS, SEED
+from fraudfl.config import DATA_PROCESSED, DATA_SPLITS, IBM_MAX_DAY, RESULTS, SEED
 from fraudfl.data.ibm_features import feature_columns
 from fraudfl.data.sampling import SMALL_GROUP, subsample_negatives
 from fraudfl.eval.metrics import evaluate
 from fraudfl.models import TabMLP
-from fraudfl.privacy import CLIP, DELTA, add_server_noise, noise_multiplier, privatize_update
+from fraudfl.khung import SEEDS as B0_SEEDS, gan_fold, vai_tro
+from fraudfl.privacy import CLIP, DELTA, add_server_noise, dpsgd_steps, noise_multiplier, privatize_update
 from fraudfl.runlog import archive_run
 from fraudfl.train import GraphData, fedavg, predict, train_full_batch
 
@@ -72,7 +73,22 @@ def main():
     ap.add_argument("--bounded-cap-q", type=float, default=None,
                     help="trọng số bị chặn (McMahan 2018): mức chặn ŵ = phân vị q của n_fit; w_k = min(n_k/ŵ, 1). "
                          "Áp cho setting fedavg_chan và dp")
+    ap.add_argument("--chia", choices=["cu", "b0"], default="cu",
+                    help="cu = tự chia như trước 11/11; b0 = chia cố định của khung (D25), dùng cho mọi số chính thức mới")
+    ap.add_argument("--client", choices=["ngan_hang", "nuoc"], default="ngan_hang",
+                    help="đơn vị client: ngân hàng gửi (như cũ) hoặc nước của ngân hàng gửi (data/splits/ibm_ngan_hang_quoc_gia.csv)")
+    ap.add_argument("--gop-nuoc-nho", type=int, default=10_000,
+                    help="--client nuoc: nước có ít giao dịch hơn mức này gộp thành một client '_khac'")
+    # DP mức bản ghi (DP-SGD trong từng client, setting dp_banghi; fedavg_sgd = cùng cách học nhưng không cắt, không nhiễu)
+    ap.add_argument("--dp-lr", type=float, default=0.5, help="DP-SGD: lr SGD (D13: SGD momentum, không dùng Adam)")
+    ap.add_argument("--dp-momentum", type=float, default=0.9)
+    ap.add_argument("--dp-clip", type=float, default=1.0, help="DP-SGD: ngưỡng cắt gradient từng giao dịch")
+    ap.add_argument("--dp-batch", type=int, default=1024, help="DP-SGD: cỡ lô kỳ vọng (lấy mẫu Poisson q = lô / n_fit)")
+    ap.add_argument("--dp-local-epochs", type=float, default=1.0, help="DP-SGD: số epoch mỗi vòng")
+    ap.add_argument("--dp-pos-weight", type=float, default=10.0, help="DP-SGD: hằng số công khai (D13)")
     args = ap.parse_args()
+    if args.chia == "b0" and args.seed not in B0_SEEDS:
+        raise SystemExit(f"--chia b0 chỉ có seed {B0_SEEDS}")
     out = RESULTS / ("ibm_fl_dp" + (f"_{args.tag}" if args.tag else ""))
     out.mkdir(parents=True, exist_ok=True)
     (out / "log.txt").write_text("", encoding="utf-8")
@@ -89,7 +105,17 @@ def main():
     y = f["LABEL"].to_numpy().astype(np.int64)
     amt, day = f["AMOUNT_USD"].to_numpy(), f["TX_TIME_DAYS"].to_numpy()
 
-    if args.min_tx is None:          # cách cũ (D19): NH >= min_cases ca + 1 client gộp
+    if args.client == "nuoc":        # client = nước của ngân hàng gửi; giữ mọi giao dịch, nước nhỏ gộp '_khac'
+        nuoc = pd.read_csv(DATA_SPLITS / "ibm_ngan_hang_quoc_gia.csv", dtype=str).set_index("BANK")["NUOC"]
+        nc = nuoc.reindex(f["FROM_BANK"].astype(str)).to_numpy()
+        if pd.isna(nc).any():
+            raise SystemExit(f"{int(pd.isna(nc).sum())} giao dịch không tra được nước")
+        size = pd.Series(nc).value_counts()
+        nho = set(size[size < args.gop_nuoc_nho].index)
+        client_name = np.where(pd.Series(nc).isin(nho), "_khac", nc)
+        names = list(pd.Series(client_name).value_counts().index)
+        desc = f"nước ({len(nho)} nước < {args.gop_nuoc_nho:,} giao dịch gộp '_khac')"
+    elif args.min_tx is None:          # cách cũ (D19): NH >= min_cases ca + 1 client gộp
         cases = f.groupby("FROM_BANK")["LABEL"].sum()
         big = sorted(cases[cases >= args.min_cases].index, key=lambda b: -cases[b])
         client_name = np.where(f["FROM_BANK"].isin(big), f["FROM_BANK"], SMALL_GROUP)
@@ -120,11 +146,20 @@ def main():
     # (StratifiedKFold / train_test_split cần đủ thành viên mỗi lớp)
     cc_all = np.bincount(cid, weights=y, minlength=K)
     strat = np.where(cc_all[cid] >= 10, cid * 2 + y, -(y + 1))
-    for k, (tr_all, te) in enumerate(skf.split(X, strat)):
+    if args.chia == "b0":             # vai trò từng dòng lấy từ file chia đã chốt (D25)
+        fold_b0 = gan_fold(f["TX_ID"].to_numpy(), args.seed)
+        chia = []
+        for k in range(5):
+            m = vai_tro(fold_b0, k)
+            chia.append((np.flatnonzero(m["fit"]), np.flatnonzero(m["val"]), np.flatnonzero(m["test"])))
+    else:
+        chia = []
+        for k, (tr_all, te) in enumerate(skf.split(X, strat)):
+            fit_all, val = train_test_split(tr_all, test_size=0.2, stratify=strat[tr_all], random_state=args.seed + k)
+            chia.append((fit_all, val, te))
+    for k, (fit_all, val, te) in enumerate(chia):
         if k not in args.folds:
             continue
-        fit_all, val = train_test_split(tr_all, test_size=0.2, stratify=strat[tr_all],
-                                        random_state=args.seed + k)
         s = subsample_negatives(fit_all, y[fit_all], cid[fit_all], args.rate, args.seed + k)
         fit = s["TX_ID"].to_numpy()
         log(f"\n=== Fold {k}: fit (lấy mẫu) {len(fit):,} | val {len(val):,} | test {len(te):,} ===")
@@ -260,6 +295,36 @@ def main():
                 history += [{"fold": k, "setting": f"dp_eps{eps:g}", **h} for h in hist]
                 report(f"dp ε={eps:g}", full_score(m, clients),
                        {"epsilon": eps, "z": z, "q": q, "noise_std": std, "seconds": round(time.time() - t0)})
+        if "fedavg_sgd" in args.settings or "dp_banghi" in args.settings:
+            # DP mức bản ghi (Abadi et al., 2016): mỗi client học bằng DP-SGD trên dữ liệu của mình; bảo vệ TỪNG giao dịch.
+            # Không cần trung bình đều (độ nhạy theo giao dịch, không theo client) → FedAvg theo số mẫu.
+            # ε của mỗi client tính riêng theo q = lô / n_fit và tổng số bước, coi như client tham gia MỌI vòng (cận trên).
+            eps_list = ([float("inf")] if "fedavg_sgd" in args.settings else []) + \
+                       (list(args.eps) if "dp_banghi" in args.settings else [])
+            for eps in eps_list:
+                t0 = time.time()
+                gen = torch.Generator().manual_seed(args.seed + k)
+                plan = {}
+                for i, c in enumerate(clients):
+                    q = min(1.0, args.dp_batch / max(c.n_fit, 1))
+                    steps = max(1, round(args.dp_local_epochs / q))
+                    z = 0.0 if math.isinf(eps) else noise_multiplier(eps, sample_rate=q, steps=steps * args.rounds)
+                    plan[id(c)] = (q, steps, z)
+
+                def local_train(model, c):
+                    q, steps, z = plan[id(c)]
+                    opt = torch.optim.SGD(model.parameters(), lr=args.dp_lr, momentum=args.dp_momentum)
+                    dpsgd_steps(model, c.x[c.fit], c.y[c.fit], opt, steps, q,
+                                clip=args.dp_clip if z > 0 else float("inf"), z=z, pos_weight=args.dp_pos_weight, gen=gen)
+
+                torch.manual_seed(args.seed)
+                m, hist = fedavg(TabMLP(len(fc)), clients, args.dp_lr, args.rounds, 1, local_train=local_train,
+                                 clients_per_round=m_round, sample_gen=torch.Generator().manual_seed(args.seed + 1000 + k))
+                ten = "fedavg_sgd" if math.isinf(eps) else f"dp_banghi ε={eps:g}"
+                history += [{"fold": k, "setting": ten, **h} for h in hist]
+                zs = np.array([p[2] for p in plan.values()])
+                report(ten, full_score(m, clients), {"epsilon": eps, "z_trung_vi": float(np.median(zs)),
+                                                     "z_lon_nhat": float(zs.max()), "seconds": round(time.time() - t0)})
         pd.DataFrame(history).to_csv(out / "history.csv", index=False, float_format="%.5f")
 
     df = pd.DataFrame(rows)

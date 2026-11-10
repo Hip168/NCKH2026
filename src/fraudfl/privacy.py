@@ -88,6 +88,21 @@ def dpsgd_steps(model: nn.Module, X: torch.Tensor, y: torch.Tensor, opt: torch.o
     per_sample_grad = vmap(grad(loss_one), in_dims=(None, 0, 0))
     expected_batch = sample_rate * len(X)   # cỡ lô trung bình, khoảng 1.024
     model.train()                   # chuyển sang chế độ học
+    if z == 0 and clip == float("inf"):
+        # KHÔNG DP (không cắt, không nhiễu): tổng gradient từng mẫu = gradient của tổng loss → tính một lần cho cả lô,
+        # nhanh hơn vmap nhiều lần, cùng kết quả (test_privacy.py so hai đường). Vẫn lấy mẫu Poisson như bản DP.
+        for _ in range(steps):
+            idx = torch.nonzero(torch.rand(len(X), generator=gen) < sample_rate).squeeze(1)
+            opt.zero_grad()
+            if len(idx):
+                out = model(X[idx]).squeeze(-1)
+                loss = nn.functional.binary_cross_entropy_with_logits(out, y[idx], pos_weight=pw, reduction="sum")
+                (loss / expected_batch).backward()
+            else:
+                for p in model.parameters():
+                    p.grad = torch.zeros_like(p)
+            opt.step()
+        return
     for _ in range(steps):          # VÒNG LẶP HỌC, khoảng 39 bước mỗi vòng
         # Bước 1, BỐC LÔ: mỗi giao dịch có xác suất sample_rate được chọn, nên cỡ lô dao động quanh 1.024
         idx = torch.nonzero(torch.rand(len(X), generator=gen) < sample_rate).squeeze(1)
