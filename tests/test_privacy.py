@@ -52,3 +52,16 @@ def test_dpsgd_duong_nhanh_khong_dp_bang_duong_vmap():
                     clip=clip, z=0.0, pos_weight=4.0, gen=torch.Generator().manual_seed(7))
     for pa, pb in zip(a.parameters(), b.parameters()):
         torch.testing.assert_close(pa, pb, atol=1e-5, rtol=1e-4)
+
+
+def test_dpsgd_ghost_clipping_bang_vmap():
+    # Có cắt (clip nhỏ) và có nhiễu: ghost clipping phải ra đúng như vmap với cùng bộ sinh số ngẫu nhiên
+    torch.manual_seed(2)
+    X, y = torch.randn(400, 6) * 3, (torch.rand(400) < 0.2).float()
+    a, b = TabMLP(6), TabMLP(6)
+    b.load_state_dict(a.state_dict())
+    for m, gh in ((a, True), (b, False)):
+        dpsgd_steps(m, X, y, torch.optim.SGD(m.parameters(), lr=0.3, momentum=0.9), steps=6, sample_rate=0.25,
+                    clip=0.05, z=0.8, pos_weight=2.0, gen=torch.Generator().manual_seed(11), ghost=gh)
+    for pa, pb in zip(a.parameters(), b.parameters()):
+        torch.testing.assert_close(pa, pb, atol=1e-5, rtol=1e-4)
