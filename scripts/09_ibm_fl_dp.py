@@ -83,6 +83,8 @@ def main():
     ap.add_argument("--dp-lr", type=float, default=0.5, help="DP-SGD: lr SGD (D13: SGD momentum, không dùng Adam)")
     ap.add_argument("--dp-momentum", type=float, default=0.9)
     ap.add_argument("--dp-clip", type=float, default=1.0, help="DP-SGD: ngưỡng cắt gradient từng giao dịch")
+    ap.add_argument("--dp-cat-khi-khong-nhieu", action="store_true",
+                    help="fedavg_sgd vẫn cắt gradient (không nhiễu) để tách ảnh hưởng của cắt và của nhiễu")
     ap.add_argument("--dp-batch", type=int, default=1024, help="DP-SGD: cỡ lô kỳ vọng (lấy mẫu Poisson q = lô / n_fit)")
     ap.add_argument("--dp-local-epochs", type=float, default=1.0, help="DP-SGD: số epoch mỗi vòng")
     ap.add_argument("--dp-pos-weight", type=float, default=10.0, help="DP-SGD: hằng số công khai (D13)")
@@ -315,7 +317,7 @@ def main():
                     q, steps, z = plan[id(c)]
                     opt = torch.optim.SGD(model.parameters(), lr=args.dp_lr, momentum=args.dp_momentum)
                     dpsgd_steps(model, c.x[c.fit], c.y[c.fit], opt, steps, q,
-                                clip=args.dp_clip if z > 0 else float("inf"), z=z, pos_weight=args.dp_pos_weight, gen=gen)
+                                clip=args.dp_clip if (z > 0 or args.dp_cat_khi_khong_nhieu) else float("inf"), z=z, pos_weight=args.dp_pos_weight, gen=gen)
 
                 torch.manual_seed(args.seed)
                 m, hist = fedavg(TabMLP(len(fc)), clients, args.dp_lr, args.rounds, 1, local_train=local_train,
