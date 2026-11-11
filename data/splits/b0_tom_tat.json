@@ -1,0 +1,162 @@
+{
+ "stem": "HI-Small",
+ "ngay": "0-9",
+ "so_dong": 5077237,
+ "so_ca": 4522,
+ "so_ngan_hang": 30470,
+ "seeds": [
+  42,
+  7,
+  2027
+ ],
+ "quy_tac": "fold k: test = k, val = (k+1) mod 5, fit = còn lại",
+ "theo_seed": {
+  "42": [
+   {
+    "fold": 0,
+    "fit_dong": 3046341,
+    "val_dong": 1015448,
+    "test_dong": 1015448,
+    "fit_ca": 2713,
+    "val_ca": 904,
+    "test_ca": 905
+   },
+   {
+    "fold": 1,
+    "fit_dong": 3046342,
+    "val_dong": 1015447,
+    "test_dong": 1015448,
+    "fit_ca": 2715,
+    "val_ca": 903,
+    "test_ca": 904
+   },
+   {
+    "fold": 2,
+    "fit_dong": 3046343,
+    "val_dong": 1015447,
+    "test_dong": 1015447,
+    "fit_ca": 2714,
+    "val_ca": 905,
+    "test_ca": 903
+   },
+   {
+    "fold": 3,
+    "fit_dong": 3046343,
+    "val_dong": 1015447,
+    "test_dong": 1015447,
+    "fit_ca": 2712,
+    "val_ca": 905,
+    "test_ca": 905
+   },
+   {
+    "fold": 4,
+    "fit_dong": 3046342,
+    "val_dong": 1015448,
+    "test_dong": 1015447,
+    "fit_ca": 2712,
+    "val_ca": 905,
+    "test_ca": 905
+   }
+  ],
+  "7": [
+   {
+    "fold": 0,
+    "fit_dong": 3046341,
+    "val_dong": 1015448,
+    "test_dong": 1015448,
+    "fit_ca": 2713,
+    "val_ca": 904,
+    "test_ca": 905
+   },
+   {
+    "fold": 1,
+    "fit_dong": 3046342,
+    "val_dong": 1015447,
+    "test_dong": 1015448,
+    "fit_ca": 2715,
+    "val_ca": 903,
+    "test_ca": 904
+   },
+   {
+    "fold": 2,
+    "fit_dong": 3046343,
+    "val_dong": 1015447,
+    "test_dong": 1015447,
+    "fit_ca": 2714,
+    "val_ca": 905,
+    "test_ca": 903
+   },
+   {
+    "fold": 3,
+    "fit_dong": 3046343,
+    "val_dong": 1015447,
+    "test_dong": 1015447,
+    "fit_ca": 2712,
+    "val_ca": 905,
+    "test_ca": 905
+   },
+   {
+    "fold": 4,
+    "fit_dong": 3046342,
+    "val_dong": 1015448,
+    "test_dong": 1015447,
+    "fit_ca": 2712,
+    "val_ca": 905,
+    "test_ca": 905
+   }
+  ],
+  "2027": [
+   {
+    "fold": 0,
+    "fit_dong": 3046341,
+    "val_dong": 1015448,
+    "test_dong": 1015448,
+    "fit_ca": 2713,
+    "val_ca": 904,
+    "test_ca": 905
+   },
+   {
+    "fold": 1,
+    "fit_dong": 3046342,
+    "val_dong": 1015447,
+    "test_dong": 1015448,
+    "fit_ca": 2715,
+    "val_ca": 903,
+    "test_ca": 904
+   },
+   {
+    "fold": 2,
+    "fit_dong": 3046343,
+    "val_dong": 1015447,
+    "test_dong": 1015447,
+    "fit_ca": 2714,
+    "val_ca": 905,
+    "test_ca": 903
+   },
+   {
+    "fold": 3,
+    "fit_dong": 3046343,
+    "val_dong": 1015447,
+    "test_dong": 1015447,
+    "fit_ca": 2712,
+    "val_ca": 905,
+    "test_ca": 905
+   },
+   {
+    "fold": 4,
+    "fit_dong": 3046342,
+    "val_dong": 1015448,
+    "test_dong": 1015447,
+    "fit_ca": 2712,
+    "val_ca": 905,
+    "test_ca": 905
+   }
+  ]
+ },
+ "ma_bam": {
+  "chia": "a6cbea2866f91f18e32545ee681c934503bda7a253190449b7db01757277e9bc",
+  "nuoc": "e40b117fe72daeef566a5e23dbf6bcf54e1504073556238c81d286e761814534"
+ },
+ "so_nuoc": 34,
+ "dong_khong_co_nuoc": 0
+}

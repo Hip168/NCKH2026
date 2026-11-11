@@ -25,6 +25,9 @@ Python 3.11. Đã kiểm tra trên Windows 11 với các phiên bản ghi trong 
 | 8. Biểu đồ cho bài báo | `python scripts/40_figures.py` | `results/figures/` |
 | Kiểm thử | `python -m pytest -q tests` | |
 
+**Hướng dẫn chạy mới nhất (cài đặt, IBM HI-Small, FL + DP, Cách 1, CI): [docs/HUONG_DAN_CHAY.md](docs/HUONG_DAN_CHAY.md).**
+Bảng "Chạy theo thứ tự" ở trên là phần synthetic cũ.
+
 **Mới nhất (06/11/2026): đọc [docs/BAO_CAO_TONG_KET_2026-11-06.md](docs/BAO_CAO_TONG_KET_2026-11-06.md) trước** (kết quả chính thức 3 seed, vấn đề còn tồn tại, việc tiếp theo). Bản 03/11: [docs/BAO_CAO_BAN_GIAO_2026-11-03.md](docs/BAO_CAO_BAN_GIAO_2026-11-03.md) (mục tiêu, kết quả IBM 802 ngân hàng, cách chạy, việc tiếp theo). Báo cáo cũ: [docs/BAO_CAO_TONG_HOP.md](docs/BAO_CAO_TONG_HOP.md).
 Chạy bằng Docker, không cần cài Python: [docs/huong_dan_docker.md](docs/huong_dan_docker.md).
 Bảng số đầy đủ: [docs/results.md](docs/results.md).
