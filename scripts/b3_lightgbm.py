@@ -251,7 +251,22 @@ def chay_mlp_fold(
     """Huấn luyện TabMLP với lô nhỏ và dừng sớm theo val PR-AUC (hỗ trợ GPU nếu có)."""
     import torch
     from torch import nn
-    from fraudfl.models import TabMLP
+
+    try:
+        from fraudfl.models import TabMLP
+    except ImportError:
+        class TabMLP(nn.Module):  # dự phòng khi chạy offline trên Kaggle không có torch_geometric
+            def __init__(self, in_dim: int):
+                super().__init__()
+                self.net = nn.Sequential(
+                    nn.Linear(in_dim, 64), nn.ReLU(),
+                    nn.Linear(64, 32), nn.ReLU(),
+                    nn.Linear(32, 16), nn.ReLU(),
+                    nn.Linear(16, 1),
+                )
+
+            def forward(self, x: torch.Tensor, edge_index=None) -> torch.Tensor:
+                return self.net(x).squeeze(-1)
 
     torch.manual_seed(seed)
     rng = np.random.default_rng(seed)
@@ -491,3 +506,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
