@@ -1,0 +1,2 @@
+fold,setting,pr_auc,macro_pr_auc,recall@1%,vdr@1%,epsilon,z_trung_vi,z_lon_nhat,seconds
+0,dp_banghi ε=1,0.01871,0.05270,0.21657,0.00012,1.00000,12.10938,12.81250,8

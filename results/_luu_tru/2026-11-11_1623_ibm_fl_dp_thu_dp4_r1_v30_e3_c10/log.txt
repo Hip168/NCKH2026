@@ -1,0 +1,14 @@
+HI-Small ngày 0–9: 5,077,237 gd, 4,522 ca; 22 đặc trưng (view bank); K = 27 client (nước (8 nước < 10,000 giao dịch gộp '_khac')); 27 client/vòng; r = 1.0; 30 vòng × 3 epoch; lr 0.005; batch None; pos_weight None; ε [8.0, 1.0]; seed 42; FedProx μ 0.0; server lr 1.0, momentum 0.0; C 1.0
+Ca rửa tiền: 4,522 trên 27 client; client không có ca nào: 0; nhiều nhất 2090; trung vị 78
+
+=== Fold 0: fit (lấy mẫu) 3,046,341 | val 1,015,448 | test 1,015,448 ===
+  fedavg_sgd     PR-AUC 0.0956 | TB theo client 0.1406 | Recall@1% 0.4740 | VDR@1% 0.0003
+  dp_banghi ε=8  PR-AUC 0.0290 | TB theo client 0.0553 | Recall@1% 0.3017 | VDR@1% 0.0002
+  dp_banghi ε=1  PR-AUC 0.0046 | TB theo client 0.0059 | Recall@1% 0.0575 | VDR@1% 0.0000
+
+=== Trung bình qua các fold ===
+               pr_auc  macro_pr_auc  recall@1%  vdr@1%
+setting                                               
+fedavg_sgd     0.0956        0.1406     0.4740  0.0003
+dp_banghi ε=8  0.0290        0.0553     0.3017  0.0002
+dp_banghi ε=1  0.0046        0.0059     0.0575  0.0000

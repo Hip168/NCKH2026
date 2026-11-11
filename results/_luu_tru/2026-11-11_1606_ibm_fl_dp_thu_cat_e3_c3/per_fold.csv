@@ -1,0 +1,2 @@
+fold,setting,pr_auc,macro_pr_auc,recall@1%,vdr@1%,epsilon,z_trung_vi,z_lon_nhat,seconds
+0,fedavg_sgd,0.08528,0.13497,0.45083,0.00296,inf,0.00000,0.00000,55

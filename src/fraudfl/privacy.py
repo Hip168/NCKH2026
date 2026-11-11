@@ -71,9 +71,49 @@ def add_server_noise(avg: dict, global_: dict, std: float, gen: torch.Generator)
             else avg[k] for k in global_}
 
 
+def _mlp_tuyen_tinh(model: nn.Module):
+    """model.net là chuỗi chỉ gồm Linear / ReLU và chứa mọi tham số của model → trả về (net, tên tham số), ngược lại None."""
+    net = getattr(model, "net", None)
+    if not isinstance(net, nn.Sequential) or not all(isinstance(m, (nn.Linear, nn.ReLU)) for m in net):
+        return None
+    lin = [(i, m) for i, m in enumerate(net) if isinstance(m, nn.Linear)]
+    if any(m.bias is None for _, m in lin) or \
+            sum(p.numel() for p in model.parameters()) != sum(p.numel() for _, m in lin for p in m.parameters()):
+        return None
+    ten = {id(p): n for n, p in model.named_parameters()}
+    return net, [(m, ten[id(m.weight)], ten[id(m.bias)]) for _, m in lin]
+
+
+def _tong_gradient_da_cat_ghost(net, lin, xb, yb, clip, pw) -> dict:
+    """Ghost clipping cho MLP (Goodfellow 2015; Li et al. 2022): ở lớp tuyến tính, gradient của mẫu i là g_i·a_iᵀ (+ g_i cho
+    bias) nên ‖·‖² = ‖g_i‖²(‖a_i‖² + 1). Tính chuẩn từng mẫu và tổng đã cắt Σ c_i g_i a_iᵀ bằng vài phép nhân ma trận,
+    không cần dựng gradient từng mẫu. Kết quả bằng đúng đường vmap (test_privacy.py)."""
+    h, vao, ra = xb, [], []
+    for m in net:
+        if isinstance(m, nn.Linear):
+            vao.append(h.detach())
+            h = m(h)
+            ra.append(h)
+        else:
+            h = m(h)
+    loss = nn.functional.binary_cross_entropy_with_logits(h.squeeze(-1), yb, pos_weight=pw, reduction="sum")
+    G = torch.autograd.grad(loss, ra)            # tổng loss → hàng i chỉ phụ thuộc mẫu i
+    sq = sum(g.pow(2).sum(1) * (a.pow(2).sum(1) + 1.0) for g, a in zip(G, vao))
+    c = (clip / (sq.sqrt() + 1e-12)).clamp(max=1.0)
+    out = {}
+    for (m, tw, tb), g, a in zip(lin, G, vao):
+        gc = g * c[:, None]
+        out[tw], out[tb] = gc.T @ a, gc.sum(0)
+    return out
+
+
 def dpsgd_steps(model: nn.Module, X: torch.Tensor, y: torch.Tensor, opt: torch.optim.Optimizer, steps: int,
-                sample_rate: float, clip: float, z: float, pos_weight: float, gen: torch.Generator):
-    """Record-level DP-SGD: lấy mẫu Poisson, gradient từng mẫu (torch.func), cắt, cộng nhiễu, chia cho batch kỳ vọng."""
+                sample_rate: float, clip: float, z: float, pos_weight: float, gen: torch.Generator,
+                ghost: bool | None = None):
+    """Record-level DP-SGD: lấy mẫu Poisson, gradient từng mẫu (torch.func), cắt, cộng nhiễu, chia cho batch kỳ vọng.
+
+    `ghost`: None = tự dùng ghost clipping nếu model là MLP chỉ gồm Linear/ReLU (nhanh hơn nhiều, cùng kết quả);
+    False = luôn dùng vmap."""
     # X: 16 đặc trưng của các giao dịch phần fit. y: đáp án, 1 là gian lận, 0 là thường.
     names = [n for n, _ in model.named_parameters()]   # tên các nhóm số trong mô hình
     pw = torch.tensor(pos_weight)   # mức phạt khi chấm sai ca gian lận, mặc định 10
@@ -88,11 +128,32 @@ def dpsgd_steps(model: nn.Module, X: torch.Tensor, y: torch.Tensor, opt: torch.o
     per_sample_grad = vmap(grad(loss_one), in_dims=(None, 0, 0))
     expected_batch = sample_rate * len(X)   # cỡ lô trung bình, khoảng 1.024
     model.train()                   # chuyển sang chế độ học
+    if z == 0 and clip == float("inf"):
+        # KHÔNG DP (không cắt, không nhiễu): tổng gradient từng mẫu = gradient của tổng loss → tính một lần cho cả lô,
+        # nhanh hơn vmap nhiều lần, cùng kết quả (test_privacy.py so hai đường). Vẫn lấy mẫu Poisson như bản DP.
+        for _ in range(steps):
+            idx = torch.nonzero(torch.rand(len(X), generator=gen) < sample_rate).squeeze(1)
+            opt.zero_grad()
+            if len(idx):
+                out = model(X[idx]).squeeze(-1)
+                loss = nn.functional.binary_cross_entropy_with_logits(out, y[idx], pos_weight=pw, reduction="sum")
+                (loss / expected_batch).backward()
+            else:
+                for p in model.parameters():
+                    p.grad = torch.zeros_like(p)
+            opt.step()
+        return
+    gh = _mlp_tuyen_tinh(model) if ghost is not False else None
+    if ghost and gh is None:
+        raise ValueError("ghost clipping chỉ dùng cho MLP gồm Linear/ReLU")
     for _ in range(steps):          # VÒNG LẶP HỌC, khoảng 39 bước mỗi vòng
         # Bước 1, BỐC LÔ: mỗi giao dịch có xác suất sample_rate được chọn, nên cỡ lô dao động quanh 1.024
         idx = torch.nonzero(torch.rand(len(X), generator=gen) < sample_rate).squeeze(1)
         params = {n: p.detach() for n, p in model.named_parameters()}   # các con số hiện tại
-        if len(idx):                # lô có ít nhất một giao dịch
+        if len(idx) and gh is not None:   # ghost clipping: cùng kết quả bước 2–4, không dựng gradient từng mẫu
+            with torch.enable_grad():
+                summed = _tong_gradient_da_cat_ghost(gh[0], gh[1], X[idx], y[idx], clip, pw)
+        elif len(idx):              # lô có ít nhất một giao dịch
             # Bước 2, CHẤM VÀ SO ĐÁP ÁN: tính hướng sửa của từng giao dịch
             g = per_sample_grad(params, X[idx], y[idx])
             # Bước 3, CẮT: đo độ lớn hướng sửa của từng giao dịch, cái nào vượt clip thì thu nhỏ về clip.
