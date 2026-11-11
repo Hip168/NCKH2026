@@ -1,0 +1,9 @@
+{
+  "thoi_diem": "2026-11-11T02:36:51",
+  "script": "09_ibm_fl_dp.py",
+  "lenh": "scripts/09_ibm_fl_dp.py --chia b0 --client nuoc --rate 0.1 --rounds 30 --pos-weight 1 --folds 0 --settings fedavg_sgd dp_banghi --eps 8 1 --tag thu_nuoc_dpbanghi_f0",
+  "commit": "dff2247",
+  "co_thay_doi_chua_commit": true,
+  "thu_muc_luu_tru": "results/_luu_tru/2026-11-11_0236_ibm_fl_dp_thu_nuoc_dpbanghi_f0",
+  "ghi_chu": "FL+DP mức client IBM HI-Small, K=27, C=1.0, chặn q=None, folds [0], ε [8.0, 1.0], 30 vòng"
+}

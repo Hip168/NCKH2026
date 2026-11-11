@@ -1,0 +1,82 @@
+fold,setting,client,n_test,ca_xau_test,pr_auc
+0,fedavg_sgd,USA,459871,429,0.02888
+0,fedavg_sgd,Germany,63997,57,0.04829
+0,fedavg_sgd,China,52385,44,0.03138
+0,fedavg_sgd,Switzerland,44315,27,0.06119
+0,fedavg_sgd,India,35388,25,0.03840
+0,fedavg_sgd,UK,34084,27,0.04191
+0,fedavg_sgd,France,32495,30,0.02968
+0,fedavg_sgd,Japan,32605,23,0.03444
+0,fedavg_sgd,Israel,32117,22,0.02931
+0,fedavg_sgd,Italy,26585,18,0.04303
+0,fedavg_sgd,Australia,23770,19,0.06907
+0,fedavg_sgd,Canada,23648,18,0.03323
+0,fedavg_sgd,Spain,22353,25,0.04848
+0,fedavg_sgd,Crypto,20605,9,0.00220
+0,fedavg_sgd,Russia,20697,11,0.04799
+0,fedavg_sgd,Mexico,14495,4,0.01041
+0,fedavg_sgd,Saudi Arabia,12374,48,0.16355
+0,fedavg_sgd,Brazil,9888,9,0.02934
+0,fedavg_sgd,Netherlands,9455,7,0.06661
+0,fedavg_sgd,Belgium,8145,11,0.10110
+0,fedavg_sgd,Austria,7715,7,0.09604
+0,fedavg_sgd,Finland,7093,16,0.09199
+0,fedavg_sgd,Portugal,6271,5,0.03318
+0,fedavg_sgd,Greece,5718,7,0.05454
+0,fedavg_sgd,Ireland,3527,2,0.01861
+0,fedavg_sgd,_khac,3150,3,0.05003
+0,fedavg_sgd,Slovakia,2702,2,0.02997
+0,dp_banghi ε=8,USA,459871,429,0.03926
+0,dp_banghi ε=8,Germany,63997,57,0.03734
+0,dp_banghi ε=8,China,52385,44,0.06224
+0,dp_banghi ε=8,Switzerland,44315,27,0.08042
+0,dp_banghi ε=8,India,35388,25,0.11814
+0,dp_banghi ε=8,UK,34084,27,0.04604
+0,dp_banghi ε=8,France,32495,30,0.05542
+0,dp_banghi ε=8,Japan,32605,23,0.04352
+0,dp_banghi ε=8,Israel,32117,22,0.02436
+0,dp_banghi ε=8,Italy,26585,18,0.17039
+0,dp_banghi ε=8,Australia,23770,19,0.12099
+0,dp_banghi ε=8,Canada,23648,18,0.07281
+0,dp_banghi ε=8,Spain,22353,25,0.02864
+0,dp_banghi ε=8,Crypto,20605,9,0.00041
+0,dp_banghi ε=8,Russia,20697,11,0.08145
+0,dp_banghi ε=8,Mexico,14495,4,0.00817
+0,dp_banghi ε=8,Saudi Arabia,12374,48,0.10574
+0,dp_banghi ε=8,Brazil,9888,9,0.08595
+0,dp_banghi ε=8,Netherlands,9455,7,0.19502
+0,dp_banghi ε=8,Belgium,8145,11,0.25289
+0,dp_banghi ε=8,Austria,7715,7,0.08472
+0,dp_banghi ε=8,Finland,7093,16,0.08556
+0,dp_banghi ε=8,Portugal,6271,5,0.02724
+0,dp_banghi ε=8,Greece,5718,7,0.19367
+0,dp_banghi ε=8,Ireland,3527,2,0.07760
+0,dp_banghi ε=8,_khac,3150,3,0.39826
+0,dp_banghi ε=8,Slovakia,2702,2,0.01709
+0,dp_banghi ε=1,USA,459871,429,0.02190
+0,dp_banghi ε=1,Germany,63997,57,0.03189
+0,dp_banghi ε=1,China,52385,44,0.03636
+0,dp_banghi ε=1,Switzerland,44315,27,0.02991
+0,dp_banghi ε=1,India,35388,25,0.07705
+0,dp_banghi ε=1,UK,34084,27,0.06588
+0,dp_banghi ε=1,France,32495,30,0.02370
+0,dp_banghi ε=1,Japan,32605,23,0.02980
+0,dp_banghi ε=1,Israel,32117,22,0.03088
+0,dp_banghi ε=1,Italy,26585,18,0.04152
+0,dp_banghi ε=1,Australia,23770,19,0.07085
+0,dp_banghi ε=1,Canada,23648,18,0.04663
+0,dp_banghi ε=1,Spain,22353,25,0.06212
+0,dp_banghi ε=1,Crypto,20605,9,0.00047
+0,dp_banghi ε=1,Russia,20697,11,0.06473
+0,dp_banghi ε=1,Mexico,14495,4,0.00525
+0,dp_banghi ε=1,Saudi Arabia,12374,48,0.13135
+0,dp_banghi ε=1,Brazil,9888,9,0.03308
+0,dp_banghi ε=1,Netherlands,9455,7,0.11897
+0,dp_banghi ε=1,Belgium,8145,11,0.09501
+0,dp_banghi ε=1,Austria,7715,7,0.03836
+0,dp_banghi ε=1,Finland,7093,16,0.08252
+0,dp_banghi ε=1,Portugal,6271,5,0.01190
+0,dp_banghi ε=1,Greece,5718,7,0.05281
+0,dp_banghi ε=1,Ireland,3527,2,0.51149
+0,dp_banghi ε=1,_khac,3150,3,0.17045
+0,dp_banghi ε=1,Slovakia,2702,2,0.01796
