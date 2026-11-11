@@ -38,7 +38,7 @@ Ra `data/processed/HI-Small_features_bank.parquet` (280 MB). Mọi bước dư�
 ## 3. Các thí nghiệm chính
 
 **Từ 11/11 làm theo khung chốt từng bước: `docs/KHUNG_CHOT_BUOC.md`.** Đầu mỗi bước chạy
-`python scripts/b0_chia_co_dinh.py --kiem-tra` (phải ra 3 dòng `KHỚP`). Chạy trên Kaggle: `notebooks/kaggle_mau.ipynb`.
+`python scripts/b0_chia_co_dinh.py --kiem-tra` (phải ra 3 dòng `KHỚP`). Chạy trên Kaggle: `notebooks/kaggle_mau.ipynb`, hướng dẫn từng bước ở `docs/HUONG_DAN_KAGGLE.md`.
 Các lệnh dưới đây là cách chạy cũ (mỗi script tự chia fold), giữ để tham khảo.
 
 Thử nhanh bất kỳ lệnh nào: đổi `--folds 0 1 2 3 4` thành `--folds 0` (nhanh gấp 5).
