@@ -48,6 +48,28 @@ def test_chay_lightgbm_fold_chon_spw_tren_val():
     assert info["val_pr_auc"] > 0.5
 
 
+def test_chay_lightgbm_fold_imbalanced_not_stuck_at_iter1():
+    rng = np.random.default_rng(7)
+    n_fit, n_val, n_test = 15000, 5000, 2000
+    X_fit = rng.normal(size=(n_fit, 8)).astype(np.float32)
+    logit_fit = -6.2 + 0.9 * X_fit[:, 0] - 0.8 * X_fit[:, 1] + 0.5 * (X_fit[:, 2] > 1.0)
+    y_fit = (rng.random(n_fit) < 1.0 / (1.0 + np.exp(-logit_fit))).astype(np.int64)
+
+    X_val = rng.normal(size=(n_val, 8)).astype(np.float32)
+    logit_val = -6.2 + 0.9 * X_val[:, 0] - 0.8 * X_val[:, 1] + 0.5 * (X_val[:, 2] > 1.0)
+    y_val = (rng.random(n_val) < 1.0 / (1.0 + np.exp(-logit_val))).astype(np.int64)
+    X_test = rng.normal(size=(n_test, 8)).astype(np.float32)
+
+    assert y_fit.sum() >= 10 and y_val.sum() >= 3
+    _, test_sc, info = b3.chay_lightgbm_fold(
+        X_fit, y_fit, None, X_val, y_val, X_test,
+        spw_grid=[1.0, 10.0], seed=42, n_estimators=200, lr=0.05, num_leaves=31, early_stopping=30, n_jobs=1,
+        log=lambda m: None,
+    )
+    assert info["best_iter"] > 1
+    assert np.isfinite(test_sc).all()
+
+
 def test_viet_bao_cao(tmp_path):
     df = pd.DataFrame([
         {"mo_hinh": "lgbm", "dac_trung": "co_ban", "seed": 42, "fold": 0, "pr_auc": 0.25, "recall@1%": 0.4, "vdr@1%": 0.5, "macro_pr_auc": 0.2, "thoi_gian": 12.0},
@@ -56,3 +78,4 @@ def test_viet_bao_cao(tmp_path):
     b3.viet_bao_cao(df, tmp_path)
     md = (tmp_path / "BAO_CAO.md").read_text(encoding="utf-8")
     assert "do_thi_fl" in md and "0.3500" in md and "FL-safe" in md
+

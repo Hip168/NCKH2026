@@ -25,6 +25,7 @@ import gc
 import json
 import sys
 import time
+import warnings
 from pathlib import Path
 
 import _bootstrap  # noqa: F401
@@ -48,7 +49,7 @@ from fraudfl.khung import FILE_CHIA, SEEDS as B0_SEEDS, gan_fold, vai_tro
 from fraudfl.runlog import archive_run
 
 BO_DAC_TRUNG = ("co_ban", "do_thi_fl", "do_thi_bank", "do_thi_nuoc", "do_thi_global")
-DEFAULT_SPW_GRID = [1.0, 5.0, 10.0, 20.0, 50.0]
+DEFAULT_SPW_GRID = [1.0, 3.0, 5.0, 10.0, 20.0]
 
 
 def ram_dinh_mb() -> float:
@@ -169,29 +170,36 @@ def chay_lightgbm_fold(
     best_iter = 0
     best_val_score = None
 
+    min_child_samples = min(100, max(20, len(y_fit) // 50))
     for spw in spw_grid:
         model = lgb.LGBMClassifier(
             n_estimators=n_estimators,
             learning_rate=lr,
             num_leaves=num_leaves,
-            min_child_samples=50,
+            min_child_samples=min_child_samples,
+            min_child_weight=5.0,
+            reg_lambda=10.0,
+            max_delta_step=1.0,
             subsample=0.8,
             subsample_freq=1,
             colsample_bytree=0.8,
             scale_pos_weight=float(spw),
+            metric="average_precision",
             random_state=seed,
             n_jobs=n_jobs,
             verbose=-1,
         )
-        model.fit(
-            X_fit,
-            y_fit,
-            sample_weight=w_fit,
-            eval_set=[(X_val, y_val)],
-            eval_metric="average_precision",
-            callbacks=[lgb.early_stopping(stopping_rounds=early_stopping, verbose=False)],
-        )
-        val_pred = model.predict_proba(X_val)[:, 1]
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", message="X does not have valid feature names", category=UserWarning)
+            model.fit(
+                X_fit,
+                y_fit,
+                sample_weight=w_fit,
+                eval_set=[(X_val, y_val)],
+                eval_metric="average_precision",
+                callbacks=[lgb.early_stopping(stopping_rounds=early_stopping, first_metric_only=True, verbose=False)],
+            )
+            val_pred = model.predict_proba(X_val)[:, 1]
         val_ap = float(average_precision_score(y_val, val_pred))
         b_iter = int(model.best_iteration_ or n_estimators)
         log(f"    [LGBM spw={spw:g}] val PR-AUC={val_ap:.4f} (best_iter={b_iter})")
@@ -202,7 +210,9 @@ def chay_lightgbm_fold(
             best_iter = b_iter
             best_val_score = val_pred
 
-    test_score = best_model.predict_proba(X_test)[:, 1]
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="X does not have valid feature names", category=UserWarning)
+        test_score = best_model.predict_proba(X_test)[:, 1]
     return best_val_score, test_score, {"scale_pos_weight": best_spw, "best_iter": best_iter, "val_pr_auc": best_val_ap}
 
 
@@ -379,7 +389,7 @@ def main():
     ap.add_argument("--spw-grid", type=float, nargs="+", default=DEFAULT_SPW_GRID, help="Danh sách scale_pos_weight dò trên val cho LightGBM")
     ap.add_argument("--lgbm-estimators", type=int, default=1500)
     ap.add_argument("--lgbm-lr", type=float, default=0.05)
-    ap.add_argument("--lgbm-leaves", type=int, default=63)
+    ap.add_argument("--lgbm-leaves", type=int, default=31)
     ap.add_argument("--lgbm-patience", type=int, default=50)
     ap.add_argument("--mlp-epochs", type=int, default=120)
     ap.add_argument("--mlp-patience", type=int, default=15)
