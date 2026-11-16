@@ -1,5 +1,8 @@
 # Giao việc Em 1 — B1 (giữ bao nhiêu dữ liệu) và B2 (chia client theo nước)
 
+> **Cập nhật 11/11: script cho cả 3 việc đã viết sẵn. Làm theo `HUONG_DAN_B1_B2.md`** (lệnh chạy, cách kiểm tra số,
+> câu hỏi báo cáo). Phần dưới giữ lại để biết mục đích từng việc.
+
 Người duyệt: Đạo. Nhánh làm việc: `em1/b1-du-lieu`. Hỏi gì cứ hỏi Đạo; dùng trợ lý AI thoải mái, nhưng **mọi con số
 trong báo cáo phải do script chạy ra**, không chép số AI tự nói.
 
@@ -13,7 +16,7 @@ Máy Windows: dùng PowerShell; hoặc chạy hết trên Kaggle bằng `noteboo
 
 ## Việc 1 — Thống kê phân bổ dữ liệu (không cần mô hình)
 
-Viết `scripts/b1_thong_ke.py`, đọc `data/processed/HI-Small_features_bank.parquet` (lọc `TX_TIME_DAYS <= 9`) và
+Script `scripts/b1_thong_ke.py` (đã có) đọc `data/processed/HI-Small_features_bank.parquet` (lọc `TX_TIME_DAYS <= 9`) và
 `data/splits/ibm_ngan_hang_quoc_gia.csv`. Ra `results/b1_thong_ke/`:
 
 | Bảng | Cột |
@@ -40,9 +43,8 @@ Mục đích: **giảm dữ liệu để máy chạy nhẹ hơn** (~1 triệu b�
       --max-epochs 300 --patience 30 --so-mau 1000000 --bu-trong-so --tag b1_n1000000_s42
   ```
 
-- ⚠️ Script 12 **đang tự chia fold** (cách cũ). Việc đầu tiên: sửa script 12 thêm tùy chọn `--chia b0` để lấy fit/val/test
-  từ `fraudfl.khung.gan_fold(tx_id, seed)` + `vai_tro(fold, k)`. Viết test cho phần sửa. Đạo duyệt phần này trước khi
-  chạy số chính thức.
+- Script 12 đã có `--chia b0` (lấy fit/val/test từ `fraudfl.khung`, có test). `scripts/b1_duong_hoc.py` gọi script 12
+  cho từng cỡ và seed rồi tổng hợp.
 - Chạy chính thức: 3 seed (42, 7, 2027) × 5 fold cho mỗi cỡ.
 
 Tiêu chí chốt (viết sẵn): chọn **N nhỏ nhất đạt ≥ 95%** PR-AUC của "đủ". Nếu 1 triệu chưa đạt 95% thì vẫn có thể chọn

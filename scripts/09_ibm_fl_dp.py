@@ -35,6 +35,7 @@ from sklearn.model_selection import StratifiedKFold, train_test_split
 
 from fraudfl.config import DATA_PROCESSED, DATA_SPLITS, IBM_MAX_DAY, RESULTS, SEED
 from fraudfl.data.ibm_features import feature_columns
+from fraudfl.data.quoc_gia import TEN_GOP, client_theo_nuoc
 from fraudfl.data.sampling import SMALL_GROUP, subsample_negatives
 from fraudfl.eval.metrics import evaluate
 from fraudfl.models import TabMLP
@@ -109,13 +110,11 @@ def main():
 
     if args.client == "nuoc":        # client = nước của ngân hàng gửi; giữ mọi giao dịch, nước nhỏ gộp '_khac'
         nuoc = pd.read_csv(DATA_SPLITS / "ibm_ngan_hang_quoc_gia.csv", dtype=str).set_index("BANK")["NUOC"]
-        nc = nuoc.reindex(f["FROM_BANK"].astype(str)).to_numpy()
-        if pd.isna(nc).any():
-            raise SystemExit(f"{int(pd.isna(nc).sum())} giao dịch không tra được nước")
-        size = pd.Series(nc).value_counts()
-        nho = set(size[size < args.gop_nuoc_nho].index)
-        client_name = np.where(pd.Series(nc).isin(nho), "_khac", nc)
-        names = list(pd.Series(client_name).value_counts().index)
+        nc = nuoc.reindex(f["FROM_BANK"].astype(str)).reset_index(drop=True)
+        bang = client_theo_nuoc(nc, args.gop_nuoc_nho)          # cùng bảng với scripts/b2_client_theo_nuoc.py
+        client_name = nc.map(bang.set_index("NUOC")["CLIENT"]).to_numpy()
+        names = list(bang.drop_duplicates("CLIENT").sort_values("MA_CLIENT")["CLIENT"])
+        nho = set(bang.loc[bang["CLIENT"] == TEN_GOP, "NUOC"])
         desc = f"nước ({len(nho)} nước < {args.gop_nuoc_nho:,} giao dịch gộp '_khac')"
     elif args.min_tx is None:          # cách cũ (D19): NH >= min_cases ca + 1 client gộp
         cases = f.groupby("FROM_BANK")["LABEL"].sum()

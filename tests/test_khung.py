@@ -61,3 +61,45 @@ def test_trung_tx_id_bao_loi():
 def test_nuoc_tu_ten():
     ten = pd.Series(["Germany Bank #123", "Saudi Arabia Bank #7", "National Bank of Cleveland", "Crytpo Bank #9"])
     assert list(nuoc_tu_ten(ten)) == ["Germany", "Saudi Arabia", "USA", "Crypto"]
+
+
+def test_client_theo_nuoc_gop_nuoc_nho_va_ma_on_dinh():
+    from fraudfl.data.quoc_gia import TEN_GOP, client_theo_nuoc
+
+    nuoc = pd.Series(["A"] * 50 + ["B"] * 30 + ["C"] * 5 + ["D"] * 3)
+    b = client_theo_nuoc(nuoc, gop_nho=10)
+    m = b.set_index("NUOC")
+    assert m.loc["A", "MA_CLIENT"] == 0 and m.loc["B", "MA_CLIENT"] == 1     # nhiều giao dịch nhất mã 0
+    assert m.loc["C", "CLIENT"] == m.loc["D", "CLIENT"] == TEN_GOP           # nước nhỏ gộp chung
+    assert m.loc["C", "MA_CLIENT"] == b["MA_CLIENT"].max()                    # client gộp luôn ở cuối
+    pd.testing.assert_frame_equal(b, client_theo_nuoc(nuoc.sample(frac=1, random_state=1), gop_nho=10))
+    with pytest.raises(ValueError):
+        client_theo_nuoc(pd.Series(["A", None]))
+
+
+def test_script12_chia_b0_dung_vai_tro_cua_khung():
+    import importlib.util
+    import sys
+    from argparse import Namespace
+    from pathlib import Path
+
+    from fraudfl.khung import FILE_CHIA, gan_fold
+
+    scripts = Path(__file__).resolve().parents[1] / "scripts"
+    sys.path.insert(0, str(scripts))
+    spec = importlib.util.spec_from_file_location("s12", scripts / "12_ibm_cach1_lo_nho.py")
+    s12 = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(s12)
+
+    tx = pd.read_parquet(FILE_CHIA, columns=["TX_ID"])["TX_ID"].to_numpy()[::997]   # ~5 nghìn giao dịch thật
+    tx = np.random.default_rng(0).permutation(tx)                                     # thứ tự dòng bất kỳ
+    y = np.zeros(len(tx), dtype=np.int64)
+    cid = np.zeros(len(tx), dtype=np.int64)
+    fold = gan_fold(tx, 7)
+    ra = list(s12.chia_fold(Namespace(chia="b0", seed=7), tx, y, cid, 1))
+    assert len(ra) == N_FOLD
+    for k, (fit, val, te) in enumerate(ra):
+        vt = vai_tro(fold, k)
+        assert np.array_equal(fit, np.flatnonzero(vt["fit"]))
+        assert np.array_equal(val, np.flatnonzero(vt["val"]))
+        assert np.array_equal(te, np.flatnonzero(vt["test"]))

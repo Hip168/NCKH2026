@@ -29,7 +29,6 @@ Ra:     results/ibm_cach1[_<tag>]/per_fold.csv, history.csv, log.txt (+ do_khoi.
 import argparse
 import copy
 import json
-import resource
 import subprocess
 import sys
 import time
@@ -47,6 +46,7 @@ from fraudfl.config import DATA_PROCESSED, IBM_MAX_DAY, RESULTS, SEED
 from fraudfl.data.ibm_features import feature_columns
 from fraudfl.data.sampling import subsample_negatives
 from fraudfl.eval.metrics import evaluate
+from fraudfl.khung import N_FOLD, gan_fold, vai_tro
 from fraudfl.models import TabMLP
 from fraudfl.runlog import archive_run
 
@@ -55,17 +55,47 @@ MOC = RESULTS / "ibm_fl_dp_CHINH_5fold_moc" / "per_fold.csv"     # kết quả g
 
 
 def ram_dinh_mb() -> float:
-    """RAM đỉnh của tiến trình này từ lúc chạy (macOS trả byte, Linux trả KB)."""
+    """RAM đỉnh của tiến trình này từ lúc chạy (macOS trả byte, Linux trả KB; Windows không có resource → psutil)."""
+    try:
+        import resource
+    except ImportError:                     # Windows
+        try:
+            import psutil
+            mi = psutil.Process().memory_info()
+            return getattr(mi, "peak_wset", mi.rss) / 2**20
+        except ImportError:
+            return float("nan")
     r = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
     return r / 2**20 if sys.platform == "darwin" else r / 2**10
 
 
 def thu_muc_fold(args, k: int):
     mau = f"_n{args.so_mau}" if args.so_mau else f"_r{args.rate:g}"
-    return CACHE / f"{args.stem}_mintx{args.min_tx}{mau}_seed{args.seed}" / f"fold{k}"
+    chia = "_b0" if args.chia == "b0" else ""
+    return CACHE / f"{args.stem}_mintx{args.min_tx}{mau}{chia}_seed{args.seed}" / f"fold{k}"
 
 
 # ---------------------------------------------------------------- bước 1: chuẩn bị (giống hệt cách chia của 09)
+def chia_fold(args, tx_id, y, cid, K):
+    """Lần lượt (fit, val, test) là chỉ số dòng của 5 fold.
+
+    --chia b0: cách chia cố định của khung (D25): test = fold k, val = fold k+1, fit = 3 fold còn lại (60/20/20).
+    --chia cu: cách cũ (mỗi script tự chia): 5 fold phân tầng, val = 20% phần train (64/16/20).
+    """
+    if args.chia == "b0":
+        fold = gan_fold(tx_id, args.seed)
+        for k in range(N_FOLD):
+            vt = vai_tro(fold, k)
+            yield np.flatnonzero(vt["fit"]), np.flatnonzero(vt["val"]), np.flatnonzero(vt["test"])
+        return
+    skf = StratifiedKFold(5, shuffle=True, random_state=args.seed)
+    cc_all = np.bincount(cid, weights=y, minlength=K)
+    strat = np.where(cc_all[cid] >= 10, cid * 2 + y, -(y + 1))
+    for k, (tr_all, te) in enumerate(skf.split(tx_id, strat)):
+        fit_all, val = train_test_split(tr_all, test_size=0.2, stratify=strat[tr_all], random_state=args.seed + k)
+        yield fit_all, val, te
+
+
 def chuan_bi(args, folds: list[int], log):
     can = [k for k in folds if not (thu_muc_fold(args, k) / "xong.json").exists()]
     if not can:
@@ -83,17 +113,14 @@ def chuan_bi(args, folds: list[int], log):
     amt, day = f["AMOUNT_USD"].to_numpy(), f["TX_TIME_DAYS"].to_numpy()
     cid = pd.Series(range(len(names)), index=names)[f["FROM_BANK"].to_numpy()].to_numpy()
     K = len(names)
+    tx_id = f["TX_ID"].to_numpy()
     del f
     log(f"Chuẩn bị: {len(y):,} giao dịch, {int(y.sum()):,} ca, {K} ngân hàng, {len(fc)} đặc trưng "
         f"({time.time() - t0:.0f} giây đọc)")
 
-    skf = StratifiedKFold(5, shuffle=True, random_state=args.seed)
-    cc_all = np.bincount(cid, weights=y, minlength=K)
-    strat = np.where(cc_all[cid] >= 10, cid * 2 + y, -(y + 1))
-    for k, (tr_all, te) in enumerate(skf.split(X, strat)):
+    for k, (fit_all, val, te) in enumerate(chia_fold(args, tx_id, y, cid, K)):
         if k not in can:
             continue
-        fit_all, val = train_test_split(tr_all, test_size=0.2, stratify=strat[tr_all], random_state=args.seed + k)
         w_fit = None
         rate = args.rate
         if args.so_mau:                            # giữ mọi ca rửa tiền, bốc ca bình thường cho đủ tổng --so-mau
@@ -207,7 +234,8 @@ def hoc_mot_fold(args, k: int, log, max_luot: int | None = None) -> tuple[dict, 
     r = evaluate(yt, st, kem["amt"], kem["day"])
     nhom = pd.Series(np.arange(len(yt))).groupby(kem["cid"]).agg(list)      # chỉ số test theo ngân hàng
     pc = [float(average_precision_score(yt[ix], st[ix])) for ix in map(np.array, nhom) if yt[ix].sum() > 0]
-    row = {"fold": k, "setting": "cach1", "rate": info.get("rate_thuc", args.rate), "so_mau": args.so_mau,
+    row = {"fold": k, "setting": "cach1", "rate": info.get("rate_thuc", args.rate), "so_mau": args.so_mau, "chia": args.chia,
+           "seed": args.seed,
            "bu_trong_so": wf is not None, "thu_tu": args.thu_tu, "khoi": args.khoi,
            "batch": args.batch_size, "pos_weight": args.pos_weight, "lr": args.lr,
            "pr_auc": r["pr_auc"], "macro_pr_auc": float(np.mean(pc)), "recall@1%": r["recall@1%"],
@@ -232,7 +260,7 @@ def quet_khoi(args, out, log):
     """Mỗi cỡ khối chạy 1 lượt trong tiến trình riêng (RAM đỉnh không bị lẫn với bước chuẩn bị)."""
     rows = []
     for kh in args.quet_khoi:
-        cmd = [sys.executable, __file__, "--folds", str(args.folds[0]), "--khoi", str(kh), "--max-epochs", "1",
+        cmd = [sys.executable, __file__, "--folds", str(args.folds[0]), "--khoi", str(kh), "--max-epochs", "1", "--chia", args.chia,
                "--batch-size", str(args.batch_size), "--rate", str(args.rate), "--min-tx", str(args.min_tx),
                "--seed", str(args.seed), "--pos-weight", str(args.pos_weight), "--lr", str(args.lr),
                "--_con", str(out / f"_con_{kh}.json")]
@@ -271,6 +299,8 @@ def main():
                     help="> 0: lấy mẫu con phần fit còn khoảng N dòng (giữ hết ca rửa tiền, bốc ca bình thường theo từng ngân hàng)")
     ap.add_argument("--bu-trong-so", action="store_true",
                     help="nhân trọng số ca bình thường = số gốc / số giữ để bù phần bỏ đi (dùng với --so-mau hoặc --rate < 1)")
+    ap.add_argument("--chia", choices=["cu", "b0"], default="cu",
+                    help="b0 = cách chia cố định của khung (D25, dùng cho B1–B6); cu = mỗi script tự chia (kết quả trước 11/11)")
     ap.add_argument("--thu-tu", choices=["xao", "co_dinh"], default="xao")
     ap.add_argument("--threads", type=int, default=0, help="số luồng CPU cho torch (0 = mặc định)")
     ap.add_argument("--quet-khoi", type=int, nargs="*", default=None)
@@ -300,7 +330,7 @@ def main():
         with open(out / "log.txt", "a", encoding="utf-8") as fh:
             fh.write(msg + "\n")
 
-    log(f"Cách 1 | {args.stem} ngày 0–{IBM_MAX_DAY} | ngân hàng >= {args.min_tx} gd | rate {args.rate:g} | "
+    log(f"Cách 1 | chia {args.chia} | {args.stem} ngày 0–{IBM_MAX_DAY} | ngân hàng >= {args.min_tx} gd | rate {args.rate:g} | "
         f"số mẫu {args.so_mau or 'đủ'} | bù trọng số {args.bu_trong_so} | khối {args.khoi:,} | lô {args.batch_size} | lr {args.lr} | pos_weight {args.pos_weight} | "
         f"tối đa {args.max_epochs} lượt, dừng sau {args.patience} lượt không tăng | thứ tự {args.thu_tu} | "
         f"seed {args.seed} | {torch.get_num_threads()} luồng | ngân hàng < {args.min_fit_chuan_hoa} dòng fit dùng chuẩn hóa chung")

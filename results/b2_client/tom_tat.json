@@ -1,0 +1,31 @@
+{
+ "gop_nho": 10000,
+ "so_client": 27,
+ "so_nuoc": 34,
+ "nuoc_gop_vao_khac": [
+  "Croatia",
+  "Lithuania",
+  "Slovenia",
+  "Estonia",
+  "Latvia",
+  "Cyprus",
+  "Malta",
+  "Luxembourg"
+ ],
+ "client_lon_nhat": {
+  "ten": "USA",
+  "pct_giao_dich": 45.28
+ },
+ "client_it_hon_min_ca_test_f0": [
+  "Crypto",
+  "Mexico",
+  "Brazil",
+  "Netherlands",
+  "Austria",
+  "Portugal",
+  "Greece",
+  "Ireland",
+  "Slovakia",
+  "_khac"
+ ]
+}

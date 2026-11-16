@@ -1,0 +1,33 @@
+{
+ "so_giao_dich": 5077237,
+ "so_ca": 4522,
+ "ty_le_pct": 0.0891,
+ "so_ngan_hang": 30470,
+ "so_nuoc": 34,
+ "nuoc_nhieu_ca_nhat": [
+  {
+   "nuoc": "USA",
+   "so_ca": 2090,
+   "pct_ca": 46.22
+  },
+  {
+   "nuoc": "Germany",
+   "so_ca": 272,
+   "pct_ca": 6.02
+  },
+  {
+   "nuoc": "China",
+   "so_ca": 241,
+   "pct_ca": 5.33
+  }
+ ],
+ "pct_ca_3_nuoc_dau": 57.56,
+ "loai_ty_le_cao_nhat": {
+  "loai_thanh_toan": "ACH",
+  "ty_le_pct": 0.6383
+ },
+ "ty_le_ngay_min_max_pct": [
+  0.0289,
+  0.2122
+ ]
+}
