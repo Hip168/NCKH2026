@@ -28,7 +28,7 @@
     "SND_IN_SUM_LOG_7D"
   ],
   "n_laundering": 5177,
-  "giay_doc": 5,
-  "giay_tinh_dac_trung": 38,
+  "giay_doc": 18,
+  "giay_tinh_dac_trung": 32,
   "parquet": "HI-Small_features_bank.parquet"
 }

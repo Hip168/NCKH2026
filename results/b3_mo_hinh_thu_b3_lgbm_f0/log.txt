@@ -1,0 +1,40 @@
+B3 | mô hình=['lgbm'] | đặc trưng=['co_ban', 'do_thi_fl', 'do_thi_nuoc', 'do_thi_global'] | seeds=[42] | folds=[0] | so_mau=đủ | spw_grid=[1.0, 3.0, 5.0, 10.0, 20.0]
+Nạp HI-Small_features_bank.parquet: 5,077,237 dòng ngày 0–9, 4,522 ca, 22 đặc trưng cơ bản (2.4s)
+Đang tính đặc trưng đồ thị (scope=global) từ HI-Small_Trans.csv ...
+  Đã lưu HI-Small_graph_global.parquet (5,078,345 dòng, 123.8s)
+Đang tính đặc trưng đồ thị (scope=country) từ HI-Small_Trans.csv ...
+  Đã lưu HI-Small_graph_country.parquet (5,078,345 dòng, 142.4s)
+
+=== seed=42 fold=0 | lgbm | co_ban (22 cột) ===
+    [LGBM spw=1] val PR-AUC=0.2016 (best_iter=485)
+    [LGBM spw=3] val PR-AUC=0.1964 (best_iter=476)
+    [LGBM spw=5] val PR-AUC=0.1913 (best_iter=495)
+    [LGBM spw=10] val PR-AUC=0.1872 (best_iter=539)
+    [LGBM spw=20] val PR-AUC=0.1828 (best_iter=506)
+  TEST PR-AUC 0.2174 | Recall@1% 0.6011 | VDR@1% 0.0336 | macro 0.4993 | 814.5s
+
+=== seed=42 fold=0 | lgbm | do_thi_fl (36 cột) ===
+    [LGBM spw=1] val PR-AUC=0.4082 (best_iter=487)
+    [LGBM spw=3] val PR-AUC=0.4026 (best_iter=502)
+    [LGBM spw=5] val PR-AUC=0.3975 (best_iter=473)
+    [LGBM spw=10] val PR-AUC=0.3922 (best_iter=779)
+    [LGBM spw=20] val PR-AUC=0.3836 (best_iter=554)
+  TEST PR-AUC 0.4183 | Recall@1% 0.6983 | VDR@1% 0.0735 | macro 0.6191 | 1033.5s
+
+=== seed=42 fold=0 | lgbm | do_thi_nuoc (48 cột) ===
+    [LGBM spw=1] val PR-AUC=0.4574 (best_iter=569)
+    [LGBM spw=3] val PR-AUC=0.4521 (best_iter=615)
+    [LGBM spw=5] val PR-AUC=0.4469 (best_iter=455)
+    [LGBM spw=10] val PR-AUC=0.4395 (best_iter=704)
+    [LGBM spw=20] val PR-AUC=0.4320 (best_iter=722)
+  TEST PR-AUC 0.4508 | Recall@1% 0.7215 | VDR@1% 0.9913 | macro 0.6606 | 1243.5s
+
+=== seed=42 fold=0 | lgbm | do_thi_global (48 cột) ===
+    [LGBM spw=1] val PR-AUC=0.4793 (best_iter=497)
+    [LGBM spw=3] val PR-AUC=0.4717 (best_iter=490)
+    [LGBM spw=5] val PR-AUC=0.4678 (best_iter=755)
+    [LGBM spw=10] val PR-AUC=0.4578 (best_iter=555)
+    [LGBM spw=20] val PR-AUC=0.4517 (best_iter=677)
+  TEST PR-AUC 0.4846 | Recall@1% 0.7204 | VDR@1% 0.9950 | macro 0.6654 | 1221.0s
+
+Đã lưu trữ: /kaggle/working/NCKH2026/results/_luu_tru/2026-11-22_1449_b3_mo_hinh_thu_b3_lgbm_f0
