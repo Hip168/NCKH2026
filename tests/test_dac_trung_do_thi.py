@@ -52,6 +52,9 @@ def test_strict_past_and_graph_features_global():
     assert g.loc[1, "G_SND_PASS_1H"] == 1.0
     assert g.loc[1, "G_SND_FANIN_LOG_1D"] == pytest.approx(np.log1p(1))
     assert g.loc[1, "G_SND_FANOUT_LOG_1D"] == 0.0
+    # B nhận 100 lúc 00:00, chuyển 90 lúc 00:30 -> pass ratio 1h = 90/100 = 0.9, latency = log1p(30 min)
+    assert g.loc[1, "G_SND_PASS_RATIO_1H"] == pytest.approx(0.9, rel=1e-3)
+    assert g.loc[1, "G_SND_IN_OUT_LATENCY_LOG"] == pytest.approx(np.log1p(30.0), rel=1e-3)
 
     # Dòng 3 (02:00, A->B): cùng phút với dòng 2 (C->A lúc 02:00), KHÔNG được thấy dòng 2!
     # A mới chỉ có dòng 0 (gửi B) -> fanin=0, pass_1h=0, appear=log1p(1), pair_past=log1p(1)
@@ -65,6 +68,8 @@ def test_strict_past_and_graph_features_global():
 
     # Dòng 4 (03:00, B->A): A từng gửi cho B ở dòng 0 và dòng 3 -> chu trình A->B (dòng 0,3) -> A (dòng 4) = 2 lần
     assert g.loc[4, "G_CYCLE_ABA_LOG_7D"] == pytest.approx(np.log1p(2))
+    # Chênh lệch chu trình ABA: A gửi B 50.0 ở dòng 3, giờ B chuyển lại 40.0 -> diff = |40-50|/(50+1) = 10/51
+    assert g.loc[4, "G_CYCLE_ABA_DIFF_LOG_7D"] == pytest.approx(10.0 / 51.0, rel=1e-3)
     # A (tài khoản nhận ở dòng 4) từng nhận từ C lúc 02:00 (1h trước) và gửi B lúc 02:00 -> G_RCV_PASS_1H = 1
     assert g.loc[4, "G_RCV_PASS_1H"] == 1.0
     assert g.loc[4, "G_RCV_FANIN_LOG_1D"] == pytest.approx(np.log1p(1))
@@ -120,3 +125,4 @@ def test_row_order_invariance():
             rtol=1e-6,
             atol=1e-6,
         )
+

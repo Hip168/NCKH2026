@@ -69,10 +69,17 @@ def ram_dinh_mb() -> float:
 
 
 def _dam_bao_do_thi(stem: str, scope: str, raw_path: Path | None, log) -> Path:
-    """Đảm bảo file parquet đặc trưng đồ thị cho `scope` đã tồn tại; nếu chưa thì tính từ `--raw`."""
+    """Đảm bảo file parquet đặc trưng đồ thị cho `scope` đã tồn tại và đủ cột; nếu chưa thì tính từ `--raw`."""
     p = DATA_PROCESSED / f"{stem}_graph_{scope}.parquet"
     if p.exists():
-        return p
+        try:
+            # Kiểm tra xem file đã có đủ các đặc trưng đồ thị tối ưu mới chưa
+            schema_cols = set(pd.read_parquet(p).columns)
+            if all(c in schema_cols for c in ALL_GRAPH_FEATURES):
+                return p
+            log(f"Phát hiện {p.name} là bản cũ (thiếu các đặc trưng đồ thị mới) → tự động tính lại...")
+        except Exception:
+            pass
     if raw_path is None or not raw_path.exists():
         raise SystemExit(
             f"Chưa có {p} và không tìm thấy file gốc --raw={raw_path}. "

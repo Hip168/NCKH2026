@@ -20,6 +20,8 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from fraudfl.data.ibm_features import usd_rates
+
 _STRIDE = 10**9
 SEC_1H = 3600
 SEC_1D = 86400
@@ -35,6 +37,11 @@ GRAPH_FEATURES_FL = [
     "G_CYCLE_ABA_LOG_7D",
     "G_PAIR_PAST_LOG_7D",
     "G_SND_APPEAR_LOG",
+    "G_SND_PASS_RATIO_1H",
+    "G_SND_PASS_RATIO_1D",
+    "G_SND_IN_OUT_LATENCY_LOG",
+    "G_SND_BURST_1D_7D",
+    "G_CYCLE_ABA_DIFF_LOG_7D",
 ]
 
 GRAPH_FEATURES_RCV = [
@@ -47,6 +54,9 @@ GRAPH_FEATURES_RCV = [
     "G_RCV_RECENT_OUT_1H",
     "G_RCV_RECENT_OUT_1D",
     "G_RCV_APPEAR_LOG",
+    "G_RCV_PASS_RATIO_1H",
+    "G_RCV_PASS_RATIO_1D",
+    "G_RCV_IN_OUT_LATENCY_LOG",
 ]
 
 ALL_GRAPH_FEATURES = GRAPH_FEATURES_FL + GRAPH_FEATURES_RCV
@@ -69,6 +79,86 @@ def _count_past(
     t_lo = np.zeros_like(q_t64) if w_sec is None else np.maximum(q_t64 - w_sec, 0)
     lo = np.searchsorted(comp, q_k * _STRIDE + t_lo, side="left")
     return (hi - lo).astype(np.float32)
+
+
+def _sum_past(
+    ev_key: np.ndarray,
+    ev_t: np.ndarray,
+    ev_v: np.ndarray,
+    q_key: np.ndarray,
+    q_t: np.ndarray,
+    w_sec: int | None = None,
+) -> np.ndarray:
+    """Tổng giá trị sự kiện của cùng khóa trong [t - w_sec, t)."""
+    if len(ev_key) == 0:
+        return np.zeros(len(q_key), dtype=np.float32)
+    order = np.lexsort((ev_t, ev_key))
+    ek = ev_key[order].astype(np.int64)
+    et = ev_t[order].astype(np.int64)
+    ev = ev_v[order].astype(np.float64)
+    comp = ek * _STRIDE + et
+    cs = np.concatenate([[0.0], np.cumsum(ev)])
+
+    qk = q_key.astype(np.int64)
+    qt = q_t.astype(np.int64)
+    hi = np.searchsorted(comp, qk * _STRIDE + qt, side="left")
+    t_lo = np.zeros_like(qt) if w_sec is None else np.maximum(qt - w_sec, 0)
+    lo = np.searchsorted(comp, qk * _STRIDE + t_lo, side="left")
+    return (cs[hi] - cs[lo]).astype(np.float32)
+
+
+def _last_time_past(
+    ev_key: np.ndarray,
+    ev_t: np.ndarray,
+    q_key: np.ndarray,
+    q_t: np.ndarray,
+    w_sec: int | None = None,
+) -> np.ndarray:
+    """Thời điểm xảy ra sự kiện gần nhất trước q_t trong [t - w_sec, t); -1 nếu chưa có."""
+    if len(ev_key) == 0:
+        return np.full(len(q_key), -1.0, dtype=np.float32)
+    order = np.lexsort((ev_t, ev_key))
+    ek = ev_key[order].astype(np.int64)
+    et = ev_t[order].astype(np.int64)
+    comp = ek * _STRIDE + et
+
+    qk = q_key.astype(np.int64)
+    qt = q_t.astype(np.int64)
+    hi = np.searchsorted(comp, qk * _STRIDE + qt, side="left") - 1
+    valid = (hi >= 0) & (ek[np.maximum(hi, 0)] == qk)
+    if w_sec is not None:
+        valid = valid & (qt - et[np.maximum(hi, 0)] <= w_sec)
+    res = np.full(len(q_key), -1.0, dtype=np.float32)
+    res[valid] = et[hi[valid]].astype(np.float32)
+    return res
+
+
+def _last_val_past(
+    ev_key: np.ndarray,
+    ev_t: np.ndarray,
+    ev_v: np.ndarray,
+    q_key: np.ndarray,
+    q_t: np.ndarray,
+    w_sec: int | None = None,
+) -> np.ndarray:
+    """Giá trị của sự kiện gần nhất trước q_t trong [t - w_sec, t); -1 nếu chưa có."""
+    if len(ev_key) == 0:
+        return np.full(len(q_key), -1.0, dtype=np.float32)
+    order = np.lexsort((ev_t, ev_key))
+    ek = ev_key[order].astype(np.int64)
+    et = ev_t[order].astype(np.int64)
+    ev = ev_v[order].astype(np.float64)
+    comp = ek * _STRIDE + et
+
+    qk = q_key.astype(np.int64)
+    qt = q_t.astype(np.int64)
+    hi = np.searchsorted(comp, qk * _STRIDE + qt, side="left") - 1
+    valid = (hi >= 0) & (ek[np.maximum(hi, 0)] == qk)
+    if w_sec is not None:
+        valid = valid & (qt - et[np.maximum(hi, 0)] <= w_sec)
+    res = np.full(len(q_key), -1.0, dtype=np.float32)
+    res[valid] = ev[hi[valid]].astype(np.float32)
+    return res
 
 
 def _prepare_distinct_sweepline(
@@ -201,6 +291,20 @@ def build_graph_features(
     a_from = codes[:n].astype(np.int64)
     a_to = codes[n:].astype(np.int64)
 
+    # Lấy giá trị tiền chuẩn hóa USD
+    if "Payment Currency" in df.columns and "Receiving Currency" in df.columns:
+        try:
+            rates = usd_rates(df)
+            amt = (df["Amount Paid"] / df["Payment Currency"].map(rates)).to_numpy(np.float64)
+        except Exception:
+            amt = df["Amount Paid"].to_numpy(np.float64)
+    elif "Amount Paid" in df.columns:
+        amt = df["Amount Paid"].to_numpy(np.float64)
+    elif "AMOUNT_USD" in df.columns:
+        amt = df["AMOUNT_USD"].to_numpy(np.float64)
+    else:
+        amt = np.ones(n, dtype=np.float64)
+
     out = pd.DataFrame({"TX_ID": np.arange(n, dtype=np.int64)})
 
     # ---- Nhóm 1: Đặc trưng phía tài khoản gửi + cặp với tài khoản gửi (FL-safe) ----
@@ -234,6 +338,27 @@ def build_graph_features(
     both_t = np.concatenate([t, t])
     out["G_SND_APPEAR_LOG"] = np.log1p(_count_past(both_acc, both_t, a_from, t, None)).astype(np.float32)
 
+    # Động lực dòng tiền và chu trình phía tài khoản gửi (FL-Safe)
+    in_sum_1h = _sum_past(a_to, t, amt, a_from, t, SEC_1H)
+    out["G_SND_PASS_RATIO_1H"] = np.where(in_sum_1h > 0, np.minimum(amt / (in_sum_1h + 1e-4), 10.0), 0.0).astype(np.float32)
+
+    in_sum_1d = _sum_past(a_to, t, amt, a_from, t, SEC_1D)
+    out["G_SND_PASS_RATIO_1D"] = np.where(in_sum_1d > 0, np.minimum(amt / (in_sum_1d + 1e-4), 10.0), 0.0).astype(np.float32)
+
+    last_in_t = _last_time_past(a_to, t, a_from, t, None)
+    out["G_SND_IN_OUT_LATENCY_LOG"] = np.where(last_in_t >= 0, np.log1p((t - last_in_t) / 60.0), 0.0).astype(np.float32)
+
+    out_cnt_1d = _count_past(a_from, t, a_from, t, SEC_1D)
+    out_cnt_7d = _count_past(a_from, t, a_from, t, SEC_7D)
+    out["G_SND_BURST_1D_7D"] = np.where(out_cnt_7d > 0, (out_cnt_1d + 1.0) / (out_cnt_7d / 7.0 + 1.0), 0.0).astype(np.float32)
+
+    last_ba_val = _last_val_past(p_ab, t, amt, p_ba, t, SEC_7D)
+    out["G_CYCLE_ABA_DIFF_LOG_7D"] = np.where(
+        last_ba_val > 0,
+        np.abs(amt - last_ba_val) / (np.maximum(amt, last_ba_val) + 1.0),
+        0.0,
+    ).astype(np.float32)
+
     # ---- Nhóm 2: Đặc trưng tài khoản nhận ----
     if scope == "global":
         rcv_in_1h = _count_past(a_to, t, a_to, t, SEC_1H)
@@ -245,6 +370,15 @@ def build_graph_features(
         out["G_RCV_RECENT_OUT_1H"] = (rcv_out_1h > 0).astype(np.float32)
         out["G_RCV_RECENT_OUT_1D"] = (rcv_out_1d > 0).astype(np.float32)
         out["G_RCV_APPEAR_LOG"] = np.log1p(_count_past(both_acc, both_t, a_to, t, None)).astype(np.float32)
+
+        rcv_out_sum_1h = _sum_past(a_from, t, amt, a_to, t, SEC_1H)
+        out["G_RCV_PASS_RATIO_1H"] = np.where(rcv_out_sum_1h > 0, np.minimum(amt / (rcv_out_sum_1h + 1e-4), 10.0), 0.0).astype(np.float32)
+
+        rcv_out_sum_1d = _sum_past(a_from, t, amt, a_to, t, SEC_1D)
+        out["G_RCV_PASS_RATIO_1D"] = np.where(rcv_out_sum_1d > 0, np.minimum(amt / (rcv_out_sum_1d + 1e-4), 10.0), 0.0).astype(np.float32)
+
+        rcv_last_out_t = _last_time_past(a_from, t, a_to, t, None)
+        out["G_RCV_IN_OUT_LATENCY_LOG"] = np.where(rcv_last_out_t >= 0, np.log1p((t - rcv_last_out_t) / 60.0), 0.0).astype(np.float32)
     else:
         if scope == "bank":
             obs_series = pd.concat([df["From Bank"].astype(str), df["To Bank"].astype(str)], ignore_index=True)
@@ -264,6 +398,7 @@ def build_graph_features(
         diff = obs_from != obs_to
         ev_partner_to = np.concatenate([a_to, a_to[diff]])
         ev_partner_from = np.concatenate([a_from, a_from[diff]])
+        ev_amt = np.concatenate([amt, amt[diff]])
 
         for w_label, w_sec in (("1D", SEC_1D), ("7D", SEC_7D)):
             out[f"G_RCV_FANIN_LOG_{w_label}"] = np.log1p(
@@ -285,4 +420,14 @@ def build_graph_features(
         ev_both_t = np.concatenate([ev_t, ev_t])
         out["G_RCV_APPEAR_LOG"] = np.log1p(_count_past(ev_both_k, ev_both_t, q_rcv, t, None)).astype(np.float32)
 
+        rcv_out_sum_1h = _sum_past(ev_from, ev_t, ev_amt, q_rcv, t, SEC_1H)
+        out["G_RCV_PASS_RATIO_1H"] = np.where(rcv_out_sum_1h > 0, np.minimum(amt / (rcv_out_sum_1h + 1e-4), 10.0), 0.0).astype(np.float32)
+
+        rcv_out_sum_1d = _sum_past(ev_from, ev_t, ev_amt, q_rcv, t, SEC_1D)
+        out["G_RCV_PASS_RATIO_1D"] = np.where(rcv_out_sum_1d > 0, np.minimum(amt / (rcv_out_sum_1d + 1e-4), 10.0), 0.0).astype(np.float32)
+
+        rcv_last_out_t = _last_time_past(ev_from, ev_t, q_rcv, t, None)
+        out["G_RCV_IN_OUT_LATENCY_LOG"] = np.where(rcv_last_out_t >= 0, np.log1p((t - rcv_last_out_t) / 60.0), 0.0).astype(np.float32)
+
     return out[["TX_ID"] + ALL_GRAPH_FEATURES]
+
