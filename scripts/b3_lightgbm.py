@@ -186,6 +186,7 @@ def chay_lightgbm_fold(
             min_child_samples=min_child_samples,
             min_child_weight=5.0,
             reg_lambda=10.0,
+            reg_alpha=1.0,
             max_delta_step=1.0,
             subsample=0.8,
             subsample_freq=1,
@@ -194,6 +195,7 @@ def chay_lightgbm_fold(
             metric="average_precision",
             random_state=seed,
             n_jobs=n_jobs,
+            force_col_wise=True,
             verbose=-1,
         )
         with warnings.catch_warnings():
@@ -245,7 +247,8 @@ def _chuan_hoa_theo_ngan_hang(
         sd[du] = np.where(s_ > 0, s_, 1.0)
 
     def _norm(idx):
-        return ((X[idx] - mu[cid[idx]]) / sd[cid[idx]]).astype(np.float32)
+        val = ((X[idx] - mu[cid[idx]]) / sd[cid[idx]]).astype(np.float32)
+        return np.clip(val, -10.0, 10.0)
 
     return _norm(fit_idx), _norm(val_idx), _norm(test_idx)
 
@@ -289,7 +292,7 @@ def chay_mlp_fold(
     rng = np.random.default_rng(seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = TabMLP(X_fit.shape[1]).to(device)
-    opt = torch.optim.Adam(model.parameters(), lr=lr)
+    opt = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-4)
     loss_fn = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(pos_weight, device=device), reduction="none")
 
     def _predict(arr: np.ndarray) -> np.ndarray:
@@ -307,17 +310,21 @@ def chay_mlp_fold(
     bad = 0
     n = len(y_fit)
 
+    X_fit_t = torch.from_numpy(X_fit)
+    y_fit_t = torch.from_numpy(y_fit.astype(np.float32))
+    w_fit_t = torch.from_numpy(w_fit.astype(np.float32)) if w_fit is not None else None
+
     for epoch in range(1, max_epochs + 1):
         model.train()
         perm = rng.permutation(n)
         for i in range(0, n, batch_size):
             b = perm[i : i + batch_size]
-            xb = torch.from_numpy(X_fit[b]).to(device)
-            yb = torch.from_numpy(y_fit[b].astype(np.float32)).to(device)
+            xb = X_fit_t[b].to(device)
+            yb = y_fit_t[b].to(device)
             opt.zero_grad()
             loss = loss_fn(model(xb), yb)
-            if w_fit is not None:
-                wb = torch.from_numpy(w_fit[b].astype(np.float32)).to(device)
+            if w_fit_t is not None:
+                wb = w_fit_t[b].to(device)
                 loss = (loss * wb).sum() / wb.sum()
             else:
                 loss = loss.mean()
